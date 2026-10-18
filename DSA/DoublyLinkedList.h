@@ -34,6 +34,8 @@ private:
 public:
     DoubleLinkedList();
     ~DoubleLinkedList();
+    DoubleLinkedList(const DoubleLinkedList&) = delete;
+    DoubleLinkedList& operator=(const DoubleLinkedList&) = delete;
 
     bool empty() const;
 

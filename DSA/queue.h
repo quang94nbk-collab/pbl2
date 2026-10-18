@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace std;
+
 template <typename T>
 struct QueueNode {
     T value;
@@ -79,10 +81,10 @@ template <typename T>
 void Queue<T>::print() const {
     QueueNode<T> *p = frontNode;
     while (p != nullptr) {
-        std::cout << p->value << " ";
+        cout << p->value << " ";
         p = p->next;
     }
-    std::cout << "\n";
+    cout << "\n";
 }
 
 template <typename T>
