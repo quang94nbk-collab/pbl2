@@ -8,6 +8,8 @@
 #include <string>
 
 #include "../DSA/DoublyLinkedList.h"
+#include "../DSA/hashtable.h" 
+#include "../DSA/queue.h"     
 #include "../model/classsection.h"
 #include "../model/course.h"
 #include "../model/registration.h"
@@ -18,9 +20,18 @@ using namespace std;
 class SystemManager {
 private:
     DoubleLinkedList<Student> studentList;
+    HashTable<string, NodeDLL<Student>*> studentTable;
+
     DoubleLinkedList<Course> courseList;
+    HashTable<string, NodeDLL<Course>*> courseTable;
+
     DoubleLinkedList<ClassSection> sectionList;
+    HashTable<string, NodeDLL<ClassSection>*> sectionTable;
+
     DoubleLinkedList<Registration> registrationList;
+    HashTable<string, NodeDLL<Registration>*> registrationTable;
+
+    HashTable<string, Queue<string>*> waitlistTable;
 
     static string today() {
         time_t now = time(nullptr);
@@ -34,18 +45,42 @@ private:
         return date.str();
     }
 
+    template <typename T>
+    NodeDLL<T>* getLastNode(const DoubleLinkedList<T>& list) const {
+        auto current = list.getHead();
+        NodeDLL<T>* tail = nullptr;
+        while (current != nullptr) {
+            tail = current;
+            current = current->next;
+        }
+        return tail;
+    }
+
 public:
+    ~SystemManager() {
+        auto current = sectionList.getHead();
+        while (current != nullptr) {
+            Queue<string>* q = nullptr;
+            if (waitlistTable.get(current->data.getMaLopHP(), q)) {
+                delete q;
+            }
+            current = current->next;
+        }
+    }
+
     bool addStudent(const Student& newStudent) {
-        if (newStudent.getMaSV().empty() || findStudent(newStudent.getMaSV()) != nullptr) {
+        if (newStudent.getMaSV().empty() || studentTable.search(newStudent.getMaSV())) {
             return false;
         }
+        
         studentList.pushBack(newStudent);
+        studentTable.insert(newStudent.getMaSV(), getLastNode(studentList));
         return true;
     }
 
     bool deleteStudent(const string& studentID) {
-        Student* student = findStudent(studentID);
-        if (student == nullptr) {
+        NodeDLL<Student>* node = nullptr;
+        if (!studentTable.get(studentID, node)) {
             return false;
         }
 
@@ -53,26 +88,20 @@ public:
         while (current != nullptr) {
             auto next = current->next;
             if (current->data.getMaSV() == studentID) {
-                ClassSection* section = findClassSection(current->data.getMaLopHP());
-                if (section != nullptr) {
-                    section->giamSoLuong();
-                }
-                registrationList.eraseNode(current);
+                cancelRegistration(studentID, current->data.getMaLopHP());
             }
             current = next;
         }
 
-        studentList.eraseValue(*student);
+        studentList.eraseValue(node->data);
+        studentTable.erase(studentID);
         return true;
     }
 
     Student* findStudent(const string& studentID) {
-        auto current = studentList.getHead();
-        while (current != nullptr) {
-            if (current->data.getMaSV() == studentID) {
-                return &current->data;
-            }
-            current = current->next;
+        NodeDLL<Student>* node = nullptr;
+        if (studentTable.get(studentID, node)) {
+            return &(node->data);
         }
         return nullptr;
     }
@@ -86,6 +115,25 @@ public:
         }
     }
 
+    bool addCourse(const Course& newCourse) {
+        if (newCourse.getMaMon().empty() || newCourse.getSoTinChi() <= 0 ||
+            courseTable.search(newCourse.getMaMon())) {
+            return false;
+        }
+        
+        courseList.pushBack(newCourse);
+        courseTable.insert(newCourse.getMaMon(), getLastNode(courseList));
+        return true;
+    }
+
+    Course* findCourse(const string& courseID) {
+        NodeDLL<Course>* node = nullptr;
+        if (courseTable.get(courseID, node)) {
+            return &(node->data);
+        }
+        return nullptr;
+    }
+
     void displayAllCourses() const {
         auto current = courseList.getHead();
         while (current != nullptr) {
@@ -95,46 +143,27 @@ public:
         }
     }
 
-    bool addCourse(const Course& newCourse) {
-        if (newCourse.getMaMon().empty() || newCourse.getSoTinChi() <= 0 ||
-            findCourse(newCourse.getMaMon()) != nullptr) {
-            return false;
-        }
-        courseList.pushBack(newCourse);
-        return true;
-    }
-
-    Course* findCourse(const string& courseID) {
-        auto current = courseList.getHead();
-        while (current != nullptr) {
-            if (current->data.getMaMon() == courseID) {
-                return &current->data;
-            }
-            current = current->next;
-        }
-        return nullptr;
-    }
-
     bool addClassSection(const ClassSection& newSection) {
         if (newSection.getMaLopHP().empty() ||
-            findClassSection(newSection.getMaLopHP()) != nullptr ||
-            findCourse(newSection.getMaMon()) == nullptr ||
+            sectionTable.search(newSection.getMaLopHP()) ||
+            !courseTable.search(newSection.getMaMon()) ||
             newSection.getSiSoToiDa() <= 0 ||
             newSection.getTietBatDau() <= 0 ||
             newSection.getTietKetThuc() <= newSection.getTietBatDau()) {
             return false;
         }
+        
         sectionList.pushBack(newSection);
+        sectionTable.insert(newSection.getMaLopHP(), getLastNode(sectionList));
+        
+        waitlistTable.insert(newSection.getMaLopHP(), new Queue<string>());
         return true;
     }
 
     ClassSection* findClassSection(const string& sectionID) {
-        auto current = sectionList.getHead();
-        while (current != nullptr) {
-            if (current->data.getMaLopHP() == sectionID) {
-                return &current->data;
-            }
-            current = current->next;
+        NodeDLL<ClassSection>* node = nullptr;
+        if (sectionTable.get(sectionID, node)) {
+            return &(node->data);
         }
         return nullptr;
     }
@@ -144,14 +173,6 @@ public:
         while (current != nullptr) {
             current->data.xuat();
             cout << "----------------------\n";
-            current = current->next;
-        }
-    }
-
-    void displayAllRegistrations() const {
-        auto current = registrationList.getHead();
-        while (current != nullptr) {
-            current->data.xuat();
             current = current->next;
         }
     }
@@ -180,21 +201,27 @@ public:
     bool registerClass(const string& studentID, const string& sectionID,
                        const string& registrationDate = "") {
         ClassSection* section = findClassSection(sectionID);
-        if (findStudent(studentID) == nullptr || section == nullptr) {
+        if (!studentTable.search(studentID) || section == nullptr) {
             return false;
         }
 
-        auto current = registrationList.getHead();
-        while (current != nullptr) {
-            if (current->data.getMaSV() == studentID &&
-                current->data.getMaLopHP() == sectionID) {
-                return false;
+        const string regID = "DK_" + studentID + "_" + sectionID;
+
+        if (registrationTable.search(regID)) {
+            return false;
+        }
+
+        if (isTimeConflict(studentID, sectionID)) {
+            return false; 
+        }
+
+        if (!section->conCho()) {
+            Queue<string>* q = nullptr;
+            if (waitlistTable.get(sectionID, q)) {
+                q->push(studentID);
+                cout << "Lop da day. Sinh vien " << studentID << " duoc dua vao hang doi.\n";
             }
-            current = current->next;
-        }
-
-        if (!section->conCho() || isTimeConflict(studentID, sectionID)) {
-            return false;
+            return false; 
         }
 
         const string date = registrationDate.empty() ? today() : registrationDate;
@@ -202,35 +229,64 @@ public:
             return false;
         }
 
-        const string registrationID = "DK_" + studentID + "_" + sectionID;
-        registrationList.pushBack(
-            Registration(registrationID, studentID, sectionID, date));
+        registrationList.pushBack(Registration(regID, studentID, sectionID, date));
+        registrationTable.insert(regID, getLastNode(registrationList));
         return true;
     }
 
     bool cancelRegistration(const string& studentID, const string& sectionID) {
+        const string regID = "DK_" + studentID + "_" + sectionID;
+        NodeDLL<Registration>* regNode = nullptr;
+
+        if (!registrationTable.get(regID, regNode)) {
+            return false;
+        }
+
+        ClassSection* section = findClassSection(sectionID);
+        if (section != nullptr) {
+            section->giamSoLuong();
+        }
+        
+        registrationList.eraseNode(regNode);
+        registrationTable.erase(regID);
+        
+        if (section != nullptr) {
+            Queue<string>* q = nullptr;
+            if (waitlistTable.get(sectionID, q)) {
+                string nextStudent;
+                while (q->pop(nextStudent)) {
+                    if (!isTimeConflict(nextStudent, sectionID)) {
+                        section->tangSoLuong();
+                        const string date = today();
+                        const string newRegID = "DK_" + nextStudent + "_" + sectionID;
+                        
+                        registrationList.pushBack(Registration(newRegID, nextStudent, sectionID, date));
+                        registrationTable.insert(newRegID, getLastNode(registrationList));
+                        
+                        cout << "Tu dong dang ky cho sinh vien " << nextStudent 
+                             << " tu hang doi vao lop " << sectionID << ".\n";
+                        break;
+                    } else {
+                        cout << "Sinh vien " << nextStudent << " bi trung lich, chuyen sang ban tiep theo.\n";
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    void displayAllRegistrations() const {
         auto current = registrationList.getHead();
         while (current != nullptr) {
-            if (current->data.getMaSV() == studentID &&
-                current->data.getMaLopHP() == sectionID) {
-                ClassSection* section = findClassSection(sectionID);
-                if (section != nullptr) {
-                    section->giamSoLuong();
-                }
-                registrationList.eraseNode(current);
-                return true;
-            }
+            current->data.xuat();
             current = current->next;
         }
-        return false;
     }
 
     const DoubleLinkedList<Student>& getStudents() const { return studentList; }
     const DoubleLinkedList<Course>& getCourses() const { return courseList; }
     const DoubleLinkedList<ClassSection>& getSections() const { return sectionList; }
-    const DoubleLinkedList<Registration>& getRegistrations() const {
-        return registrationList;
-    }
+    const DoubleLinkedList<Registration>& getRegistrations() const { return registrationList; }
 };
 
 #endif
