@@ -28,28 +28,27 @@ public:
     void xuat() const override;
     bool operator==(const Student& other) const;
 };
-
-inline Student::Student() : Person() {
+Student::Student() : Person() {
     lop = "";
     nganhHoc = "";
 }
 
-inline Student::Student(string maSV, string ten, string sdt, string mail,
+Student::Student(string maSV, string ten, string sdt, string mail,
                  string lopSV, string nganh)
     : Person(maSV, ten, sdt, mail) {
     lop = lopSV;
     nganhHoc = nganh;
 }
 
-inline string Student::getMaSV() const { return maNguoi; }
-inline string Student::getLop() const { return lop; }
-inline string Student::getNganhHoc() const { return nganhHoc; }
+string Student::getMaSV() const { return maNguoi; }
+string Student::getLop() const { return lop; }
+string Student::getNganhHoc() const { return nganhHoc; }
 
-inline void Student::setMaSV(string maSV) { maNguoi = maSV; }
-inline void Student::setLop(string lopSV) { lop = lopSV; }
-inline void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
+void Student::setMaSV(string maSV) { maNguoi = maSV; }
+void Student::setLop(string lopSV) { lop = lopSV; }
+void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
 
-inline void Student::nhap() {
+void Student::nhap() {
     cout << "Ma sinh vien: ";
     getline(cin >> ws, maNguoi);
     cout << "Ho ten: ";
@@ -64,7 +63,7 @@ inline void Student::nhap() {
     getline(cin, nganhHoc);
 }
 
-inline void Student::xuat() const {
+void Student::xuat() const {
     cout << "Ma sinh vien: " << maNguoi << '\n';
     cout << "Ho ten: " << hoTen << '\n';
     cout << "So dien thoai: " << soDienThoai << '\n';
@@ -73,7 +72,7 @@ inline void Student::xuat() const {
     cout << "Nganh hoc: " << nganhHoc << '\n';
 }
 
-inline bool Student::operator==(const Student& other) const {
+bool Student::operator==(const Student& other) const {
     return maNguoi == other.maNguoi;
 }
 

@@ -13,28 +13,20 @@ The program creates its data files in the current working directory when you
 save and exit. Keep `students.txt`, `courses.txt`, `sections.txt`, and
 `registrations.txt` together when moving the saved data.
 
-The initial menu supports adding students, courses, and class sections;
-registering and cancelling course registrations; and listing stored records.
+The application separates administrator and student menus. Administrators can
+add students, courses, and class sections, manage registrations, and view all
+records. Students can view courses and class sections, manage only their own
+registrations, and view their own information.
 
-## Authentication example
+## Login accounts
 
-`AuthManager` currently keeps accounts in memory; it is an example API and is
-not yet connected to the main menu or saved between runs. A small usage example:
+The default administrator account is `admin` with password `admin`. Each
+student logs in with their student ID as both username and initial password.
+When an administrator adds a student, the program creates that student's
+account immediately. Student accounts are recreated from `students.txt` at
+startup, so no separate account file is needed.
 
-```cpp
-#include "manager/authmanager.h"
-
-AuthManager auth;
-auth.addAccount("admin", "demo-password", UserRole::Administrator);
-auth.addAccount("sv001", "demo-password", UserRole::Student, "SV001");
-
-if (auth.login("sv001", "demo-password")) {
-    const UserAccount* user = auth.currentUser();
-    // Check user->role and, for a student, use user->studentID.
-    auth.logout();
-}
-```
-
-This in-memory example compares the supplied passwords directly. Do not use
-real passwords with it; a deployed application needs secure password hashing,
-account persistence, and role checks at each protected operation.
+This is a simple local/demo login: passwords are compared directly and student
+passwords are derived from their IDs. Do not use real passwords with it; a
+deployed application needs password changes, secure password hashing, and
+account persistence.

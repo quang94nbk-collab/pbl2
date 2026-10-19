@@ -55,6 +55,15 @@ public:
         return true;
     }
 
+    bool hasAccount(const string& username) const {
+        for (const UserAccount& account : accounts) {
+            if (account.username == username) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool login(const string& username, const string& password) {
         logout();
         for (size_t i = 0; i < accounts.size(); ++i) {
