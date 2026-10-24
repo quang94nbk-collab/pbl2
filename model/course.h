@@ -13,10 +13,11 @@ private:
     string khoaHoc;   // Khoa hoc cua sinh vien (vi du: K22, K23...)
     string nganhHoc;  // Nganh hoc (vi du: Dac thu, Ngon ngu Nhat, Chung...)
     bool batBuoc;     // true: Bat buoc, false: Tu chon
+    int hocKy;        // Hoc ky: 1 hoac 2 (do Admin quyet dinh)
 
 public:
     Course();
-    Course(string ma, string ten, int tinChi, string k = "", string kh = "", string ng = "", bool bb = true);
+    Course(string ma, string ten, int tinChi, string k = "", string kh = "", string ng = "", bool bb = true, int hk = 1);
 
     string getMaMon() const;
     string getTenMon() const;
@@ -26,6 +27,7 @@ public:
     string getNganhHoc() const;
     bool isBatBuoc() const;
     string getLoaiMon() const;
+    int getHocKy() const;
 
     void setMaMon(string ma);
     void setTenMon(string ten);
@@ -34,6 +36,7 @@ public:
     void setKhoaHoc(string kh);
     void setNganhHoc(string ng);
     void setBatBuoc(bool bb);
+    bool setHocKy(int hk);
 
     void nhap();
     void xuat() const;
@@ -48,9 +51,10 @@ inline Course::Course() {
     khoaHoc = "";
     nganhHoc = "";
     batBuoc = true;
+    hocKy = 1;
 }
 
-inline Course::Course(string ma, string ten, int tinChi, string k, string kh, string ng, bool bb) {
+inline Course::Course(string ma, string ten, int tinChi, string k, string kh, string ng, bool bb, int hk) {
     maMon = ma;
     tenMon = ten;
     soTinChi = tinChi;
@@ -58,6 +62,7 @@ inline Course::Course(string ma, string ten, int tinChi, string k, string kh, st
     khoaHoc = kh;
     nganhHoc = ng;
     batBuoc = bb;
+    hocKy = hk;
 }
 
 inline string Course::getMaMon() const { return maMon; }
@@ -68,6 +73,7 @@ inline string Course::getKhoaHoc() const { return khoaHoc; }
 inline string Course::getNganhHoc() const { return nganhHoc; }
 inline bool Course::isBatBuoc() const { return batBuoc; }
 inline string Course::getLoaiMon() const { return batBuoc ? "Bat buoc" : "Tu chon"; }
+inline int Course::getHocKy() const { return hocKy; }
 
 inline void Course::setMaMon(string ma) { maMon = ma; }
 inline void Course::setTenMon(string ten) { tenMon = ten; }
@@ -75,6 +81,14 @@ inline void Course::setKhoa(string k) { khoa = k; }
 inline void Course::setKhoaHoc(string kh) { khoaHoc = kh; }
 inline void Course::setNganhHoc(string ng) { nganhHoc = ng; }
 inline void Course::setBatBuoc(bool bb) { batBuoc = bb; }
+
+inline bool Course::setHocKy(int hk) {
+    if (hk == 1 || hk == 2) {
+        hocKy = hk;
+        return true;
+    }
+    return false;
+}
 
 inline bool Course::setSoTinChi(int tinChi) {
     if (tinChi <= 0) {
@@ -118,6 +132,17 @@ inline void Course::nhap() {
     } while (loai != 1 && loai != 2);
     cin.ignore(10000, '\n');
     batBuoc = (loai == 1);
+
+    int hk = 1;
+    do {
+        cout << "Hoc ky ap dung (1 hoac 2): ";
+        cin >> hk;
+        if (hk != 1 && hk != 2) {
+            cout << "Vui long chon 1 hoac 2.\n";
+        }
+    } while (hk != 1 && hk != 2);
+    cin.ignore(10000, '\n');
+    hocKy = hk;
 }
 
 inline void Course::xuat() const {
@@ -128,6 +153,7 @@ inline void Course::xuat() const {
     cout << "Khoa hoc ap dung: " << (khoaHoc.empty() ? "Tat ca" : khoaHoc) << '\n';
     cout << "Nganh hoc ap dung: " << (nganhHoc.empty() ? "Tat ca" : nganhHoc) << '\n';
     cout << "Loai mon: " << getLoaiMon() << '\n';
+    cout << "Hoc ky: " << hocKy << '\n';
 }
 
 inline bool Course::operator==(const Course& other) const {

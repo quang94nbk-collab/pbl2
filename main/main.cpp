@@ -8,18 +8,19 @@ using namespace std;
 
 namespace {
 
-void showMenu() {
-    cout << "\n=== HE THONG DANG KY TIN CHI ===\n"
+void showMenu(int currentSemester) {
+    cout << "\n=== HE THONG DANG KY TIN CHI [HOC KY HIEN TAI: " << currentSemester << "] ===\n"
          << "1. Them sinh vien\n"
-         << "2. Them mon hoc\n"
-         << "3. Them lop hoc phan\n"
+         << "2. Them mon hoc (kem ki hoc 1 hoac 2)\n"
+         << "3. Them lop hoc phan (kem ki hoc 1 hoac 2)\n"
          << "4. Dang ky lop hoc phan\n"
          << "5. Huy dang ky\n"
          << "6. Xem sinh vien\n"
          << "7. Xem mon hoc (tat ca)\n"
          << "8. Xem lop hoc phan\n"
          << "9. Xem dang ky\n"
-         << "10. Xem mon hoc theo Khoa, Khoa hoc & Nganh (Bat buoc / Tu chon)\n"
+         << "10. Xem mon hoc theo Khoa, Khoa hoc, Nganh & Ki hoc (Bat buoc / Tu chon)\n"
+         << "11. Thiet lap ki hoc he thong (Admin quyet dinh ki 1 hoac 2)\n"
          << "0. Luu va thoat\n"
          << "Chon: ";
 }
@@ -50,7 +51,7 @@ int main() {
     }
 
     while (true) {
-        showMenu();
+        showMenu(system.getCurrentSemester());
         int choice;
         if (!readChoice(choice)) {
             if (!cin.eof()) {
@@ -116,7 +117,36 @@ int main() {
             getline(cin, khoaHoc);
             cout << "Nhap Nganh hoc can xem (vi du: Dac thu, Tieng Nhat, de trong de xem tat ca): ";
             getline(cin, nganh);
-            system.displayCoursesByKhoaKhoaHocAndNganh(khoa, khoaHoc, nganh);
+            cout << "Nhap Ki hoc can xem (1 hoac 2, de trong hoac nhap 0 de xem tat ca): ";
+            string hkStr;
+            getline(cin, hkStr);
+            int hk = 0;
+            if (!hkStr.empty()) {
+                try {
+                    hk = stoi(hkStr);
+                } catch (...) {
+                    hk = 0;
+                }
+            }
+            system.displayCoursesByKhoaKhoaHocAndNganh(khoa, khoaHoc, nganh, hk);
+            continue;
+        } else if (choice == 11) {
+            cout << "\n--- THIET LAP KI HOC HE THONG (ADMIN QUYET DINH) ---\n";
+            cout << "Ki hoc hien tai: Ki " << system.getCurrentSemester() << '\n';
+            cout << "Nhap ki hoc muon ap dung (1 hoac 2): ";
+            string semStr;
+            getline(cin, semStr);
+            int newSem = 0;
+            try {
+                newSem = stoi(semStr);
+            } catch (...) {
+                newSem = 0;
+            }
+            if (system.setCurrentSemester(newSem)) {
+                cout << "Da thiet lap thanh cong: He thong hien dang o Hoc ky " << newSem << ".\n";
+            } else {
+                cout << "Thiet lap that bai: Ki hoc chi co the la 1 hoac 2.\n";
+            }
             continue;
         } else {
             cout << "Lua chon khong hop le.\n";

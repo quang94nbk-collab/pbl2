@@ -10,11 +10,12 @@ g++ -std=c++14 -Wall -Wextra -pedantic main\main.cpp -o pbl2.exe
 ```
 
 The program creates its data files in the current working directory when you
-save and exit. Keep `students.txt`, `courses.txt`, `sections.txt`, and
-`registrations.txt` together when moving the saved data.
+save and exit. Keep `students.txt`, `courses.txt`, `sections.txt`,
+`registrations.txt`, and `semester.txt` together when moving the saved data.
 
 The initial menu supports adding students, courses, and class sections;
-registering and cancelling course registrations; and listing stored records.
+registering and cancelling course registrations; listing stored records;
+and configuring the active academic semester (term 1 or 2).
 
 ## Authentication example
 

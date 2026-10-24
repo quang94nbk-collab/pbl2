@@ -17,6 +17,40 @@ private:
     const string courseFile = "courses.txt";
     const string sectionFile = "sections.txt";
     const string registrationFile = "registrations.txt";
+    const string semesterFile = "semester.txt";
+
+    bool loadSemester(SystemManager& system, string& error) const {
+        errno = 0;
+        ifstream file(semesterFile.c_str());
+        if (!file.is_open()) {
+            if (errno == ENOENT) {
+                return true; // Mac dinh la ki 1 neu chua co tep
+            }
+            error = "Khong mo duoc tep " + semesterFile;
+            return false;
+        }
+        int sem = 1;
+        if (file >> sem) {
+            if (sem == 1 || sem == 2) {
+                system.setCurrentSemester(sem);
+            }
+        }
+        if (file.bad()) {
+            error = "Loi khi doc tep " + semesterFile;
+            return false;
+        }
+        return true;
+    }
+
+    bool saveSemester(const SystemManager& system, string& error) const {
+        ofstream file(semesterFile.c_str());
+        if (!file) {
+            error = "Khong mo duoc tep " + semesterFile + " de ghi.";
+            return false;
+        }
+        file << system.getCurrentSemester() << '\n';
+        return true;
+    }
 
     bool loadStudents(SystemManager& system, string& error) const {
         errno = 0;
@@ -79,9 +113,12 @@ private:
             string khoaHoc = "";
             string nganh = "";
             int isBB = 1;
+            int hocKy = 1;
             if (row >> quoted(khoa) >> quoted(khoaHoc)) {
                 if (row >> quoted(nganh) >> isBB) {
-                    // doc thanh cong khoa, khoaHoc, nganh va loai mon
+                    if (row >> hocKy) {
+                        // doc thanh cong hocKy
+                    }
                 } else {
                     row.clear();
                     int tempBB = 1;
@@ -90,7 +127,7 @@ private:
                     }
                 }
             }
-            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, isBB == 1))) {
+            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, isBB == 1, hocKy))) {
                 error = "Khong the nap mon hoc: " + id;
                 return false;
             }
@@ -124,8 +161,12 @@ private:
                 error = "Du lieu lop hoc phan khong hop le.";
                 return false;
             }
+            int hocKy = 1;
+            if (row >> hocKy) {
+                // doc thanh cong hocKy
+            }
             ClassSection section(id, courseID, instructor, day, startPeriod,
-                                 endPeriod, room, capacity);
+                                 endPeriod, room, capacity, hocKy);
             if (!system.addClassSection(section)) {
                 error = "Khong the nap lop hoc phan: " + id;
                 return false;
@@ -158,7 +199,7 @@ private:
                 error = "Du lieu dang ky khong hop le.";
                 return false;
             }
-            if (!system.registerClass(studentID, sectionID, date)) {
+            if (!system.registerClass(studentID, sectionID, date, false)) {
                 error = "Khong the nap dang ky: " + id;
                 return false;
             }
@@ -172,13 +213,18 @@ private:
 
 public:
     bool loadAllData(SystemManager& system, string& error) const {
-        return loadStudents(system, error) &&
+        return loadSemester(system, error) &&
+               loadStudents(system, error) &&
                loadCourses(system, error) &&
                loadSections(system, error) &&
                loadRegistrations(system, error);
     }
 
     bool saveAllData(const SystemManager& system, string& error) const {
+        if (!saveSemester(system, error)) {
+            return false;
+        }
+
         ofstream students(studentFile.c_str());
         ofstream courses(courseFile.c_str());
         ofstream sections(sectionFile.c_str());
@@ -209,7 +255,8 @@ public:
                     << quoted(course->data.getKhoa()) << ' '
                     << quoted(course->data.getKhoaHoc()) << ' '
                     << quoted(course->data.getNganhHoc()) << ' '
-                    << (course->data.isBatBuoc() ? 1 : 0) << '\n';
+                    << (course->data.isBatBuoc() ? 1 : 0) << ' '
+                    << course->data.getHocKy() << '\n';
             course = course->next;
         }
 
@@ -222,7 +269,8 @@ public:
                      << section->data.getTietBatDau() << ' '
                      << section->data.getTietKetThuc() << ' '
                      << quoted(section->data.getPhong()) << ' '
-                     << section->data.getSiSoToiDa() << '\n';
+                     << section->data.getSiSoToiDa() << ' '
+                     << section->data.getHocKy() << '\n';
             section = section->next;
         }
 

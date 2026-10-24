@@ -32,6 +32,7 @@ private:
     HashTable<string, NodeDLL<Registration>*> registrationTable;
 
     HashTable<string, Queue<string>*> waitlistTable;
+    int currentSemester; // Ki hoc do Admin quyet dinh (1 hoac 2)
 
     static string today() {
         time_t now = time(nullptr);
@@ -57,6 +58,18 @@ private:
     }
 
 public:
+    SystemManager() : currentSemester(1) {}
+
+    int getCurrentSemester() const { return currentSemester; }
+
+    bool setCurrentSemester(int semester) {
+        if (semester == 1 || semester == 2) {
+            currentSemester = semester;
+            return true;
+        }
+        return false;
+    }
+
     ~SystemManager() {
         auto current = sectionList.getHead();
         while (current != nullptr) {
@@ -143,12 +156,13 @@ public:
         }
     }
 
-    void displayCoursesByKhoaKhoaHocAndNganh(const string& khoa, const string& khoaHoc, const string& nganh = "") const {
+    void displayCoursesByKhoaKhoaHocAndNganh(const string& khoa, const string& khoaHoc, const string& nganh = "", int hocKy = 0) const {
         cout << "\n======================================================\n";
         cout << "  DANH SACH MON HOC\n";
         cout << "  - Khoa:      " << (khoa.empty() ? "TAT CA" : khoa) << "\n";
         cout << "  - Khoa hoc:  " << (khoaHoc.empty() ? "TAT CA" : khoaHoc) << "\n";
         cout << "  - Nganh hoc: " << (nganh.empty() ? "TAT CA" : nganh) << "\n";
+        cout << "  - Hoc ky:    " << (hocKy == 0 ? "TAT CA (1 va 2)" : to_string(hocKy)) << "\n";
         cout << "======================================================\n";
 
         cout << "\n>>> [MON BAT BUOC]:\n";
@@ -161,8 +175,9 @@ public:
                                 current->data.getKhoaHoc() == "Chung" || current->data.getKhoaHoc() == khoaHoc;
             bool matchNganh = nganh.empty() || current->data.getNganhHoc().empty() ||
                               current->data.getNganhHoc() == "Chung" || current->data.getNganhHoc() == nganh;
+            bool matchHocKy = (hocKy == 0) || (current->data.getHocKy() == hocKy);
 
-            if (matchKhoa && matchKhoaHoc && matchNganh && current->data.isBatBuoc()) {
+            if (matchKhoa && matchKhoaHoc && matchNganh && matchHocKy && current->data.isBatBuoc()) {
                 countBB++;
                 cout << "[" << countBB << "]\n";
                 current->data.xuat();
@@ -184,8 +199,9 @@ public:
                                 current->data.getKhoaHoc() == "Chung" || current->data.getKhoaHoc() == khoaHoc;
             bool matchNganh = nganh.empty() || current->data.getNganhHoc().empty() ||
                               current->data.getNganhHoc() == "Chung" || current->data.getNganhHoc() == nganh;
+            bool matchHocKy = (hocKy == 0) || (current->data.getHocKy() == hocKy);
 
-            if (matchKhoa && matchKhoaHoc && matchNganh && !current->data.isBatBuoc()) {
+            if (matchKhoa && matchKhoaHoc && matchNganh && matchHocKy && !current->data.isBatBuoc()) {
                 countTC++;
                 cout << "[" << countTC << "]\n";
                 current->data.xuat();
@@ -200,7 +216,7 @@ public:
     }
 
     void displayCoursesByKhoaAndKhoaHoc(const string& khoa, const string& khoaHoc) const {
-        displayCoursesByKhoaKhoaHocAndNganh(khoa, khoaHoc, "");
+        displayCoursesByKhoaKhoaHocAndNganh(khoa, khoaHoc, "", 0);
     }
 
     bool addClassSection(const ClassSection& newSection) {
@@ -259,15 +275,28 @@ public:
     }
 
     bool registerClass(const string& studentID, const string& sectionID,
-                       const string& registrationDate = "") {
+                       const string& registrationDate = "", bool checkSemester = true) {
         Student* student = findStudent(studentID);
         ClassSection* section = findClassSection(sectionID);
         if (student == nullptr || section == nullptr) {
             return false;
         }
 
+        if (checkSemester && section->getHocKy() != currentSemester) {
+            cout << "Dang ky that bai: Lop hoc phan '" << sectionID << "' mo cho Hoc ky "
+                 << section->getHocKy() << ", trong khi he thong dang o Hoc ky "
+                 << currentSemester << " do Admin quyet dinh.\n";
+            return false;
+        }
+
         Course* course = findCourse(section->getMaMon());
         if (course != nullptr) {
+            if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != currentSemester) {
+                cout << "Dang ky that bai: Mon hoc '" << course->getTenMon() << "' thuoc chuong trinh Hoc ky "
+                     << course->getHocKy() << ", trong khi he thong dang o Hoc ky "
+                     << currentSemester << " do Admin quyet dinh.\n";
+                return false;
+            }
             if (!course->getKhoa().empty() && course->getKhoa() != "Chung") {
                 if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa()) {
                     cout << "Dang ky that bai: Mon hoc thuoc Khoa '" << course->getKhoa()
