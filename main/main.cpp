@@ -10,17 +10,18 @@ namespace {
 
 void showMenu() {
     cout << "\n=== HE THONG DANG KY TIN CHI ===\n"
-              << "1. Them sinh vien\n"
-              << "2. Them mon hoc\n"
-              << "3. Them lop hoc phan\n"
-              << "4. Dang ky lop hoc phan\n"
-              << "5. Huy dang ky\n"
-              << "6. Xem sinh vien\n"
-              << "7. Xem mon hoc\n"
-              << "8. Xem lop hoc phan\n"
-              << "9. Xem dang ky\n"
-              << "0. Luu va thoat\n"
-              << "Chon: ";
+         << "1. Them sinh vien\n"
+         << "2. Them mon hoc\n"
+         << "3. Them lop hoc phan\n"
+         << "4. Dang ky lop hoc phan\n"
+         << "5. Huy dang ky\n"
+         << "6. Xem sinh vien\n"
+         << "7. Xem mon hoc (tat ca)\n"
+         << "8. Xem lop hoc phan\n"
+         << "9. Xem dang ky\n"
+         << "10. Xem mon hoc theo Khoa, Khoa hoc & Nganh (Bat buoc / Tu chon)\n"
+         << "0. Luu va thoat\n"
+         << "Chon: ";
 }
 
 bool readChoice(int& choice) {
@@ -106,6 +107,16 @@ int main() {
             continue;
         } else if (choice == 9) {
             system.displayAllRegistrations();
+            continue;
+        } else if (choice == 10) {
+            string khoa, khoaHoc, nganh;
+            cout << "Nhap Khoa can xem (de trong de xem tat ca): ";
+            getline(cin, khoa);
+            cout << "Nhap Khoa hoc can xem (vi du: K22, de trong de xem tat ca): ";
+            getline(cin, khoaHoc);
+            cout << "Nhap Nganh hoc can xem (vi du: Dac thu, Tieng Nhat, de trong de xem tat ca): ";
+            getline(cin, nganh);
+            system.displayCoursesByKhoaKhoaHocAndNganh(khoa, khoaHoc, nganh);
             continue;
         } else {
             cout << "Lua chon khong hop le.\n";

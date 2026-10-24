@@ -95,6 +95,54 @@ public:
         }
     }
 
+    void displayCoursesByKhoaAndKhoaHoc(const string& khoa, const string& khoaHoc) const {
+        cout << "\n======================================================\n";
+        cout << "  DANH SACH MON HOC - KHOA: " << (khoa.empty() ? "TAT CA" : khoa)
+             << " | KHOA HOC: " << (khoaHoc.empty() ? "TAT CA" : khoaHoc) << "\n";
+        cout << "======================================================\n";
+
+        cout << "\n>>> [MON BAT BUOC]:\n";
+        int countBB = 0;
+        auto current = courseList.getHead();
+        while (current != nullptr) {
+            bool matchKhoa = khoa.empty() || current->data.getKhoa().empty() ||
+                             current->data.getKhoa() == "Chung" || current->data.getKhoa() == khoa;
+            bool matchKhoaHoc = khoaHoc.empty() || current->data.getKhoaHoc().empty() ||
+                                current->data.getKhoaHoc() == "Chung" || current->data.getKhoaHoc() == khoaHoc;
+            if (matchKhoa && matchKhoaHoc && current->data.isBatBuoc()) {
+                countBB++;
+                cout << "[" << countBB << "]\n";
+                current->data.xuat();
+                cout << "----------------------\n";
+            }
+            current = current->next;
+        }
+        if (countBB == 0) {
+            cout << "(Khong co mon bat buoc phu hop)\n";
+        }
+
+        cout << "\n>>> [MON TU CHON]:\n";
+        int countTC = 0;
+        current = courseList.getHead();
+        while (current != nullptr) {
+            bool matchKhoa = khoa.empty() || current->data.getKhoa().empty() ||
+                             current->data.getKhoa() == "Chung" || current->data.getKhoa() == khoa;
+            bool matchKhoaHoc = khoaHoc.empty() || current->data.getKhoaHoc().empty() ||
+                                current->data.getKhoaHoc() == "Chung" || current->data.getKhoaHoc() == khoaHoc;
+            if (matchKhoa && matchKhoaHoc && !current->data.isBatBuoc()) {
+                countTC++;
+                cout << "[" << countTC << "]\n";
+                current->data.xuat();
+                cout << "----------------------\n";
+            }
+            current = current->next;
+        }
+        if (countTC == 0) {
+            cout << "(Khong co mon tu chon phu hop)\n";
+        }
+        cout << "======================================================\n";
+    }
+
     bool addCourse(const Course& newCourse) {
         if (newCourse.getMaMon().empty() || newCourse.getSoTinChi() <= 0 ||
             findCourse(newCourse.getMaMon()) != nullptr) {
@@ -179,21 +227,47 @@ public:
 
     bool registerClass(const string& studentID, const string& sectionID,
                        const string& registrationDate = "") {
+        Student* student = findStudent(studentID);
         ClassSection* section = findClassSection(sectionID);
-        if (findStudent(studentID) == nullptr || section == nullptr) {
+        if (student == nullptr || section == nullptr) {
             return false;
+        }
+
+        Course* course = findCourse(section->getMaMon());
+        if (course != nullptr) {
+            if (!course->getKhoa().empty() && course->getKhoa() != "Chung") {
+                if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa()) {
+                    cout << "Dang ky that bai: Mon hoc thuoc Khoa '" << course->getKhoa()
+                         << "' (Khoa cua sinh vien: '" << (student->getKhoa().empty() ? "Chua cap nhat" : student->getKhoa()) << "').\n";
+                    return false;
+                }
+            }
+            if (!course->getKhoaHoc().empty() && course->getKhoaHoc() != "Chung") {
+                if (student->getKhoaHoc().empty() || student->getKhoaHoc() != course->getKhoaHoc()) {
+                    cout << "Dang ky that bai: Mon hoc ap dung cho Khoa hoc '" << course->getKhoaHoc()
+                         << "' (Khoa hoc cua sinh vien: '" << (student->getKhoaHoc().empty() ? "Chua cap nhat" : student->getKhoaHoc()) << "').\n";
+                    return false;
+                }
+            }
         }
 
         auto current = registrationList.getHead();
         while (current != nullptr) {
             if (current->data.getMaSV() == studentID &&
                 current->data.getMaLopHP() == sectionID) {
+                cout << "Dang ky that bai: Sinh vien da dang ky lop hoc phan nay roi.\n";
                 return false;
             }
             current = current->next;
         }
 
-        if (!section->conCho() || isTimeConflict(studentID, sectionID)) {
+        if (isTimeConflict(studentID, sectionID)) {
+            cout << "Dang ky that bai: Trung lich hoc voi lop hoc phan da dang ky.\n";
+            return false;
+        }
+
+        if (!section->conCho()) {
+            cout << "Dang ky that bai: Lop hoc phan da day.\n";
             return false;
         }
 

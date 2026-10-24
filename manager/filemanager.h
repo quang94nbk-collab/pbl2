@@ -38,7 +38,12 @@ private:
                 error = "Du lieu sinh vien khong hop le.";
                 return false;
             }
-            if (!system.addStudent(Student(id, name, phone, email, className, major))) {
+            string khoa = "";
+            string khoaHoc = "";
+            if (row >> quoted(khoa) >> quoted(khoaHoc)) {
+                // doc thanh cong khoa va khoaHoc
+            }
+            if (!system.addStudent(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
                 error = "Khong the nap sinh vien: " + id;
                 return false;
             }
@@ -70,7 +75,22 @@ private:
                 error = "Du lieu mon hoc khong hop le.";
                 return false;
             }
-            if (!system.addCourse(Course(id, name, credits))) {
+            string khoa = "";
+            string khoaHoc = "";
+            string nganh = "";
+            int isBB = 1;
+            if (row >> quoted(khoa) >> quoted(khoaHoc)) {
+                if (row >> quoted(nganh) >> isBB) {
+                    // doc thanh cong khoa, khoaHoc, nganh va loai mon
+                } else {
+                    row.clear();
+                    int tempBB = 1;
+                    if (row >> tempBB) {
+                        isBB = tempBB;
+                    }
+                }
+            }
+            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, isBB == 1))) {
                 error = "Khong the nap mon hoc: " + id;
                 return false;
             }
@@ -175,7 +195,9 @@ public:
                      << quoted(student->data.getSoDienThoai()) << ' '
                      << quoted(student->data.getEmail()) << ' '
                      << quoted(student->data.getLop()) << ' '
-                     << quoted(student->data.getNganhHoc()) << '\n';
+                     << quoted(student->data.getNganhHoc()) << ' '
+                     << quoted(student->data.getKhoa()) << ' '
+                     << quoted(student->data.getKhoaHoc()) << '\n';
             student = student->next;
         }
 
@@ -183,7 +205,11 @@ public:
         while (course != nullptr) {
             courses << quoted(course->data.getMaMon()) << ' '
                     << quoted(course->data.getTenMon()) << ' '
-                    << course->data.getSoTinChi() << '\n';
+                    << course->data.getSoTinChi() << ' '
+                    << quoted(course->data.getKhoa()) << ' '
+                    << quoted(course->data.getKhoaHoc()) << ' '
+                    << quoted(course->data.getNganhHoc()) << ' '
+                    << (course->data.isBatBuoc() ? 1 : 0) << '\n';
             course = course->next;
         }
 
