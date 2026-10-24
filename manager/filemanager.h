@@ -15,6 +15,7 @@ class FileManager {
 private:
     const string studentFile = "students.txt";
     const string courseFile = "courses.txt";
+    const string curriculumFile = "curriculums.txt";
     const string sectionFile = "sections.txt";
     const string registrationFile = "registrations.txt";
 
@@ -77,6 +78,39 @@ private:
         }
         if (file.bad()) {
             error = "Loi khi doc tep " + courseFile;
+            return false;
+        }
+        return true;
+    }
+
+    bool loadCurriculums(SystemManager& system, string& error) const {
+        errno = 0;
+        ifstream file(curriculumFile.c_str());
+        if (!file.is_open()) {
+            if (errno == ENOENT) {
+                return true;
+            }
+            error = "Khong mo duoc tep " + curriculumFile;
+            return false;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            istringstream row(line);
+            string maKhoa, maMon;
+            int hocKy, batBuocInt;
+            if (!(row >> quoted(maKhoa) >> quoted(maMon) >> hocKy >> batBuocInt)) {
+                error = "Du lieu chuong trinh dao tao khong hop le.";
+                return false;
+            }
+            CurriculumItem item(maKhoa, maMon, hocKy, batBuocInt != 0);
+            if (!system.addCurriculumItem(item)) {
+                error = "Khong the nap mon trong CTDT: " + maKhoa + " - " + maMon;
+                return false;
+            }
+        }
+        if (file.bad()) {
+            error = "Loi khi doc tep " + curriculumFile;
             return false;
         }
         return true;
@@ -154,6 +188,7 @@ public:
     bool loadAllData(SystemManager& system, string& error) const {
         return loadStudents(system, error) &&
                loadCourses(system, error) &&
+               loadCurriculums(system, error) &&
                loadSections(system, error) &&
                loadRegistrations(system, error);
     }
@@ -161,9 +196,10 @@ public:
     bool saveAllData(const SystemManager& system, string& error) const {
         ofstream students(studentFile.c_str());
         ofstream courses(courseFile.c_str());
+        ofstream curriculums(curriculumFile.c_str());
         ofstream sections(sectionFile.c_str());
         ofstream registrations(registrationFile.c_str());
-        if (!students || !courses || !sections || !registrations) {
+        if (!students || !courses || !curriculums || !sections || !registrations) {
             error = "Khong mo duoc tep du lieu de ghi.";
             return false;
         }
@@ -185,6 +221,15 @@ public:
                     << quoted(course->data.getTenMon()) << ' '
                     << course->data.getSoTinChi() << '\n';
             course = course->next;
+        }
+
+        auto curItem = system.getCurriculums().getHead();
+        while (curItem != nullptr) {
+            curriculums << quoted(curItem->data.getMaKhoa()) << ' '
+                        << quoted(curItem->data.getMaMon()) << ' '
+                        << curItem->data.getHocKy() << ' '
+                        << (curItem->data.isBatBuoc() ? 1 : 0) << '\n';
+            curItem = curItem->next;
         }
 
         auto section = system.getSections().getHead();
@@ -209,7 +254,7 @@ public:
             registration = registration->next;
         }
 
-        if (!students || !courses || !sections || !registrations) {
+        if (!students || !courses || !curriculums || !sections || !registrations) {
             error = "Loi khi ghi tep du lieu.";
             return false;
         }

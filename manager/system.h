@@ -12,6 +12,7 @@
 #include "../DSA/queue.h"     
 #include "../model/classsection.h"
 #include "../model/course.h"
+#include "../model/curriculum.h"
 #include "../model/registration.h"
 #include "../model/student.h"
 
@@ -30,6 +31,8 @@ private:
 
     DoubleLinkedList<Registration> registrationList;
     HashTable<string, NodeDLL<Registration>*> registrationTable;
+
+    DoubleLinkedList<CurriculumItem> curriculumList;
 
     HashTable<string, Queue<string>*> waitlistTable;
 
@@ -143,6 +146,92 @@ public:
         }
     }
 
+    // --- QUAN LY CHUONG TRINH DAO TAO ---
+    bool addCurriculumItem(const CurriculumItem& item) {
+        if (item.getMaKhoa().empty() || item.getMaMon().empty() ||
+            !courseTable.search(item.getMaMon())) {
+            return false;
+        }
+
+        auto current = curriculumList.getHead();
+        while (current != nullptr) {
+            if (current->data == item) {
+                return false; // Đã tồn tại môn trong CTĐT của khoa này
+            }
+            current = current->next;
+        }
+
+        curriculumList.pushBack(item);
+        return true;
+    }
+
+    bool isCourseAllowedForStudent(const string& studentID, const string& courseID) const {
+        // Neu chua co du lieu CTDT, cho phep dang ky mac dinh (tuong thich nguoc)
+        if (curriculumList.getHead() == nullptr) {
+            return true;
+        }
+
+        NodeDLL<Student>* node = nullptr;
+        if (!studentTable.get(studentID, node)) {
+            return false;
+        }
+
+        string maKhoa = node->data.getMaKhoa();
+
+        auto current = curriculumList.getHead();
+        while (current != nullptr) {
+            // Môn học hợp lệ nếu thuộc Khoa của SV HOẶC thuộc khoa Cơ bản/Đại cương ("100") HOẶC "ALL"
+            if (current->data.getMaMon() == courseID &&
+                (current->data.getMaKhoa() == maKhoa ||
+                 current->data.getMaKhoa() == "100" ||
+                 current->data.getMaKhoa() == "ALL")) {
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+
+    void displayCurriculumByFaculty(const string& maKhoa) const {
+        cout << "=== CHUONG TRINH DAO TAO KHOA " << maKhoa << " ===\n";
+        auto current = curriculumList.getHead();
+        bool found = false;
+        while (current != nullptr) {
+            if (current->data.getMaKhoa() == maKhoa ||
+                current->data.getMaKhoa() == "100" ||
+                current->data.getMaKhoa() == "ALL") {
+                found = true;
+                NodeDLL<Course>* cNode = nullptr;
+                string tenMon = "";
+                int tinChi = 0;
+                if (courseTable.get(current->data.getMaMon(), cNode)) {
+                    tenMon = cNode->data.getTenMon();
+                    tinChi = cNode->data.getSoTinChi();
+                }
+                cout << "- [Ky " << current->data.getHocKy() << "] "
+                     << current->data.getMaMon() << " - " << tenMon
+                     << " (" << tinChi << " TC) | "
+                     << (current->data.isBatBuoc() ? "Bat buoc" : "Tu chon")
+                     << " | Thuoc: " << current->data.getTenKhoa() << '\n';
+            }
+            current = current->next;
+        }
+        if (!found) {
+            cout << "Chua co mon hoc nao trong chuong trinh dao tao cua khoa nay.\n";
+        }
+    }
+
+    void displayCurriculumForStudent(const string& studentID) const {
+        NodeDLL<Student>* node = nullptr;
+        if (!studentTable.get(studentID, node)) {
+            cout << "Khong tim thay sinh vien: " << studentID << '\n';
+            return;
+        }
+        cout << "Sinh vien: " << node->data.getHoTen() << " (" << node->data.getMaSV()
+             << ") - " << node->data.getTenKhoa() << '\n';
+        displayCurriculumByFaculty(node->data.getMaKhoa());
+    }
+
     bool addClassSection(const ClassSection& newSection) {
         if (newSection.getMaLopHP().empty() ||
             sectionTable.search(newSection.getMaLopHP()) ||
@@ -205,6 +294,13 @@ public:
             return false;
         }
 
+        // KIEM TRA CHUONG TRINH DAO TAO KHOA
+        if (!isCourseAllowedForStudent(studentID, section->getMaMon())) {
+            cout << "Loi: Mon hoc " << section->getMaMon()
+                 << " khong thuoc chuong trinh dao tao cua khoa ban!\n";
+            return false;
+        }
+
         const string regID = "DK_" + studentID + "_" + sectionID;
 
         if (registrationTable.search(regID)) {
@@ -255,7 +351,8 @@ public:
             if (waitlistTable.get(sectionID, q)) {
                 string nextStudent;
                 while (q->pop(nextStudent)) {
-                    if (!isTimeConflict(nextStudent, sectionID)) {
+                    if (!isTimeConflict(nextStudent, sectionID) &&
+                        isCourseAllowedForStudent(nextStudent, section->getMaMon())) {
                         section->tangSoLuong();
                         const string date = today();
                         const string newRegID = "DK_" + nextStudent + "_" + sectionID;
@@ -267,7 +364,7 @@ public:
                              << " tu hang doi vao lop " << sectionID << ".\n";
                         break;
                     } else {
-                        cout << "Sinh vien " << nextStudent << " bi trung lich, chuyen sang ban tiep theo.\n";
+                        cout << "Sinh vien " << nextStudent << " bi trung lich hoac khong hop le, chuyen sang ban tiep theo.\n";
                     }
                 }
             }
@@ -287,6 +384,7 @@ public:
     const DoubleLinkedList<Course>& getCourses() const { return courseList; }
     const DoubleLinkedList<ClassSection>& getSections() const { return sectionList; }
     const DoubleLinkedList<Registration>& getRegistrations() const { return registrationList; }
+    const DoubleLinkedList<CurriculumItem>& getCurriculums() const { return curriculumList; }
 };
 
 #endif
