@@ -65,6 +65,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, name, phone, email, className, major;
             if (!(row >> quoted(id) >> quoted(name) >> quoted(phone) >>
@@ -102,6 +103,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, name;
             int credits;
@@ -112,22 +114,19 @@ private:
             string khoa = "";
             string khoaHoc = "";
             string nganh = "";
-            int isBB = 1;
             int hocKy = 1;
             if (row >> quoted(khoa) >> quoted(khoaHoc)) {
-                if (row >> quoted(nganh) >> isBB) {
-                    if (row >> hocKy) {
-                        // doc thanh cong hocKy
-                    }
-                } else {
-                    row.clear();
-                    int tempBB = 1;
-                    if (row >> tempBB) {
-                        isBB = tempBB;
+                if (row >> quoted(nganh)) {
+                    // Doc va bo qua truong batBuoc cu (neu co)
+                    int ignoredBB = 1;
+                    if (row >> ignoredBB) {
+                        if (row >> hocKy) {
+                            // doc thanh cong hocKy
+                        }
                     }
                 }
             }
-            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, isBB == 1, hocKy))) {
+            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, hocKy))) {
                 error = "Khong the nap mon hoc: " + id;
                 return false;
             }
@@ -152,6 +151,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, courseID, instructor, day, room;
             int startPeriod, endPeriod, capacity;
@@ -162,11 +162,15 @@ private:
                 return false;
             }
             int hocKy = 1;
+            string nhomLopHP = "";
             if (row >> hocKy) {
                 // doc thanh cong hocKy
+                if (row >> quoted(nhomLopHP)) {
+                    // doc thanh cong nhomLopHP
+                }
             }
             ClassSection section(id, courseID, instructor, day, startPeriod,
-                                 endPeriod, room, capacity, hocKy);
+                                 endPeriod, room, capacity, hocKy, nhomLopHP);
             if (!system.addClassSection(section)) {
                 error = "Khong the nap lop hoc phan: " + id;
                 return false;
@@ -192,6 +196,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, studentID, sectionID, date;
             if (!(row >> quoted(id) >> quoted(studentID) >>
@@ -255,7 +260,7 @@ public:
                     << quoted(course->data.getKhoa()) << ' '
                     << quoted(course->data.getKhoaHoc()) << ' '
                     << quoted(course->data.getNganhHoc()) << ' '
-                    << (course->data.isBatBuoc() ? 1 : 0) << ' '
+                    << 0 << ' '
                     << course->data.getHocKy() << '\n';
             course = course->next;
         }
@@ -270,7 +275,8 @@ public:
                      << section->data.getTietKetThuc() << ' '
                      << quoted(section->data.getPhong()) << ' '
                      << section->data.getSiSoToiDa() << ' '
-                     << section->data.getHocKy() << '\n';
+                     << section->data.getHocKy() << ' '
+                     << quoted(section->data.getNhomLopHP()) << '\n';
             section = section->next;
         }
 
