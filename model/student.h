@@ -10,8 +10,8 @@ class Student : public Person {
 private:
     string lop;
     string nganhHoc;
-    string khoa;      // Khoa cua sinh vien (vi du: CNTT, Dien, Co khi...)
-    string khoaHoc;   // Khoa hoc cua sinh vien (vi du: K22, K23...)
+    string khoa;      
+    string khoaHoc;   
 
 public:
     Student();
@@ -72,9 +72,9 @@ inline void Student::nhap() {
     getline(cin, soDienThoai);
     cout << "Email: ";
     getline(cin, email);
-    cout << "Khoa (vi du: CNTT, Dien, Co khi): ";
+    cout << "Khoa: ";
     getline(cin, khoa);
-    cout << "Khoa hoc (vi du: K22, K23): ";
+    cout << "Khoa hoc: ";
     getline(cin, khoaHoc);
     cout << "Lop: ";
     getline(cin, lop);

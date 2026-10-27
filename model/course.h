@@ -9,10 +9,10 @@ private:
     string maMon;
     string tenMon;
     int soTinChi;
-    string khoa;      // Khoa quan ly / ap dung (vi du: CNTT, Dien, Co khi...)
-    string khoaHoc;   // Khoa hoc cua sinh vien (vi du: K22, K23...)
-    string nganhHoc;  // Nganh hoc (vi du: Dac thu, Ngon ngu Nhat, Chung...)
-    int hocKy;        // Hoc ky: 1 hoac 2 (do Admin quyet dinh)
+    string khoa;      
+    string khoaHoc;  
+    string nganhHoc;  
+    int hocKy;       
 
 public:
     Course();
@@ -97,7 +97,7 @@ inline void Course::nhap() {
 
     int tinChi;
     do {
-        cout << "So tin chi (> 0): ";
+        cout << "So tin chi: ";
         cin >> tinChi;
         if (tinChi <= 0) {
             cout << "So tin chi phai lon hon 0. Nhap lai.\n";
@@ -106,16 +106,16 @@ inline void Course::nhap() {
     cin.ignore(10000, '\n');
     soTinChi = tinChi;
 
-    cout << "Khoa quan ly (vi du: CNTT, Dien, Co khi): ";
+    cout << "Khoa quan ly : ";
     getline(cin, khoa);
-    cout << "Khoa hoc ap dung (vi du: K22, K23): ";
+    cout << "Khoa hoc ap dung : ";
     getline(cin, khoaHoc);
-    cout << "Nganh hoc (vi du: Dac thu, Ngon ngu Nhat, hoac de 'Chung'): ";
+    cout << "Nganh hoc : ";
     getline(cin, nganhHoc);
 
     int hk = 1;
     do {
-        cout << "Hoc ky ap dung (1 hoac 2): ";
+        cout << "Hoc ky ap dung : ";
         cin >> hk;
         if (hk != 1 && hk != 2) {
             cout << "Vui long chon 1 hoac 2.\n";

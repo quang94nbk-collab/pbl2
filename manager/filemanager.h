@@ -24,7 +24,7 @@ private:
         ifstream file(semesterFile.c_str());
         if (!file.is_open()) {
             if (errno == ENOENT) {
-                return true; // Mac dinh la ki 1 neu chua co tep
+                return true;
             }
             error = "Khong mo duoc tep " + semesterFile;
             return false;
@@ -76,7 +76,6 @@ private:
             string khoa = "";
             string khoaHoc = "";
             if (row >> quoted(khoa) >> quoted(khoaHoc)) {
-                // doc thanh cong khoa va khoaHoc
             }
             if (!system.addStudent(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
                 error = "Khong the nap sinh vien: " + id;
@@ -117,11 +116,9 @@ private:
             int hocKy = 1;
             if (row >> quoted(khoa) >> quoted(khoaHoc)) {
                 if (row >> quoted(nganh)) {
-                    // Doc va bo qua truong batBuoc cu (neu co)
                     int ignoredBB = 1;
                     if (row >> ignoredBB) {
                         if (row >> hocKy) {
-                            // doc thanh cong hocKy
                         }
                     }
                 }
@@ -164,9 +161,7 @@ private:
             int hocKy = 1;
             string nhomLopHP = "";
             if (row >> hocKy) {
-                // doc thanh cong hocKy
                 if (row >> quoted(nhomLopHP)) {
-                    // doc thanh cong nhomLopHP
                 }
             }
             ClassSection section(id, courseID, instructor, day, startPeriod,

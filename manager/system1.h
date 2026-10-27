@@ -46,7 +46,7 @@ private:
     HashTable<string, NodeDLL<Registration>*> registrationTable;
 
     HashTable<string, Queue<string>*> waitlistTable;
-    int currentSemester; // Ki hoc do Admin quyet dinh (1 hoac 2)
+    int currentSemester;
 
     static string today() {
         time_t now = time(nullptr);
@@ -151,9 +151,7 @@ public:
 
     void searchStudents(const string& keyword) const {
         string kw = toLower(keyword);
-        cout << "\n======================================================\n";
         cout << "  KET QUA TIM KIEM SINH VIEN (Tu khoa: \"" << keyword << "\")\n";
-        cout << "======================================================\n";
         int count = 0;
         auto current = studentList.getHead();
         while (current != nullptr) {
@@ -164,16 +162,13 @@ public:
             if (id.find(kw) != string::npos || name.find(kw) != string::npos ||
                 lop.find(kw) != string::npos || khoa.find(kw) != string::npos) {
                 count++;
-                cout << "[" << count << "]\n";
                 current->data.xuat();
-                cout << "----------------------\n";
             }
             current = current->next;
         }
         if (count == 0) {
             cout << "(Khong tim thay sinh vien nao phu hop)\n";
         }
-        cout << "======================================================\n";
     }
 
     bool addCourse(const Course& newCourse) {
@@ -199,21 +194,17 @@ public:
         auto current = courseList.getHead();
         while (current != nullptr) {
             current->data.xuat();
-            cout << "----------------------\n";
             current = current->next;
         }
     }
 
     // Hien thi mon hoc theo Khoa, Khoa hoc, Nganh & Ki hoc (khong phan biet bat buoc/tu chon)
     void displayCoursesByFilter(const string& khoa, const string& khoaHoc, const string& nganh = "", int hocKy = 0) const {
-        cout << "\n======================================================\n";
         cout << "  DANH SACH MON HOC\n";
         cout << "  - Khoa:      " << (khoa.empty() ? "TAT CA" : khoa) << "\n";
         cout << "  - Khoa hoc:  " << (khoaHoc.empty() ? "TAT CA" : khoaHoc) << "\n";
         cout << "  - Nganh hoc: " << (nganh.empty() ? "TAT CA" : nganh) << "\n";
         cout << "  - Hoc ky:    " << (hocKy == 0 ? "TAT CA (1 va 2)" : to_string(hocKy)) << "\n";
-        cout << "======================================================\n";
-
         int count = 0;
         auto current = courseList.getHead();
         while (current != nullptr) {
@@ -227,16 +218,13 @@ public:
 
             if (matchKhoa && matchKhoaHoc && matchNganh && matchHocKy) {
                 count++;
-                cout << "[" << count << "]\n";
                 current->data.xuat();
-                cout << "----------------------\n";
             }
             current = current->next;
         }
         if (count == 0) {
             cout << "(Khong co mon hoc phu hop)\n";
         }
-        cout << "======================================================\n";
     }
 
     bool deleteCourse(const string& courseID) {
@@ -244,8 +232,6 @@ public:
         if (!courseTable.get(courseID, node)) {
             return false;
         }
-
-        // Kiem tra xem da co lop hoc phan nao thuoc mon nay chua
         auto curSec = sectionList.getHead();
         while (curSec != nullptr) {
             if (curSec->data.getMaMon() == courseID) {
@@ -263,9 +249,7 @@ public:
 
     void searchCourses(const string& keyword) const {
         string kw = toLower(keyword);
-        cout << "\n======================================================\n";
         cout << "  KET QUA TIM KIEM MON HOC (Tu khoa: \"" << keyword << "\")\n";
-        cout << "======================================================\n";
         int count = 0;
         auto current = courseList.getHead();
         while (current != nullptr) {
@@ -276,16 +260,13 @@ public:
             if (id.find(kw) != string::npos || name.find(kw) != string::npos ||
                 khoa.find(kw) != string::npos || nganh.find(kw) != string::npos) {
                 count++;
-                cout << "[" << count << "]\n";
                 current->data.xuat();
-                cout << "----------------------\n";
             }
             current = current->next;
         }
         if (count == 0) {
             cout << "(Khong tim thay mon hoc nao phu hop)\n";
         }
-        cout << "======================================================\n";
     }
 
     bool addClassSection(const ClassSection& newSection) {
@@ -297,10 +278,8 @@ public:
             newSection.getTietKetThuc() <= newSection.getTietBatDau()) {
             return false;
         }
-        
         sectionList.pushBack(newSection);
         sectionTable.insert(newSection.getMaLopHP(), getLastNode(sectionList));
-        
         waitlistTable.insert(newSection.getMaLopHP(), new Queue<string>());
         return true;
     }
@@ -310,8 +289,6 @@ public:
         if (!sectionTable.get(sectionID, node)) {
             return false;
         }
-
-        // Xoa tat ca dang ky lien quan den lop HP nay
         auto curReg = registrationList.getHead();
         while (curReg != nullptr) {
             auto nextReg = curReg->next;
@@ -321,8 +298,6 @@ public:
             }
             curReg = nextReg;
         }
-
-        // Xoa waitlist
         Queue<string>* q = nullptr;
         if (waitlistTable.get(sectionID, q)) {
             delete q;
@@ -346,16 +321,13 @@ public:
         auto current = sectionList.getHead();
         while (current != nullptr) {
             current->data.xuat();
-            cout << "----------------------\n";
             current = current->next;
         }
     }
 
     void searchSections(const string& keyword) const {
         string kw = toLower(keyword);
-        cout << "\n======================================================\n";
         cout << "  KET QUA TIM KIEM LOP HOC PHAN (Tu khoa: \"" << keyword << "\")\n";
-        cout << "======================================================\n";
         int count = 0;
         auto current = sectionList.getHead();
         while (current != nullptr) {
@@ -366,16 +338,13 @@ public:
             if (id.find(kw) != string::npos || mon.find(kw) != string::npos ||
                 nhom.find(kw) != string::npos || gv.find(kw) != string::npos) {
                 count++;
-                cout << "[" << count << "]\n";
                 current->data.xuat();
-                cout << "----------------------\n";
             }
             current = current->next;
         }
         if (count == 0) {
             cout << "(Khong tim thay lop hoc phan nao phu hop)\n";
         }
-        cout << "======================================================\n";
     }
 
     void displayStudentsInSection(const string& sectionID) {
@@ -384,12 +353,10 @@ public:
             cout << "Khong tim thay lop hoc phan: " << sectionID << "\n";
             return;
         }
-        cout << "\n======================================================================\n";
         cout << "  DANH SACH SINH VIEN DANG KY LOP HOC PHAN: " << sectionID << "\n";
         cout << "  Mon: " << sec->getMaMon() << " | Nhom: " << (sec->getNhomLopHP().empty() ? "(Chua gan nhom)" : sec->getNhomLopHP())
              << " | Thu: " << sec->getThu() << " | Tiet: " << sec->getTietBatDau() << "-" << sec->getTietKetThuc() << "\n";
         cout << "  Si so hien tai: " << sec->getSoLuongDaDangKy() << "/" << sec->getSiSoToiDa() << "\n";
-        cout << "======================================================================\n";
         int count = 0;
         auto cur = registrationList.getHead();
         while (cur != nullptr) {
@@ -408,11 +375,7 @@ public:
         if (count == 0) {
             cout << "(Chua co sinh vien nao dang ky vao lop hoc phan nay)\n";
         }
-        cout << "======================================================================\n";
     }
-
-    // ==================== NHOM LOP HOC PHAN ====================
-
     // Thu thap tat ca cac nhom lop HP duy nhat trong ki hoc hien tai
     // Tra ve so nhom tim duoc, luu ten nhom vao mang groupNames (toi da maxGroups)
     int getGroupsForSemester(string groupNames[], int maxGroups) const {
@@ -422,7 +385,6 @@ public:
             if (current->data.getHocKy() == currentSemester &&
                 !current->data.getNhomLopHP().empty()) {
                 string nhom = current->data.getNhomLopHP();
-                // Kiem tra trung
                 bool found = false;
                 for (int i = 0; i < count; i++) {
                     if (groupNames[i] == nhom) {
@@ -439,13 +401,9 @@ public:
         }
         return count;
     }
-
     // Hien thi cac lop HP theo nhom trong ki hoc hien tai
     void displaySectionsByGroup() const {
-        cout << "\n======================================================\n";
         cout << "  DANH SACH NHOM LOP HOC PHAN - HOC KY " << currentSemester << "\n";
-        cout << "======================================================\n";
-
         const int MAX_GROUPS = 100;
         string groupNames[MAX_GROUPS];
         int groupCount = getGroupsForSemester(groupNames, MAX_GROUPS);
@@ -457,14 +415,12 @@ public:
 
         for (int g = 0; g < groupCount; g++) {
             cout << "\n>>> NHOM: " << groupNames[g] << "\n";
-            cout << "------------------------------------------------------\n";
             int sectionCount = 0;
             auto current = sectionList.getHead();
             while (current != nullptr) {
                 if (current->data.getHocKy() == currentSemester &&
                     current->data.getNhomLopHP() == groupNames[g]) {
                     sectionCount++;
-                    // Tim ten mon
                     string tenMon = current->data.getMaMon();
                     auto c = courseList.getHead();
                     while (c != nullptr) {
@@ -489,7 +445,6 @@ public:
                 cout << "  (Khong co lop hoc phan nao trong nhom nay)\n";
             }
         }
-
         // Hien thi cac lop HP chua gan nhom
         bool hasUngrouped = false;
         auto current = sectionList.getHead();
@@ -498,7 +453,6 @@ public:
                 current->data.getNhomLopHP().empty()) {
                 if (!hasUngrouped) {
                     cout << "\n>>> CHUA GAN NHOM:\n";
-                    cout << "------------------------------------------------------\n";
                     hasUngrouped = true;
                 }
                 string tenMon = current->data.getMaMon();
@@ -520,10 +474,7 @@ public:
             }
             current = current->next;
         }
-
-        cout << "======================================================\n";
     }
-
     // Tim ma lop hoc phan ma sinh vien da dang ky cho 1 mon hoc cu the (neu co)
     string getRegisteredSectionForCourse(const string& studentID, const string& courseID) const {
         auto cur = registrationList.getHead();
@@ -538,13 +489,11 @@ public:
         }
         return "";
     }
-
     // Kiem tra sinh vien da dang ky mot lop hoc phan cu the chua
     bool isSectionRegistered(const string& studentID, const string& sectionID) const {
         const string regID = "DK_" + studentID + "_" + sectionID;
         return registrationTable.search(regID);
     }
-
     // Lay danh sach cac ma lop HP ma sinh vien da dang ky
     int getStudentRegisteredSections(const string& studentID, string outSectionIDs[], int maxCount) const {
         int count = 0;
@@ -560,18 +509,15 @@ public:
         }
         return count;
     }
-
     // Lay danh sach cac nhom lop HP phu hop voi sinh vien theo Khoa, Khoa hoc, Nganh hoc va Hoc ky
     int getEligibleGroupsForStudent(const string& studentID, GroupInfo eligibleGroups[], int maxGroups) const {
         Student* student = const_cast<SystemManager*>(this)->findStudent(studentID);
         if (student == nullptr) {
             return 0;
         }
-
         const int MAX_ALL_GROUPS = 100;
         string allGroupNames[MAX_ALL_GROUPS];
         int allGroupCount = getGroupsForSemester(allGroupNames, MAX_ALL_GROUPS);
-
         int count = 0;
         for (int i = 0; i < allGroupCount; i++) {
             string gName = allGroupNames[i];
@@ -580,10 +526,8 @@ public:
             g.hocKy = currentSemester;
             g.totalSections = 0;
             g.totalCredits = 0;
-
             bool groupMatchesStudent = true;
             bool hasMatchingSection = false;
-
             auto cur = sectionList.getHead();
             while (cur != nullptr) {
                 if (cur->data.getHocKy() == currentSemester &&
@@ -592,15 +536,12 @@ public:
                         g.sectionIDs[g.totalSections] = cur->data.getMaLopHP();
                         g.totalSections++;
                     }
-
                     Course* c = const_cast<SystemManager*>(this)->findCourse(cur->data.getMaMon());
                     if (c != nullptr) {
                         g.totalCredits += c->getSoTinChi();
                         if (g.khoa.empty() && !c->getKhoa().empty() && c->getKhoa() != "Chung") g.khoa = c->getKhoa();
                         if (g.khoaHoc.empty() && !c->getKhoaHoc().empty() && c->getKhoaHoc() != "Chung") g.khoaHoc = c->getKhoaHoc();
                         if (g.nganhHoc.empty() && !c->getNganhHoc().empty() && c->getNganhHoc() != "Chung") g.nganhHoc = c->getNganhHoc();
-
-                        // Kiem tra tinh phu hop cua mon hoc nay voi sinh vien
                         bool matchK = c->getKhoa().empty() || c->getKhoa() == "Chung" || student->getKhoa().empty() || student->getKhoa() == c->getKhoa();
                         bool matchKH = c->getKhoaHoc().empty() || c->getKhoaHoc() == "Chung" || student->getKhoaHoc().empty() || student->getKhoaHoc() == c->getKhoaHoc();
                         bool matchNg = c->getNganhHoc().empty() || c->getNganhHoc() == "Chung" || student->getNganhHoc().empty() || student->getNganhHoc() == c->getNganhHoc();
@@ -613,8 +554,6 @@ public:
                 }
                 cur = cur->next;
             }
-
-            // Neu tat ca cac mon trong nhom deu phu hop voi chuong trinh cua sinh vien
             if (groupMatchesStudent && hasMatchingSection) {
                 if (count < maxGroups) {
                     eligibleGroups[count] = g;
@@ -622,7 +561,6 @@ public:
                 }
             }
         }
-
         // Neu khong tim thay nhom nao (do sinh vien chua co du Khoa/Nganh), tra ve tat ca cac nhom trong ky
         if (count == 0) {
             for (int i = 0; i < allGroupCount && count < maxGroups; i++) {
@@ -652,11 +590,8 @@ public:
                 count++;
             }
         }
-
         return count;
     }
-
-    // ==================== KET THUC NHOM LOP HP ====================
 
     bool isTimeConflict(const string& studentID, const string& newSectionID) {
         ClassSection* targetSection = findClassSection(newSectionID);
@@ -731,7 +666,6 @@ public:
             cout << "Dang ky that bai: Sinh vien da dang ky lop hoc phan nay roi.\n";
             return false;
         }
-
         // RANG BUOC: Neu sinh vien da dang ky mon nay o lop khac -> thong bao can huy lop cu truoc khi dang ky
         string oldSecID = getRegisteredSectionForCourse(studentID, section->getMaMon());
         if (!oldSecID.empty() && oldSecID != sectionID) {
@@ -819,9 +753,7 @@ public:
 
     // Hien thi dang ky cua 1 sinh vien cu the
     void displayStudentRegistrations(const string& studentID) const {
-        cout << "\n======================================================\n";
         cout << "  DANH SACH LOP DA DANG KY - SV: " << studentID << "\n";
-        cout << "======================================================\n";
         int count = 0;
         auto current = registrationList.getHead();
         while (current != nullptr) {
@@ -829,8 +761,6 @@ public:
                 count++;
                 cout << "[" << count << "] Lop HP: " << current->data.getMaLopHP()
                      << " | Ngay DK: " << current->data.getNgayDangKy() << "\n";
-
-                // Tim thong tin lop HP
                 auto sec = sectionList.getHead();
                 while (sec != nullptr) {
                     if (sec->data.getMaLopHP() == current->data.getMaLopHP()) {
@@ -853,14 +783,12 @@ public:
                     }
                     sec = sec->next;
                 }
-                cout << "----------------------\n";
             }
             current = current->next;
         }
         if (count == 0) {
             cout << "(Chua dang ky lop hoc phan nao)\n";
         }
-        cout << "======================================================\n";
     }
 
     void checkTimeConflictInteractive(const string& studentID, const string& sectionID) const {
@@ -898,9 +826,7 @@ public:
 
     int calculateTotalCredits(const string& studentID) const {
         int totalCredits = 0;
-        cout << "\n======================================================\n";
         cout << "  TONG KET TIN CHI DA DANG KY - MSSV: " << studentID << "\n";
-        cout << "======================================================\n";
         int count = 0;
         auto cur = registrationList.getHead();
         while (cur != nullptr) {
@@ -918,18 +844,13 @@ public:
             }
             cur = cur->next;
         }
-        cout << "------------------------------------------------------\n";
         cout << ">> TONG SO TIN CHI DA DANG KY: " << totalCredits << " tin chi (" << count << " lop hoc phan)\n";
-        cout << "======================================================\n";
         return totalCredits;
     }
 
     void displayStudentTimetable(const string& studentID) const {
-        cout << "\n======================================================================\n";
         cout << "                   THOI KHOA BIEU SINH VIEN: " << studentID << "\n";
         cout << "                   (Hoc ky he thong: Hoc ky " << currentSemester << ")\n";
-        cout << "======================================================================\n";
-
         const string days[] = {"2", "3", "4", "5", "6", "7", "CN"};
         const string dayNames[] = {"THU HAI (Thu 2)", "THU BA (Thu 3)", "THU TU (Thu 4)", 
                                    "THU NAM (Thu 5)", "THU SAU (Thu 6)", "THU BAY (Thu 7)", "CHU NHAT"};
@@ -962,9 +883,7 @@ public:
         if (totalClasses == 0) {
             cout << "\n(Ban chua dang ky lop hoc phan nao trong thoi khoa bieu)\n";
         }
-        cout << "\n======================================================================\n";
     }
-
     // Lay tat ca cac mon hoc ma sinh vien can dang ky trong hoc ky hien tai
     int getSemesterRequiredCourses(const string& studentID, string courseIDs[], int maxCourses) const {
         Student* student = const_cast<SystemManager*>(this)->findStudent(studentID);
@@ -1014,11 +933,9 @@ public:
         Student* student = const_cast<SystemManager*>(this)->findStudent(studentID);
         if (student == nullptr) return;
 
-        cout << "\n======================================================================\n";
         cout << "  RANG BUOC & TIEN DO DANG KY TAT CA MON HOC - HOC KY " << currentSemester << "\n";
         cout << "  Sinh vien: " << student->getHoTen() << " (MSSV: " << student->getMaSV()
              << " | Lop: " << student->getLop() << ")\n";
-        cout << "======================================================================\n";
 
         const int MAX_REQ = 50;
         string reqIDs[MAX_REQ];
@@ -1026,7 +943,6 @@ public:
 
         if (reqCount == 0) {
             cout << "(Khong tim thay mon hoc nao duoc mo cho chuong trinh cua ban trong hoc ky " << currentSemester << ")\n";
-            cout << "======================================================================\n";
             return;
         }
 
@@ -1058,11 +974,9 @@ public:
             }
         }
 
-        cout << "----------------------------------------------------------------------\n";
         cout << "Tong so mon can hoc trong ky: " << reqCount << " mon (" << totalCredits << " tin chi)\n";
         cout << "So mon da dang ky:           " << registeredCount << "/" << reqCount
              << " mon (" << registeredCredits << "/" << totalCredits << " tin chi)\n";
-        cout << "----------------------------------------------------------------------\n";
 
         if (registeredCount == reqCount) {
             cout << ">> [TIEN DO HOC TAP]: HOAN THANH! Ban da dang ky DAY DU tat ca cac mon trong Hoc ky "
@@ -1082,7 +996,6 @@ public:
             }
             cout << ">> Khuyen nghi: Ban nen dang ky bo sung day du cac mon de dam bao dung tien do chuong trinh dao tao!\n";
         }
-        cout << "======================================================================\n";
     }
 
     void displayAllRegistrations() const {

@@ -16,7 +16,7 @@ private:
     int siSoToiDa;
     int soLuongDaDangKy;
     int hocKy;
-    string nhomLopHP;  // Ma nhom lop hoc phan (VD: 25NH10)
+    string nhomLopHP;
 
 public:
     ClassSection();
@@ -155,15 +155,15 @@ inline void ClassSection::nhap() {
     getline(cin >> ws, maLopHP);
     cout << "Ma mon hoc: ";
     getline(cin, maMon);
-    cout << "Nhom lop hoc phan (VD: 25NH10): ";
+    cout << "Nhom lop hoc phan : ";
     getline(cin, nhomLopHP);
     cout << "Giang vien: ";
     getline(cin, giangVien);
-    cout << "Thu hoc (vi du: 2, 3, 4...): ";
+    cout << "Thu hoc : ";
     getline(cin, thu);
     cout << "Tiet bat dau: ";
     cin >> tietBatDau;
-    cout << "Tiet ket thuc (khong tinh tiet ket thuc): ";
+    cout << "Tiet ket thuc : ";
     cin >> tietKetThuc;
     cin.ignore(10000, '\n');
     cout << "Phong hoc: ";
@@ -174,7 +174,7 @@ inline void ClassSection::nhap() {
 
     int hk = 1;
     do {
-        cout << "Hoc ky mo lop (1 hoac 2): ";
+        cout << "Hoc ky mo lop: ";
         cin >> hk;
         if (hk != 1 && hk != 2) {
             cout << "Vui long chon 1 hoac 2.\n";
