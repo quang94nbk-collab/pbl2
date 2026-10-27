@@ -625,6 +625,8 @@ void adminSession(SystemManager& system, FileManager& files) {
     }
 }
 
+}
+
 int main() {
     SystemManager system;
     FileManager files;

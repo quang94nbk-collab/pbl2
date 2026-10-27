@@ -7,7 +7,7 @@
 #include <sstream>
 #include <string>
 
-#include "system1.h"
+#include "system.h"
 
 using namespace std;
 
