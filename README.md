@@ -3,5 +3,5 @@ struct của dsa
 lạm dụng const
 tách file main
 định nghĩa ngoài class
-try case
+try catch
 xử lí ngoại lệ
