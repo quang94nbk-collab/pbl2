@@ -29,33 +29,34 @@ public:
     virtual void nhap();
     virtual void xuat() const;
 };
-Person::Person() {
+
+inline Person::Person() {
     maNguoi = "";
     hoTen = "";
     soDienThoai = "";
     email = "";
 }
 
-Person::Person(string ma, string ten, string sdt, string mail) {
+inline Person::Person(string ma, string ten, string sdt, string mail) {
     maNguoi = ma;
     hoTen = ten;
     soDienThoai = sdt;
     email = mail;
 }
 
-Person::~Person() {}
+inline Person::~Person() {}
 
-string Person::getMaNguoi() const { return maNguoi; }
-string Person::getHoTen() const { return hoTen; }
-string Person::getSoDienThoai() const { return soDienThoai; }
-string Person::getEmail() const { return email; }
+inline string Person::getMaNguoi() const { return maNguoi; }
+inline string Person::getHoTen() const { return hoTen; }
+inline string Person::getSoDienThoai() const { return soDienThoai; }
+inline string Person::getEmail() const { return email; }
 
-void Person::setMaNguoi(string ma) { maNguoi = ma; }
-void Person::setHoTen(string ten) { hoTen = ten; }
-void Person::setSoDienThoai(string sdt) { soDienThoai = sdt; }
-void Person::setEmail(string mail) { email = mail; }
+inline void Person::setMaNguoi(string ma) { maNguoi = ma; }
+inline void Person::setHoTen(string ten) { hoTen = ten; }
+inline void Person::setSoDienThoai(string sdt) { soDienThoai = sdt; }
+inline void Person::setEmail(string mail) { email = mail; }
 
-void Person::nhap() {
+inline void Person::nhap() {
     cout << "Ma nguoi: ";
     getline(cin >> ws, maNguoi);
     cout << "Ho ten: ";
@@ -66,7 +67,7 @@ void Person::nhap() {
     getline(cin, email);
 }
 
-void Person::xuat() const {
+inline void Person::xuat() const {
     cout << "Ma: " << maNguoi << '\n';
     cout << "Ho ten: " << hoTen << '\n';
     cout << "So dien thoai: " << soDienThoai << '\n';

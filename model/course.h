@@ -26,26 +26,27 @@ public:
     void xuat() const;
     bool operator==(const Course& other) const;
 };
-Course::Course() {
+
+inline Course::Course() {
     maMon = "";
     tenMon = "";
     soTinChi = 0;
 }
 
-Course::Course(string ma, string ten, int tinChi) {
+inline Course::Course(string ma, string ten, int tinChi) {
     maMon = ma;
     tenMon = ten;
     soTinChi = tinChi;
 }
 
-string Course::getMaMon() const { return maMon; }
-string Course::getTenMon() const { return tenMon; }
-int Course::getSoTinChi() const { return soTinChi; }
+inline string Course::getMaMon() const { return maMon; }
+inline string Course::getTenMon() const { return tenMon; }
+inline int Course::getSoTinChi() const { return soTinChi; }
 
-void Course::setMaMon(string ma) { maMon = ma; }
-void Course::setTenMon(string ten) { tenMon = ten; }
+inline void Course::setMaMon(string ma) { maMon = ma; }
+inline void Course::setTenMon(string ten) { tenMon = ten; }
 
-bool Course::setSoTinChi(int tinChi) {
+inline bool Course::setSoTinChi(int tinChi) {
     if (tinChi <= 0) {
         return false;
     }
@@ -53,7 +54,7 @@ bool Course::setSoTinChi(int tinChi) {
     return true;
 }
 
-void Course::nhap() {
+inline void Course::nhap() {
     cout << "Ma mon hoc: ";
     getline(cin >> ws, maMon);
     cout << "Ten mon hoc: ";
@@ -71,13 +72,13 @@ void Course::nhap() {
     soTinChi = tinChi;
 }
 
-void Course::xuat() const {
+inline void Course::xuat() const {
     cout << "Ma mon hoc: " << maMon << '\n';
     cout << "Ten mon hoc: " << tenMon << '\n';
     cout << "So tin chi: " << soTinChi << '\n';
 }
 
-bool Course::operator==(const Course& other) const {
+inline bool Course::operator==(const Course& other) const {
     return maMon == other.maMon;
 }
 

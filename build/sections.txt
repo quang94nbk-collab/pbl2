@@ -1,0 +1,5 @@
+"LHP_MATH01" "MATH01" "TS. Nguyen Van Toan" "Thu 2" 1 3 "A101" 60
+"LHP_CS101" "CS101" "ThS. Tran Minh" "Thu 3" 4 6 "F201" 45
+"LHP_CS102" "CS102" "TS. Le Hoang" "Thu 4" 1 3 "F202" 40
+"LHP_ME101" "ME101" "ThS. Pham Duc" "Thu 5" 7 9 "C301" 50
+"LHP_EE101" "EE101" "TS. Vu Nam" "Thu 6" 1 3 "E101" 45

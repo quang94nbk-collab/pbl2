@@ -41,7 +41,8 @@ public:
     void xuat() const;
     bool operator==(const ClassSection& other) const;
 };
-ClassSection::ClassSection() {
+
+inline ClassSection::ClassSection() {
     maLopHP = "";
     maMon = "";
     giangVien = "";
@@ -53,7 +54,7 @@ ClassSection::ClassSection() {
     soLuongDaDangKy = 0;
 }
 
-ClassSection::ClassSection(string maLop, string maMonHoc, string gv, string ngayHoc,
+inline ClassSection::ClassSection(string maLop, string maMonHoc, string gv, string ngayHoc,
                            int tietDau, int tietCuoi, string phongHoc, int toiDa) {
     maLopHP = maLop;
     maMon = maMonHoc;
@@ -66,27 +67,27 @@ ClassSection::ClassSection(string maLop, string maMonHoc, string gv, string ngay
     soLuongDaDangKy = 0;
 }
 
-string ClassSection::getMaLopHP() const { return maLopHP; }
-string ClassSection::getMaMon() const { return maMon; }
-string ClassSection::getGiangVien() const { return giangVien; }
-string ClassSection::getThu() const { return thu; }
-int ClassSection::getTietBatDau() const { return tietBatDau; }
-int ClassSection::getTietKetThuc() const { return tietKetThuc; }
-string ClassSection::getPhong() const { return phong; }
-int ClassSection::getSiSoToiDa() const { return siSoToiDa; }
-int ClassSection::getSoLuongDaDangKy() const { return soLuongDaDangKy; }
+inline string ClassSection::getMaLopHP() const { return maLopHP; }
+inline string ClassSection::getMaMon() const { return maMon; }
+inline string ClassSection::getGiangVien() const { return giangVien; }
+inline string ClassSection::getThu() const { return thu; }
+inline int ClassSection::getTietBatDau() const { return tietBatDau; }
+inline int ClassSection::getTietKetThuc() const { return tietKetThuc; }
+inline string ClassSection::getPhong() const { return phong; }
+inline int ClassSection::getSiSoToiDa() const { return siSoToiDa; }
+inline int ClassSection::getSoLuongDaDangKy() const { return soLuongDaDangKy; }
 
-void ClassSection::setSoLuongDaDangKy(int soLuong) {
+inline void ClassSection::setSoLuongDaDangKy(int soLuong) {
     if (soLuong >= 0) {
         soLuongDaDangKy = soLuong;
     }
 }
 
-bool ClassSection::conCho() const {
+inline bool ClassSection::conCho() const {
     return soLuongDaDangKy < siSoToiDa;
 }
 
-bool ClassSection::tangSoLuong() {
+inline bool ClassSection::tangSoLuong() {
     if (!conCho()) {
         return false;
     }
@@ -94,13 +95,13 @@ bool ClassSection::tangSoLuong() {
     return true;
 }
 
-void ClassSection::giamSoLuong() {
+inline void ClassSection::giamSoLuong() {
     if (soLuongDaDangKy > 0) {
         soLuongDaDangKy--;
     }
 }
 
-bool ClassSection::trungLichVoi(const ClassSection& other) const {
+inline bool ClassSection::trungLichVoi(const ClassSection& other) const {
     if (thu != other.thu) {
         return false;
     }
@@ -108,7 +109,7 @@ bool ClassSection::trungLichVoi(const ClassSection& other) const {
            other.tietBatDau < tietKetThuc;
 }
 
-void ClassSection::nhap() {
+inline void ClassSection::nhap() {
     cout << "Ma lop hoc phan: ";
     getline(cin >> ws, maLopHP);
     cout << "Ma mon hoc: ";
@@ -130,7 +131,7 @@ void ClassSection::nhap() {
     soLuongDaDangKy = 0;
 }
 
-void ClassSection::xuat() const {
+inline void ClassSection::xuat() const {
     cout << "Ma lop hoc phan: " << maLopHP << '\n';
     cout << "Ma mon hoc: " << maMon << '\n';
     cout << "Giang vien: " << giangVien << '\n';
@@ -140,7 +141,7 @@ void ClassSection::xuat() const {
     cout << "Si so: " << soLuongDaDangKy << "/" << siSoToiDa << '\n';
 }
 
-bool ClassSection::operator==(const ClassSection& other) const {
+inline bool ClassSection::operator==(const ClassSection& other) const {
     return maLopHP == other.maLopHP;
 }
 

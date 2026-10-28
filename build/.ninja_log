@@ -1,0 +1,10 @@
+# ninja log v6
+36	860	8146907284738384	PBL_StudentRegistration_autogen/timestamp	154f696b8087630a
+36	860	8146907284738384	PBL_StudentRegistration_autogen/mocs_compilation.cpp	154f696b8087630a
+36	860	8146907284738384	C:/pbl/build/PBL_StudentRegistration_autogen/timestamp	154f696b8087630a
+36	860	8146907284738384	C:/pbl/build/PBL_StudentRegistration_autogen/mocs_compilation.cpp	154f696b8087630a
+879	5929	8146907285768461	CMakeFiles/PBL_StudentRegistration.dir/gui/mainwindow.cpp.obj	ed27674bb7954689
+873	4015	8146907285716394	CMakeFiles/PBL_StudentRegistration.dir/gui/logindialog.cpp.obj	aa62139cdbedaf6b
+862	5032	8146907285613453	CMakeFiles/PBL_StudentRegistration.dir/PBL_StudentRegistration_autogen/mocs_compilation.cpp.obj	b1b20b2a8f825009
+868	5782	8146907285647793	CMakeFiles/PBL_StudentRegistration.dir/main.cpp.obj	e7fba406d6a1b337
+5929	6188	8146907336270702	PBL_StudentRegistration.exe	b331628d0c9ebea0

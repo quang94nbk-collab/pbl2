@@ -115,5 +115,3 @@ inline bool Student::operator==(const Student& other) const {
 }
 
 #endif
-
-#endif
