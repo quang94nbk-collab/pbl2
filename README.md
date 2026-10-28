@@ -6,3 +6,4 @@ tách file main
 try catch
 xử lí ngoại lệ
 typename dsa
+mô hình layer
