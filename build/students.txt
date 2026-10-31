@@ -1,5 +1,0 @@
-"10222001" "Nguyen Van An" "0901234567" "an@dut.udn.vn" "22T_DT1" "Cong nghe Thong tin"
-"10122001" "Tran Quoc Bao" "0907654321" "bao@dut.udn.vn" "22CK1" "Co khi Che tao"
-"10322001" "Le Thi Cam" "0912345678" "cam@dut.udn.vn" "22DT1" "Dien tu Vien thong"
-"10222201" "Sinh viên 10222201" "0900000000" "10222201@dut.udn.vn" "22T_102" "Khoa Cong nghe Thong tin"
-"10250166" "Nguyen Hai" "0111111111" "dj@gmail.com" "25t-dt4" "cntt"

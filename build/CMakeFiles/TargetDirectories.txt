@@ -1,5 +1,0 @@
-C:/pbl/build/CMakeFiles/PBL_StudentRegistration.dir
-C:/pbl/build/CMakeFiles/edit_cache.dir
-C:/pbl/build/CMakeFiles/rebuild_cache.dir
-C:/pbl/build/CMakeFiles/PBL_StudentRegistration_autogen_timestamp_deps.dir
-C:/pbl/build/CMakeFiles/PBL_StudentRegistration_autogen.dir

@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <iomanip>
 #include <limits>
 #include <string>
@@ -624,6 +624,8 @@ void adminSession(SystemManager& system, FileManager& files) {
         }
     }
 }
+
+} // namespace
 
 int main() {
     SystemManager system;
