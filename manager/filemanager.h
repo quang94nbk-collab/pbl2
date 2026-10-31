@@ -7,7 +7,7 @@
 #include <sstream>
 #include <string>
 
-#include "system.h"
+#include "system1.h"
 
 using namespace std;
 
@@ -18,6 +18,40 @@ private:
     const string curriculumFile = "curriculums.txt";
     const string sectionFile = "sections.txt";
     const string registrationFile = "registrations.txt";
+    const string semesterFile = "semester.txt";
+
+    bool loadSemester(SystemManager& system, string& error) const {
+        errno = 0;
+        ifstream file(semesterFile.c_str());
+        if (!file.is_open()) {
+            if (errno == ENOENT) {
+                return true;
+            }
+            error = "Khong mo duoc tep " + semesterFile;
+            return false;
+        }
+        int sem = 1;
+        if (file >> sem) {
+            if (sem == 1 || sem == 2) {
+                system.setCurrentSemester(sem);
+            }
+        }
+        if (file.bad()) {
+            error = "Loi khi doc tep " + semesterFile;
+            return false;
+        }
+        return true;
+    }
+
+    bool saveSemester(const SystemManager& system, string& error) const {
+        ofstream file(semesterFile.c_str());
+        if (!file) {
+            error = "Khong mo duoc tep " + semesterFile + " de ghi.";
+            return false;
+        }
+        file << system.getCurrentSemester() << '\n';
+        return true;
+    }
 
     bool loadStudents(SystemManager& system, string& error) const {
         errno = 0;
@@ -32,6 +66,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, name, phone, email, className, major;
             if (!(row >> quoted(id) >> quoted(name) >> quoted(phone) >>
@@ -39,7 +74,11 @@ private:
                 error = "Du lieu sinh vien khong hop le.";
                 return false;
             }
-            if (!system.addStudent(Student(id, name, phone, email, className, major))) {
+            string khoa = "";
+            string khoaHoc = "";
+            if (row >> quoted(khoa) >> quoted(khoaHoc)) {
+            }
+            if (!system.addStudent(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
                 error = "Khong the nap sinh vien: " + id;
                 return false;
             }
@@ -64,6 +103,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, name;
             int credits;
@@ -71,7 +111,20 @@ private:
                 error = "Du lieu mon hoc khong hop le.";
                 return false;
             }
-            if (!system.addCourse(Course(id, name, credits))) {
+            string khoa = "";
+            string khoaHoc = "";
+            string nganh = "";
+            int hocKy = 1;
+            if (row >> quoted(khoa) >> quoted(khoaHoc)) {
+                if (row >> quoted(nganh)) {
+                    int ignoredBB = 1;
+                    if (row >> ignoredBB) {
+                        if (row >> hocKy) {
+                        }
+                    }
+                }
+            }
+            if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, hocKy))) {
                 error = "Khong the nap mon hoc: " + id;
                 return false;
             }
@@ -129,6 +182,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, courseID, instructor, day, room;
             int startPeriod, endPeriod, capacity;
@@ -138,8 +192,14 @@ private:
                 error = "Du lieu lop hoc phan khong hop le.";
                 return false;
             }
+            int hocKy = 1;
+            string nhomLopHP = "";
+            if (row >> hocKy) {
+                if (row >> quoted(nhomLopHP)) {
+                }
+            }
             ClassSection section(id, courseID, instructor, day, startPeriod,
-                                 endPeriod, room, capacity);
+                                 endPeriod, room, capacity, hocKy, nhomLopHP);
             if (!system.addClassSection(section)) {
                 error = "Khong the nap lop hoc phan: " + id;
                 return false;
@@ -165,6 +225,7 @@ private:
 
         string line;
         while (getline(file, line)) {
+            if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
             istringstream row(line);
             string id, studentID, sectionID, date;
             if (!(row >> quoted(id) >> quoted(studentID) >>
@@ -172,7 +233,7 @@ private:
                 error = "Du lieu dang ky khong hop le.";
                 return false;
             }
-            if (!system.registerClass(studentID, sectionID, date)) {
+            if (!system.registerClass(studentID, sectionID, date, false)) {
                 error = "Khong the nap dang ky: " + id;
                 return false;
             }
@@ -186,7 +247,8 @@ private:
 
 public:
     bool loadAllData(SystemManager& system, string& error) const {
-        return loadStudents(system, error) &&
+        return loadSemester(system, error) &&
+               loadStudents(system, error) &&
                loadCourses(system, error) &&
                loadCurriculums(system, error) &&
                loadSections(system, error) &&
@@ -194,6 +256,10 @@ public:
     }
 
     bool saveAllData(const SystemManager& system, string& error) const {
+        if (!saveSemester(system, error)) {
+            return false;
+        }
+
         ofstream students(studentFile.c_str());
         ofstream courses(courseFile.c_str());
         ofstream curriculums(curriculumFile.c_str());
@@ -211,7 +277,9 @@ public:
                      << quoted(student->data.getSoDienThoai()) << ' '
                      << quoted(student->data.getEmail()) << ' '
                      << quoted(student->data.getLop()) << ' '
-                     << quoted(student->data.getNganhHoc()) << '\n';
+                     << quoted(student->data.getNganhHoc()) << ' '
+                     << quoted(student->data.getKhoa()) << ' '
+                     << quoted(student->data.getKhoaHoc()) << '\n';
             student = student->next;
         }
 
@@ -219,7 +287,12 @@ public:
         while (course != nullptr) {
             courses << quoted(course->data.getMaMon()) << ' '
                     << quoted(course->data.getTenMon()) << ' '
-                    << course->data.getSoTinChi() << '\n';
+                    << course->data.getSoTinChi() << ' '
+                    << quoted(course->data.getKhoa()) << ' '
+                    << quoted(course->data.getKhoaHoc()) << ' '
+                    << quoted(course->data.getNganhHoc()) << ' '
+                    << 0 << ' '
+                    << course->data.getHocKy() << '\n';
             course = course->next;
         }
 
@@ -241,7 +314,9 @@ public:
                      << section->data.getTietBatDau() << ' '
                      << section->data.getTietKetThuc() << ' '
                      << quoted(section->data.getPhong()) << ' '
-                     << section->data.getSiSoToiDa() << '\n';
+                     << section->data.getSiSoToiDa() << ' '
+                     << section->data.getHocKy() << ' '
+                     << quoted(section->data.getNhomLopHP()) << '\n';
             section = section->next;
         }
 

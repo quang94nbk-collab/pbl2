@@ -11,15 +11,19 @@ class Student : public Person {
 private:
     string lop;
     string nganhHoc;
+    string khoa;      
+    string khoaHoc;   
 
 public:
     Student();
     Student(string maSV, string ten, string sdt, string mail,
-            string lopSV, string nganh);
+            string lopSV, string nganh, string k = "", string kh = "");
 
     string getMaSV() const;
     string getLop() const;
     string getNganhHoc() const;
+    string getKhoa() const;
+    string getKhoaHoc() const;
 
     string getMaKhoa() const;
     string getTenKhoa() const;
@@ -28,6 +32,8 @@ public:
     void setMaSV(string maSV);
     void setLop(string lopSV);
     void setNganhHoc(string nganh);
+    void setKhoa(string k);
+    void setKhoaHoc(string kh);
 
     void nhap() override;
     void xuat() const override;
@@ -37,18 +43,24 @@ public:
 inline Student::Student() : Person() {
     lop = "";
     nganhHoc = "";
+    khoa = "";
+    khoaHoc = "";
 }
 
 inline Student::Student(string maSV, string ten, string sdt, string mail,
-                 string lopSV, string nganh)
+                 string lopSV, string nganh, string k, string kh)
     : Person(maSV, ten, sdt, mail) {
     lop = lopSV;
     nganhHoc = nganh;
+    khoa = k;
+    khoaHoc = kh;
 }
 
 inline string Student::getMaSV() const { return maNguoi; }
 inline string Student::getLop() const { return lop; }
 inline string Student::getNganhHoc() const { return nganhHoc; }
+inline string Student::getKhoa() const { return khoa; }
+inline string Student::getKhoaHoc() const { return khoaHoc; }
 
 inline string Student::getMaKhoa() const {
     if (maNguoi.length() >= 3) {
@@ -78,6 +90,8 @@ inline bool Student::isValidMaSV(const string& ma) {
 inline void Student::setMaSV(string maSV) { maNguoi = maSV; }
 inline void Student::setLop(string lopSV) { lop = lopSV; }
 inline void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
+inline void Student::setKhoa(string k) { khoa = k; }
+inline void Student::setKhoaHoc(string kh) { khoaHoc = kh; }
 
 inline void Student::nhap() {
     do {
@@ -95,6 +109,10 @@ inline void Student::nhap() {
     getline(cin, soDienThoai);
     cout << "Email: ";
     getline(cin, email);
+    cout << "Khoa: ";
+    getline(cin, khoa);
+    cout << "Khoa hoc: ";
+    getline(cin, khoaHoc);
     cout << "Lop: ";
     getline(cin, lop);
     cout << "Nganh hoc: ";
@@ -106,6 +124,8 @@ inline void Student::xuat() const {
     cout << "Ho ten: " << hoTen << '\n';
     cout << "So dien thoai: " << soDienThoai << '\n';
     cout << "Email: " << email << '\n';
+    cout << "Khoa: " << (khoa.empty() ? "Chua cap nhat" : khoa) << '\n';
+    cout << "Khoa hoc: " << (khoaHoc.empty() ? "Chua cap nhat" : khoaHoc) << '\n';
     cout << "Lop: " << lop << '\n';
     cout << "Nganh hoc: " << nganhHoc << '\n';
 }
