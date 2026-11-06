@@ -15,7 +15,7 @@ class FileManager {
 private:
     const string studentFile = "students.txt";
     const string courseFile = "courses.txt";
-    const string curriculumFile = "curriculums.txt";
+    
     const string sectionFile = "sections.txt";
     const string registrationFile = "registrations.txt";
     const string semesterFile = "semester.txt";

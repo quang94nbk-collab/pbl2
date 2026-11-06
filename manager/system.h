@@ -12,7 +12,6 @@
 #include "../DSA/queue.h"     
 #include "../model/classsection.h"
 #include "../model/course.h"
-#include "../model/curriculum.h"
 #include "../model/registration.h"
 #include "../model/student.h"
 
