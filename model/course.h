@@ -1,4 +1,4 @@
-﻿#ifndef course_h
+#ifndef course_h
 #define course_h
 #include <iostream>
 #include <string>
@@ -39,7 +39,7 @@ public:
     bool operator==(const Course& other) const;
 };
 
-inline Course::Course() {
+Course::Course() {
     maMon = "";
     tenMon = "";
     soTinChi = 0;
@@ -49,7 +49,7 @@ inline Course::Course() {
     hocKy = 1;
 }
 
-inline Course::Course(string ma, string ten, int tinChi, string k, string kh, string ng, int hk) {
+Course::Course(string ma, string ten, int tinChi, string k, string kh, string ng, int hk) {
     maMon = ma;
     tenMon = ten;
     soTinChi = tinChi;
@@ -59,23 +59,21 @@ inline Course::Course(string ma, string ten, int tinChi, string k, string kh, st
     hocKy = hk;
 }
 
-inline string Course::getMaMon() const { return maMon; }
-inline string Course::getTenMon() const { return tenMon; }
-inline int Course::getSoTinChi() const { return soTinChi; }
+string Course::getMaMon() const { return maMon; }
+string Course::getTenMon() const { return tenMon; }
+int Course::getSoTinChi() const { return soTinChi; }
+string Course::getKhoa() const { return khoa; }
+string Course::getKhoaHoc() const { return khoaHoc; }
+string Course::getNganhHoc() const { return nganhHoc; }
+int Course::getHocKy() const { return hocKy; }
 
-inline void Course::setMaMon(string ma) { maMon = ma; }
-inline void Course::setTenMon(string ten) { tenMon = ten; }
+void Course::setMaMon(string ma) { maMon = ma; }
+void Course::setTenMon(string ten) { tenMon = ten; }
+void Course::setKhoa(string k) { khoa = k; }
+void Course::setKhoaHoc(string kh) { khoaHoc = kh; }
+void Course::setNganhHoc(string ng) { nganhHoc = ng; }
 
-inline string Course::getKhoa() const { return khoa; }
-inline string Course::getKhoaHoc() const { return khoaHoc; }
-inline string Course::getNganhHoc() const { return nganhHoc; }
-inline int Course::getHocKy() const { return hocKy; }
-
-inline void Course::setKhoa(string k) { khoa = k; }
-inline void Course::setKhoaHoc(string kh) { khoaHoc = kh; }
-inline void Course::setNganhHoc(string ng) { nganhHoc = ng; }
-
-inline bool Course::setHocKy(int hk) {
+bool Course::setHocKy(int hk) {
     if (hk == 1 || hk == 2) {
         hocKy = hk;
         return true;
@@ -83,7 +81,7 @@ inline bool Course::setHocKy(int hk) {
     return false;
 }
 
-inline bool Course::setSoTinChi(int tinChi) {
+bool Course::setSoTinChi(int tinChi) {
     if (tinChi <= 0) {
         return false;
     }
@@ -91,7 +89,7 @@ inline bool Course::setSoTinChi(int tinChi) {
     return true;
 }
 
-inline void Course::nhap() {
+void Course::nhap() {
     cout << "Ma mon hoc: ";
     getline(cin >> ws, maMon);
     cout << "Ten mon hoc: ";
@@ -127,7 +125,7 @@ inline void Course::nhap() {
     hocKy = hk;
 }
 
-inline void Course::xuat() const {
+void Course::xuat() const {
     cout << "Ma mon hoc: " << maMon << '\n';
     cout << "Ten mon hoc: " << tenMon << '\n';
     cout << "So tin chi: " << soTinChi << '\n';
@@ -137,7 +135,7 @@ inline void Course::xuat() const {
     cout << "Hoc ky: " << hocKy << '\n';
 }
 
-inline bool Course::operator==(const Course& other) const {
+bool Course::operator==(const Course& other) const {
     return maMon == other.maMon;
 }
 
