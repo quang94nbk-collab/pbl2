@@ -35,14 +35,14 @@ public:
     bool operator==(const Student& other) const;
 };
 
-inline Student::Student() : Person() {
+Student::Student() : Person() {
     lop = "";
     nganhHoc = "";
     khoa = "";
     khoaHoc = "";
 }
 
-inline Student::Student(string maSV, string ten, string sdt, string mail,
+Student::Student(string maSV, string ten, string sdt, string mail,
                  string lopSV, string nganh, string k, string kh)
     : Person(maSV, ten, sdt, mail) {
     lop = lopSV;
@@ -51,19 +51,19 @@ inline Student::Student(string maSV, string ten, string sdt, string mail,
     khoaHoc = kh;
 }
 
-inline string Student::getMaSV() const { return maNguoi; }
-inline string Student::getLop() const { return lop; }
-inline string Student::getNganhHoc() const { return nganhHoc; }
-inline string Student::getKhoa() const { return khoa; }
-inline string Student::getKhoaHoc() const { return khoaHoc; }
+string Student::getMaSV() const { return maNguoi; }
+string Student::getLop() const { return lop; }
+string Student::getNganhHoc() const { return nganhHoc; }
+string Student::getKhoa() const { return khoa; }
+string Student::getKhoaHoc() const { return khoaHoc; }
 
-inline void Student::setMaSV(string maSV) { maNguoi = maSV; }
-inline void Student::setLop(string lopSV) { lop = lopSV; }
-inline void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
-inline void Student::setKhoa(string k) { khoa = k; }
-inline void Student::setKhoaHoc(string kh) { khoaHoc = kh; }
+void Student::setMaSV(string maSV) { maNguoi = maSV; }
+void Student::setLop(string lopSV) { lop = lopSV; }
+void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
+void Student::setKhoa(string k) { khoa = k; }
+void Student::setKhoaHoc(string kh) { khoaHoc = kh; }
 
-inline void Student::nhap() {
+void Student::nhap() {
     cout << "Ma sinh vien: ";
     getline(cin >> ws, maNguoi);
     cout << "Ho ten: ";
@@ -82,7 +82,7 @@ inline void Student::nhap() {
     getline(cin, nganhHoc);
 }
 
-inline void Student::xuat() const {
+void Student::xuat() const {
     cout << "Ma sinh vien: " << maNguoi << '\n';
     cout << "Ho ten: " << hoTen << '\n';
     cout << "So dien thoai: " << soDienThoai << '\n';
@@ -93,7 +93,7 @@ inline void Student::xuat() const {
     cout << "Nganh hoc: " << nganhHoc << '\n';
 }
 
-inline bool Student::operator==(const Student& other) const {
+bool Student::operator==(const Student& other) const {
     return maNguoi == other.maNguoi;
 }
 

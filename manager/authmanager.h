@@ -23,11 +23,7 @@ public:
     string studentID;
 
     UserAccount(const string& accountName, const string& accountPassword,
-                UserRole accountRole, const string& linkedStudentID)
-        : password(accountPassword),
-          username(accountName),
-          role(accountRole),
-          studentID(linkedStudentID) {}
+                UserRole accountRole, const string& linkedStudentID);
 };
 
 class AuthManager {
@@ -36,52 +32,72 @@ private:
     int currentAccountIndex;
 
 public:
-    AuthManager() : currentAccountIndex(-1) {}
+    AuthManager();
 
     bool addAccount(const string& username, const string& password,
-                    UserRole role, const string& studentID = "") {
-        if (username.empty() || password.empty() ||
-            (role == UserRole::Student && studentID.empty())) {
-            return false;
-        }
+                    UserRole role, const string& studentID = "");
 
-        for (const UserAccount& account : accounts) {
-            if (account.username == username) {
-                return false;
-            }
-        }
+    bool login(const string& username, const string& password);
 
-        accounts.push_back(UserAccount(username, password, role, studentID));
-        return true;
-    }
+    void logout();
 
-    bool login(const string& username, const string& password) {
-        logout();
-        for (size_t i = 0; i < accounts.size(); ++i) {
-            if (accounts[i].username == username &&
-                accounts[i].password == password) {
-                currentAccountIndex = static_cast<int>(i);
-                return true;
-            }
-        }
+    bool isLoggedIn() const;
+
+    const UserAccount* currentUser() const;
+};
+
+inline UserAccount::UserAccount(const string& accountName, const string& accountPassword,
+                                UserRole accountRole, const string& linkedStudentID)
+    : password(accountPassword),
+      username(accountName),
+      role(accountRole),
+      studentID(linkedStudentID) {}
+
+inline AuthManager::AuthManager() : currentAccountIndex(-1) {}
+
+inline bool AuthManager::addAccount(const string& username, const string& password,
+                                    UserRole role, const string& studentID) {
+    if (username.empty() || password.empty() ||
+        (role == UserRole::Student && studentID.empty())) {
         return false;
     }
 
-    void logout() {
-        currentAccountIndex = -1;
-    }
-
-    bool isLoggedIn() const {
-        return currentAccountIndex >= 0 &&
-               static_cast<size_t>(currentAccountIndex) < accounts.size();
-    }
-
-    const UserAccount* currentUser() const {
-        if (!isLoggedIn()) {
-            return nullptr;
+    for (const UserAccount& account : accounts) {
+        if (account.username == username) {
+            return false;
         }
-        return &accounts[static_cast<size_t>(currentAccountIndex)];
     }
-};
+
+    accounts.push_back(UserAccount(username, password, role, studentID));
+    return true;
+}
+
+inline bool AuthManager::login(const string& username, const string& password) {
+    logout();
+    for (size_t i = 0; i < accounts.size(); ++i) {
+        if (accounts[i].username == username &&
+            accounts[i].password == password) {
+            currentAccountIndex = static_cast<int>(i);
+            return true;
+        }
+    }
+    return false;
+}
+
+inline void AuthManager::logout() {
+    currentAccountIndex = -1;
+}
+
+inline bool AuthManager::isLoggedIn() const {
+    return currentAccountIndex >= 0 &&
+           static_cast<size_t>(currentAccountIndex) < accounts.size();
+}
+
+inline const UserAccount* AuthManager::currentUser() const {
+    if (!isLoggedIn()) {
+        return nullptr;
+    }
+    return &accounts[static_cast<size_t>(currentAccountIndex)];
+}
 
 #endif
