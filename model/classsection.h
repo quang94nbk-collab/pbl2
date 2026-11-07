@@ -55,6 +55,9 @@ public:
     void nhap();
     void xuat() const;
     bool operator==(const ClassSection& other) const;
+
+    friend ostream& operator<<(ostream& os, const ClassSection& sec);
+    friend istream& operator>>(istream& is, ClassSection& sec);
 };
 
 ClassSection::ClassSection() {
@@ -198,8 +201,18 @@ void ClassSection::xuat() const {
     cout << "Hoc ky: " << hocKy << '\n';
 }
 
-bool ClassSection::operator==(const ClassSection& other) const {
+inline bool ClassSection::operator==(const ClassSection& other) const {
     return maLopHP == other.maLopHP;
+}
+
+inline ostream& operator<<(ostream& os, const ClassSection& sec) {
+    sec.xuat();
+    return os;
+}
+
+inline istream& operator>>(istream& is, ClassSection& sec) {
+    sec.nhap();
+    return is;
 }
 
 #endif

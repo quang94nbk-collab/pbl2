@@ -37,6 +37,9 @@ public:
     void nhap();
     void xuat() const;
     bool operator==(const Course& other) const;
+
+    friend ostream& operator<<(ostream& os, const Course& c);
+    friend istream& operator>>(istream& is, Course& c);
 };
 
 Course::Course() {
@@ -135,8 +138,18 @@ void Course::xuat() const {
     cout << "Hoc ky: " << hocKy << '\n';
 }
 
-bool Course::operator==(const Course& other) const {
+inline bool Course::operator==(const Course& other) const {
     return maMon == other.maMon;
+}
+
+inline ostream& operator<<(ostream& os, const Course& c) {
+    c.xuat();
+    return os;
+}
+
+inline istream& operator>>(istream& is, Course& c) {
+    c.nhap();
+    return is;
 }
 
 #endif
