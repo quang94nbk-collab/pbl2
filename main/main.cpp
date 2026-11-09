@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../manager/filemanager.h"
+#include "../manager/exception.h"
 
 using namespace std;
 
@@ -229,8 +230,22 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
             }
 
             string targetSectionID = chosenGroup.sectionIDs[sIndex - 1];
-            bool success = system.registerClass(studentID, targetSectionID);
-            cout << (success ? ">> Dang ky lop hoc phan thanh cong!\n" : ">> Dang ky that bai!\n");
+            try {
+                system.registerClass(studentID, targetSectionID);
+                cout << ">> Dang ky lop hoc phan thanh cong!\n";
+            } catch (const ClassFullException& e) {
+                cout << ">> [Lop day] " << e.what() << "\n";
+            } catch (const TimeConflictException& e) {
+                cout << ">> [Trung lich] " << e.what() << "\n";
+            } catch (const DuplicateException& e) {
+                cout << ">> [Trung lap] " << e.what() << "\n";
+            } catch (const WrongSemesterException& e) {
+                cout << ">> [Sai hoc ky] " << e.what() << "\n";
+            } catch (const NotEligibleException& e) {
+                cout << ">> [Khong du dieu kien] " << e.what() << "\n";
+            } catch (const AppException& e) {
+                cout << ">> Dang ky that bai: " << e.what() << "\n";
+            }
 
             system.displaySemesterRegistrationStatus(studentID);
         } else if (choice == 6) {
@@ -420,7 +435,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int tc = stoi(val);
                         if (tc > 0) c->setSoTinChi(tc);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri so tin chi khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri so tin chi vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << "Khoa quan ly moi [" << c->getKhoa() << "]: ";
@@ -441,7 +460,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int hk = stoi(val);
                         if (hk == 1 || hk == 2) c->setHocKy(hk);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri hoc ky khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri hoc ky vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << ">> Cap nhat mon hoc thanh cong!\n";
@@ -471,7 +494,9 @@ void adminSession(SystemManager& system, FileManager& files) {
                 int hk = 0;
                 try {
                     if (!hkStr.empty()) hk = stoi(hkStr);
-                } catch (...) {
+                } catch (const invalid_argument&) {
+                    hk = 0;
+                } catch (const out_of_range&) {
                     hk = 0;
                 }
                 system.displayCoursesByFilter(khoa, khoaHoc, nganh, hk);
@@ -525,7 +550,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int t = stoi(val);
                         if (t > 0) sec->setTietBatDau(t);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri tiet bat dau khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri tiet bat dau vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << "Tiet ket thuc moi [" << sec->getTietKetThuc() << "]: ";
@@ -534,7 +563,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int t = stoi(val);
                         if (t > sec->getTietBatDau()) sec->setTietKetThuc(t);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri tiet ket thuc khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri tiet ket thuc vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << "Phong hoc moi [" << sec->getPhong() << "]: ";
@@ -547,7 +580,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int ss = stoi(val);
                         if (ss > 0) sec->setSiSoToiDa(ss);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri si so khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri si so vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << "Hoc ky mo lop moi [" << sec->getHocKy() << "]: ";
@@ -556,7 +593,11 @@ void adminSession(SystemManager& system, FileManager& files) {
                     try {
                         int hk = stoi(val);
                         if (hk == 1 || hk == 2) sec->setHocKy(hk);
-                    } catch (...) {}
+                    } catch (const invalid_argument&) {
+                        cout << ">> Gia tri hoc ky khong hop le, giu nguyen gia tri cu.\n";
+                    } catch (const out_of_range&) {
+                        cout << ">> Gia tri hoc ky vuot gioi han, giu nguyen gia tri cu.\n";
+                    }
                 }
 
                 cout << ">> Cap nhat thong tin lop hoc phan thanh cong!\n";
@@ -590,8 +631,22 @@ void adminSession(SystemManager& system, FileManager& files) {
             getline(cin, svID);
             cout << "Ma lop hoc phan: ";
             getline(cin, secID);
-            bool success = system.registerClass(svID, secID);
-            cout << (success ? ">> Dang ky lop hoc phan thanh cong!\n" : ">> Dang ky that bai!\n");
+            try {
+                system.registerClass(svID, secID);
+                cout << ">> Dang ky lop hoc phan thanh cong!\n";
+            } catch (const ClassFullException& e) {
+                cout << ">> [Lop day] " << e.what() << "\n";
+            } catch (const TimeConflictException& e) {
+                cout << ">> [Trung lich] " << e.what() << "\n";
+            } catch (const DuplicateException& e) {
+                cout << ">> [Trung lap] " << e.what() << "\n";
+            } catch (const WrongSemesterException& e) {
+                cout << ">> [Sai hoc ky] " << e.what() << "\n";
+            } catch (const NotEligibleException& e) {
+                cout << ">> [Khong du dieu kien] " << e.what() << "\n";
+            } catch (const AppException& e) {
+                cout << ">> Dang ky that bai: " << e.what() << "\n";
+            }
         } else if (choice == 18) {
             string svID, secID;
             cout << "Ma sinh vien: ";
@@ -611,8 +666,10 @@ void adminSession(SystemManager& system, FileManager& files) {
             int newSem = 0;
             try {
                 newSem = stoi(semStr);
-            } catch (...) {
-                newSem = 0;
+            } catch (const invalid_argument&) {
+                cout << ">> Gia tri hoc ky nhap vao khong hop le.\n";
+            } catch (const out_of_range&) {
+                cout << ">> Gia tri hoc ky nhap vao vuot gioi han.\n";
             }
             if (system.setCurrentSemester(newSem)) {
                 cout << ">> Da thiet lap thanh cong: He thong hien dang o Hoc ky " << newSem << ".\n";
