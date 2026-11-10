@@ -33,6 +33,9 @@ public:
     void nhap() override;
     void xuat() const override;
     bool operator==(const Student& other) const;
+
+    friend ostream& operator<<(ostream& os, const Student& s);
+    friend istream& operator>>(istream& is, Student& s);
 };
 
 Student::Student() : Person() {
@@ -95,6 +98,14 @@ void Student::xuat() const {
 
 bool Student::operator==(const Student& other) const {
     return maNguoi == other.maNguoi;
+}
+ostream& operator<<(ostream& os, const Student& s) {
+    s.xuat();
+    return os;
+}
+istream& operator>>(istream& is, Student& s) {
+    s.nhap();
+    return is;
 }
 
 #endif
