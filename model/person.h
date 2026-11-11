@@ -28,6 +28,9 @@ public:
 
     virtual void nhap();
     virtual void xuat() const;
+
+    friend ostream& operator<<(ostream& os, const Person& p);
+    friend istream& operator>>(istream& is, Person& p);
 };
 
 inline Person::Person() {
@@ -72,6 +75,16 @@ inline void Person::xuat() const {
     cout << "Ho ten: " << hoTen << '\n';
     cout << "So dien thoai: " << soDienThoai << '\n';
     cout << "Email: " << email << '\n';
+}
+
+inline ostream& operator<<(ostream& os, const Person& p) {
+    p.xuat();
+    return os;
+}
+
+inline istream& operator>>(istream& is, Person& p) {
+    p.nhap();
+    return is;
 }
 
 #endif

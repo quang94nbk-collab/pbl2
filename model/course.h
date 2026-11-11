@@ -92,7 +92,7 @@ bool Course::setSoTinChi(int tinChi) {
     return true;
 }
 
-void Course::nhap() {
+inline void Course::nhap() {
     cout << "Ma mon hoc: ";
     getline(cin >> ws, maMon);
     cout << "Ten mon hoc: ";
@@ -128,7 +128,7 @@ void Course::nhap() {
     hocKy = hk;
 }
 
-void Course::xuat() const {
+inline void Course::xuat() const {
     cout << "Ma mon hoc: " << maMon << '\n';
     cout << "Ten mon hoc: " << tenMon << '\n';
     cout << "So tin chi: " << soTinChi << '\n';

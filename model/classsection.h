@@ -153,7 +153,7 @@ bool ClassSection::trungLichVoi(const ClassSection& other) const {
            other.tietBatDau < tietKetThuc;
 }
 
-void ClassSection::nhap() {
+inline void ClassSection::nhap() {
     cout << "Ma lop hoc phan: ";
     getline(cin >> ws, maLopHP);
     cout << "Ma mon hoc: ";
@@ -189,7 +189,7 @@ void ClassSection::nhap() {
     soLuongDaDangKy = 0;
 }
 
-void ClassSection::xuat() const {
+inline void ClassSection::xuat() const {
     cout << "Ma lop hoc phan: " << maLopHP << '\n';
     cout << "Ma mon hoc: " << maMon << '\n';
     cout << "Nhom lop HP: " << (nhomLopHP.empty() ? "(Chua gan nhom)" : nhomLopHP) << '\n';
