@@ -1,0 +1,13 @@
+# File biên dịch
+*.o
+*.obj
+*.exe
+*.out
+
+# Thư mục cấu hình IDE
+.vscode/
+.idea/
+build/
+
+# File dữ liệu tạm (nếu không muốn đè dữ liệu test của nhau)
+# data/*.txt

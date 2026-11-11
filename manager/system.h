@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 
+#include "exception.h"
+
 // DAL Repositories
 #include "../dal/StudentRepository.h"
 #include "../dal/CourseRepository.h"
@@ -412,81 +414,78 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
                                          const string& registrationDate, bool checkSemester) {
     Student*      student = findStudent(maSV);
     ClassSection* section = findClassSection(maLopHP);
-    if (!student || !section) return false;
 
-    if (checkSemester && section->getHocKy() != currentSemester) {
-        cout << "Dang ky that bai: Lop hoc phan '" << maLopHP << "' mo cho Hoc ky "
-             << section->getHocKy() << ", trong khi he thong dang o Hoc ky "
-             << currentSemester << " do Admin quyet dinh.\n";
-        return false;
-    }
+    if (!student)
+        throw NotFoundException("Khong tim thay sinh vien voi ma: " + maSV);
+    if (!section)
+        throw NotFoundException("Khong tim thay lop hoc phan voi ma: " + maLopHP);
+
+    if (checkSemester && section->getHocKy() != currentSemester)
+        throw WrongSemesterException(
+            "Lop hoc phan '" + maLopHP + "' mo cho Hoc ky " +
+            to_string(section->getHocKy()) +
+            ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
 
     Course* course = findCourse(section->getMaMon());
     if (course) {
-        if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != currentSemester) {
-            cout << "Dang ky that bai: Mon hoc '" << course->getTenMon()
-                 << "' thuoc chuong trinh Hoc ky " << course->getHocKy()
-                 << ", trong khi he thong dang o Hoc ky " << currentSemester << ".\n";
-            return false;
-        }
+        if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != currentSemester)
+            throw WrongSemesterException(
+                "Mon hoc '" + course->getTenMon() + "' thuoc chuong trinh Hoc ky " +
+                to_string(course->getHocKy()) +
+                ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
+
         if (!course->getKhoa().empty() && course->getKhoa() != "Chung") {
-            if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa()) {
-                cout << "Dang ky that bai: Mon hoc thuoc Khoa '" << course->getKhoa()
-                     << "' (Khoa cua sinh vien: '"
-                     << (student->getKhoa().empty() ? "Chua cap nhat" : student->getKhoa()) << "').\n";
-                return false;
-            }
+            if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa())
+                throw NotEligibleException(
+                    "Mon hoc thuoc Khoa '" + course->getKhoa() +
+                    "' (Khoa cua sinh vien: '" +
+                    (student->getKhoa().empty() ? "Chua cap nhat" : student->getKhoa()) + "')");
         }
         if (!course->getKhoaHoc().empty() && course->getKhoaHoc() != "Chung") {
-            if (student->getKhoaHoc().empty() || student->getKhoaHoc() != course->getKhoaHoc()) {
-                cout << "Dang ky that bai: Mon hoc ap dung cho Khoa hoc '" << course->getKhoaHoc()
-                     << "' (Khoa hoc cua sinh vien: '"
-                     << (student->getKhoaHoc().empty() ? "Chua cap nhat" : student->getKhoaHoc()) << "').\n";
-                return false;
-            }
+            if (student->getKhoaHoc().empty() || student->getKhoaHoc() != course->getKhoaHoc())
+                throw NotEligibleException(
+                    "Mon hoc ap dung cho Khoa hoc '" + course->getKhoaHoc() +
+                    "' (Khoa hoc cua sinh vien: '" +
+                    (student->getKhoaHoc().empty() ? "Chua cap nhat" : student->getKhoaHoc()) + "')");
         }
         if (!course->getNganhHoc().empty() && course->getNganhHoc() != "Chung") {
-            if (student->getNganhHoc().empty() || student->getNganhHoc() != course->getNganhHoc()) {
-                cout << "Dang ky that bai: Mon hoc ap dung cho Nganh '" << course->getNganhHoc()
-                     << "' (Nganh cua sinh vien: '"
-                     << (student->getNganhHoc().empty() ? "Chua cap nhat" : student->getNganhHoc()) << "').\n";
-                return false;
-            }
+            if (student->getNganhHoc().empty() || student->getNganhHoc() != course->getNganhHoc())
+                throw NotEligibleException(
+                    "Mon hoc ap dung cho Nganh '" + course->getNganhHoc() +
+                    "' (Nganh cua sinh vien: '" +
+                    (student->getNganhHoc().empty() ? "Chua cap nhat" : student->getNganhHoc()) + "')");
         }
     }
 
-    if (registrationRepo.isRegistered(maSV, maLopHP)) {
-        cout << "Dang ky that bai: Sinh vien da dang ky lop hoc phan nay roi.\n";
-        return false;
-    }
+    if (registrationRepo.isRegistered(maSV, maLopHP))
+        throw DuplicateException("Sinh vien da dang ky lop hoc phan '" + maLopHP + "' roi");
 
     string oldSecID = getRegisteredSectionForCourse(maSV, section->getMaMon());
     if (!oldSecID.empty() && oldSecID != maLopHP) {
         Course* c = findCourse(section->getMaMon());
-        cout << "Dang ky that bai: Ban da dang ky mon '"
-             << (c ? c->getTenMon() : section->getMaMon())
-             << "' o lop '" << oldSecID << "'.\n";
-        cout << ">> Vui long HUY lop hoc phan '" << oldSecID
-             << "' truoc khi dang ky lop hoc phan moi cua mon nay!\n";
-        return false;
+        throw DuplicateException(
+            "Ban da dang ky mon '" +
+            (c ? c->getTenMon() : section->getMaMon()) +
+            "' o lop '" + oldSecID +
+            "'. Vui long HUY lop cu truoc khi dang ky lop moi");
     }
 
-    if (isTimeConflict(maSV, maLopHP)) {
-        cout << "Dang ky that bai: Trung lich hoc voi lop hoc phan da dang ky.\n";
-        return false;
-    }
+    if (isTimeConflict(maSV, maLopHP))
+        throw TimeConflictException("Trung lich hoc voi mot lop hoc phan da dang ky");
 
     if (!section->conCho()) {
         Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
         if (q) {
             q->push(maSV);
-            cout << "Lop da day. Sinh vien " << maSV << " duoc dua vao hang doi.\n";
+            throw ClassFullException(
+                "Lop '" + maLopHP + "' da het cho. Sinh vien '" + maSV + "' duoc them vao hang doi cho");
         }
-        return false;
+        throw ClassFullException("Lop '" + maLopHP + "' da het cho");
     }
 
     const string date = registrationDate.empty() ? today() : registrationDate;
-    if (date.empty() || !section->tangSoLuong()) return false;
+    if (date.empty() || !section->tangSoLuong())
+        throw AppException("Loi noi bo khi thuc hien dang ky");
 
     const string regID = registrationRepo.getRegID(maSV, maLopHP);
     registrationRepo.add(Registration(regID, maSV, maLopHP, date));

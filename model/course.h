@@ -92,56 +92,63 @@ bool Course::setSoTinChi(int tinChi) {
     return true;
 }
 
-bool Course::operator==(const Course& other) const {
-    return maMon == other.maMon;
-}
-
-ostream& operator<<(ostream& os, const Course& c) {
-    os << "Ma mon hoc: " << c.maMon << '\n';
-    os << "Ten mon hoc: " << c.tenMon << '\n';
-    os << "So tin chi: " << c.soTinChi << '\n';
-    os << "Khoa: " << (c.khoa.empty() ? "Tat ca" : c.khoa) << '\n';
-    os << "Khoa hoc ap dung: " << (c.khoaHoc.empty() ? "Tat ca" : c.khoaHoc) << '\n';
-    os << "Nganh hoc ap dung: " << (c.nganhHoc.empty() ? "Tat ca" : c.nganhHoc) << '\n';
-    os << "Hoc ky: " << c.hocKy << '\n';
-    return os;
-}
-
-istream& operator>>(istream& is, Course& c) {
+inline void Course::nhap() {
     cout << "Ma mon hoc: ";
-    getline(is >> ws, c.maMon);
+    getline(cin >> ws, maMon);
     cout << "Ten mon hoc: ";
-    getline(is, c.tenMon);
+    getline(cin, tenMon);
 
     int tinChi;
     do {
         cout << "So tin chi: ";
-        is >> tinChi;
+        cin >> tinChi;
         if (tinChi <= 0) {
             cout << "So tin chi phai lon hon 0. Nhap lai.\n";
         }
     } while (tinChi <= 0);
-    is.ignore(10000, '\n');
-    c.soTinChi = tinChi;
+    cin.ignore(10000, '\n');
+    soTinChi = tinChi;
 
     cout << "Khoa quan ly : ";
-    getline(is, c.khoa);
+    getline(cin, khoa);
     cout << "Khoa hoc ap dung : ";
-    getline(is, c.khoaHoc);
+    getline(cin, khoaHoc);
     cout << "Nganh hoc : ";
-    getline(is, c.nganhHoc);
+    getline(cin, nganhHoc);
 
     int hk = 1;
     do {
         cout << "Hoc ky ap dung : ";
-        is >> hk;
+        cin >> hk;
         if (hk != 1 && hk != 2) {
             cout << "Vui long chon 1 hoac 2.\n";
         }
     } while (hk != 1 && hk != 2);
-    is.ignore(10000, '\n');
-    c.hocKy = hk;
+    cin.ignore(10000, '\n');
+    hocKy = hk;
+}
 
+inline void Course::xuat() const {
+    cout << "Ma mon hoc: " << maMon << '\n';
+    cout << "Ten mon hoc: " << tenMon << '\n';
+    cout << "So tin chi: " << soTinChi << '\n';
+    cout << "Khoa: " << (khoa.empty() ? "Tat ca" : khoa) << '\n';
+    cout << "Khoa hoc ap dung: " << (khoaHoc.empty() ? "Tat ca" : khoaHoc) << '\n';
+    cout << "Nganh hoc ap dung: " << (nganhHoc.empty() ? "Tat ca" : nganhHoc) << '\n';
+    cout << "Hoc ky: " << hocKy << '\n';
+}
+
+inline bool Course::operator==(const Course& other) const {
+    return maMon == other.maMon;
+}
+
+inline ostream& operator<<(ostream& os, const Course& c) {
+    c.xuat();
+    return os;
+}
+
+inline istream& operator>>(istream& is, Course& c) {
+    c.nhap();
     return is;
 }
 

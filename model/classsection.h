@@ -56,8 +56,8 @@ public:
     void xuat() const;
     bool operator==(const ClassSection& other) const;
 
-    friend ostream& operator<<(ostream& os, const ClassSection& cs);
-    friend istream& operator>>(istream& is, ClassSection& cs);
+    friend ostream& operator<<(ostream& os, const ClassSection& sec);
+    friend istream& operator>>(istream& is, ClassSection& sec);
 };
 
 ClassSection::ClassSection() {
@@ -153,57 +153,65 @@ bool ClassSection::trungLichVoi(const ClassSection& other) const {
            other.tietBatDau < tietKetThuc;
 }
 
-bool ClassSection::operator==(const ClassSection& other) const {
-    return maLopHP == other.maLopHP;
-}
-
-ostream& operator<<(ostream& os, const ClassSection& cs) {
-    os << "Ma lop hoc phan: " << cs.maLopHP << '\n';
-    os << "Ma mon hoc: " << cs.maMon << '\n';
-    os << "Nhom lop HP: " << (cs.nhomLopHP.empty() ? "(Chua gan nhom)" : cs.nhomLopHP) << '\n';
-    os << "Giang vien: " << cs.giangVien << '\n';
-    os << "Thu hoc: " << cs.thu << '\n';
-    os << "Tiet: " << cs.tietBatDau << " - " << cs.tietKetThuc << '\n';
-    os << "Phong: " << cs.phong << '\n';
-    os << "Si so: " << cs.soLuongDaDangKy << "/" << cs.siSoToiDa << '\n';
-    os << "Hoc ky: " << cs.hocKy << '\n';
-    return os;
-}
-
-istream& operator>>(istream& is, ClassSection& cs) {
+inline void ClassSection::nhap() {
     cout << "Ma lop hoc phan: ";
-    getline(is >> ws, cs.maLopHP);
+    getline(cin >> ws, maLopHP);
     cout << "Ma mon hoc: ";
-    getline(is, cs.maMon);
+    getline(cin, maMon);
     cout << "Nhom lop hoc phan : ";
-    getline(is, cs.nhomLopHP);
+    getline(cin, nhomLopHP);
     cout << "Giang vien: ";
-    getline(is, cs.giangVien);
+    getline(cin, giangVien);
     cout << "Thu hoc : ";
-    getline(is, cs.thu);
+    getline(cin, thu);
     cout << "Tiet bat dau: ";
-    is >> cs.tietBatDau;
+    cin >> tietBatDau;
     cout << "Tiet ket thuc : ";
-    is >> cs.tietKetThuc;
-    is.ignore(10000, '\n');
+    cin >> tietKetThuc;
+    cin.ignore(10000, '\n');
     cout << "Phong hoc: ";
-    getline(is, cs.phong);
+    getline(cin, phong);
     cout << "Si so toi da: ";
-    is >> cs.siSoToiDa;
-    is.ignore(10000, '\n');
+    cin >> siSoToiDa;
+    cin.ignore(10000, '\n');
 
     int hk = 1;
     do {
         cout << "Hoc ky mo lop: ";
-        is >> hk;
+        cin >> hk;
         if (hk != 1 && hk != 2) {
             cout << "Vui long chon 1 hoac 2.\n";
         }
     } while (hk != 1 && hk != 2);
-    is.ignore(10000, '\n');
-    cs.hocKy = hk;
+    cin.ignore(10000, '\n');
+    hocKy = hk;
 
-    cs.soLuongDaDangKy = 0;
+    soLuongDaDangKy = 0;
+}
+
+inline void ClassSection::xuat() const {
+    cout << "Ma lop hoc phan: " << maLopHP << '\n';
+    cout << "Ma mon hoc: " << maMon << '\n';
+    cout << "Nhom lop HP: " << (nhomLopHP.empty() ? "(Chua gan nhom)" : nhomLopHP) << '\n';
+    cout << "Giang vien: " << giangVien << '\n';
+    cout << "Thu hoc: " << thu << '\n';
+    cout << "Tiet: " << tietBatDau << " - " << tietKetThuc << '\n';
+    cout << "Phong: " << phong << '\n';
+    cout << "Si so: " << soLuongDaDangKy << "/" << siSoToiDa << '\n';
+    cout << "Hoc ky: " << hocKy << '\n';
+}
+
+inline bool ClassSection::operator==(const ClassSection& other) const {
+    return maLopHP == other.maLopHP;
+}
+
+inline ostream& operator<<(ostream& os, const ClassSection& sec) {
+    sec.xuat();
+    return os;
+}
+
+inline istream& operator>>(istream& is, ClassSection& sec) {
+    sec.nhap();
     return is;
 }
 

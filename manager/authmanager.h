@@ -37,9 +37,13 @@ public:
     bool addAccount(const string& username, const string& password,
                     UserRole role, const string& studentID = "");
 
+    bool removeAccount(const string& username);
+
     bool login(const string& username, const string& password);
 
     void logout();
+
+    bool hasAccount(const string& username) const;
 
     bool isLoggedIn() const;
 
@@ -72,6 +76,22 @@ inline bool AuthManager::addAccount(const string& username, const string& passwo
     return true;
 }
 
+inline bool AuthManager::removeAccount(const string& username) {
+    for (size_t i = 0; i < accounts.size(); ++i) {
+        if (accounts[i].username == username) {
+            if (currentAccountIndex == static_cast<int>(i)) {
+                logout();
+            } else if (currentAccountIndex > static_cast<int>(i)) {
+                --currentAccountIndex;
+            }
+            accounts.erase(accounts.begin() +
+                           static_cast<vector<UserAccount>::difference_type>(i));
+            return true;
+        }
+    }
+    return false;
+}
+
 inline bool AuthManager::login(const string& username, const string& password) {
     logout();
     for (size_t i = 0; i < accounts.size(); ++i) {
@@ -86,6 +106,15 @@ inline bool AuthManager::login(const string& username, const string& password) {
 
 inline void AuthManager::logout() {
     currentAccountIndex = -1;
+}
+
+inline bool AuthManager::hasAccount(const string& username) const {
+    for (const UserAccount& account : accounts) {
+        if (account.username == username) {
+            return true;
+        }
+    }
+    return false;
 }
 
 inline bool AuthManager::isLoggedIn() const {
