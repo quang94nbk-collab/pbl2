@@ -6,7 +6,6 @@
 #include "../DSA/hashtable.h"
 #include "../model/registration.h"
 #include <string>
-#include <iostream>
 using namespace std;
 
 // ============================================================
@@ -47,8 +46,7 @@ public:
     bool remove(const string& maDangKy) override;
 
     Registration* findById(const string& maDangKy) override;
-
-    void displayAll() const override;
+    const Registration* findById(const string& maDangKy) const;
 
     // ----- Chuc nang mo rong -----
 
@@ -68,6 +66,10 @@ public:
     // Tim tat ca maSV da dang ky vao 1 lop HP
     int getStudentsBySection(const string& maLopHP, string outStudentIDs[], int maxCount) const;
 
+    // Lay danh sach doi tuong Registration theo sinh vien / theo lop hoc phan
+    void getByStudent(const string& maSV, DoubleLinkedList<Registration>& outResults) const;
+    void getBySection(const string& maLopHP, DoubleLinkedList<Registration>& outResults) const;
+
     // Tim maLopHP sinh vien da dang ky cho 1 mon hoc cu the
     // (Can ClassSectionRepository de check maMon)
     // Tra ve "" neu chua dang ky
@@ -81,7 +83,9 @@ public:
     // Xoa toan bo dang ky theo maSV (dung khi xoa sinh vien)
     void removeAllByStudent(const string& maSV);
 
-    const DoubleLinkedList<Registration>& getList() const;
+    const DoubleLinkedList<Registration>& getList() const override;
+
+    void clear();
 };
 
 inline NodeDLL<Registration>* RegistrationRepository::getLastNode() const {
@@ -120,12 +124,10 @@ inline Registration* RegistrationRepository::findById(const string& maDangKy) {
     return nullptr;
 }
 
-inline void RegistrationRepository::displayAll() const {
-    auto cur = registrationList.getHead();
-    while (cur != nullptr) {
-        cur->data.xuat();
-        cur = cur->next;
-    }
+inline const Registration* RegistrationRepository::findById(const string& maDangKy) const {
+    NodeDLL<Registration>* node = nullptr;
+    if (registrationTable.get(maDangKy, node)) return &(node->data);
+    return nullptr;
 }
 
 // ----- Chuc nang mo rong -----
@@ -172,6 +174,28 @@ inline int RegistrationRepository::getStudentsBySection(const string& maLopHP, s
     return count;
 }
 
+inline void RegistrationRepository::getByStudent(const string& maSV, DoubleLinkedList<Registration>& outResults) const {
+    outResults.clear();
+    auto cur = registrationList.getHead();
+    while (cur != nullptr) {
+        if (cur->data.getMaSV() == maSV) {
+            outResults.pushBack(cur->data);
+        }
+        cur = cur->next;
+    }
+}
+
+inline void RegistrationRepository::getBySection(const string& maLopHP, DoubleLinkedList<Registration>& outResults) const {
+    outResults.clear();
+    auto cur = registrationList.getHead();
+    while (cur != nullptr) {
+        if (cur->data.getMaLopHP() == maLopHP) {
+            outResults.pushBack(cur->data);
+        }
+        cur = cur->next;
+    }
+}
+
 // Xoa toan bo dang ky theo maLopHP (dung khi xoa lop HP)
 inline void RegistrationRepository::removeAllBySection(const string& maLopHP) {
     auto cur = registrationList.getHead();
@@ -200,6 +224,11 @@ inline void RegistrationRepository::removeAllByStudent(const string& maSV) {
 
 inline const DoubleLinkedList<Registration>& RegistrationRepository::getList() const {
     return registrationList;
+}
+
+inline void RegistrationRepository::clear() {
+    registrationTable.clear();
+    registrationList.clear();
 }
 
 #endif // REGISTRATION_REPOSITORY_H

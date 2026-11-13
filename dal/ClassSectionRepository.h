@@ -7,7 +7,6 @@
 #include "../DSA/queue.h"
 #include "../model/classsection.h"
 #include <string>
-#include <iostream>
 using namespace std;
 
 // ============================================================
@@ -29,6 +28,7 @@ using namespace std;
 //    - findById : Tim nhanh qua HashTable
 //    - getWaitlist: Truy cap hang doi sinh vien cho
 //    - search / displayAll / displayByGroup
+//      (da tach sang Presentation; DAL cung cap getList / search)
 // ============================================================
 class ClassSectionRepository : public IRepository<ClassSection, string> {
 private:
@@ -52,24 +52,26 @@ public:
     bool remove(const string& maLopHP) override;
 
     ClassSection* findById(const string& maLopHP) override;
-
-    void displayAll() const override;
+    const ClassSection* findById(const string& maLopHP) const;
 
     // ----- Chuc nang mo rong -----
 
     // Truy cap hang doi waitlist cua lop HP
     Queue<string>* getWaitlist(const string& maLopHP);
+    const Queue<string>* getWaitlist(const string& maLopHP) const;
 
     bool exists(const string& maLopHP) const;
 
     // Tim kiem theo tu khoa (maLopHP, maMon, nhomLopHP, giangVien)
-    void search(const string& keyword) const;
+    void search(const string& keyword, DoubleLinkedList<ClassSection>& outResults) const;
 
     // Lay danh sach cac nhom lop HP duy nhat trong ki hoc cho truoc
     int getGroupsForSemester(int hocKy, string groupNames[], int maxGroups) const;
 
     // Duyet toan bo danh sach de loc theo ki hoc (dung cho timetable, ...)
-    const DoubleLinkedList<ClassSection>& getList() const;
+    const DoubleLinkedList<ClassSection>& getList() const override;
+
+    void clear();
 };
 
 inline NodeDLL<ClassSection>* ClassSectionRepository::getLastNode() const {
@@ -80,9 +82,7 @@ inline NodeDLL<ClassSection>* ClassSectionRepository::getLastNode() const {
 }
 
 inline string ClassSectionRepository::toLower(string s) {
-    for (char& c : s)
-        if (c >= 'A' && c <= 'Z') c = c + 32;
-    return s;
+    return utf8ToLower(s);
 }
 
 inline ClassSectionRepository::~ClassSectionRepository() {
@@ -133,12 +133,10 @@ inline ClassSection* ClassSectionRepository::findById(const string& maLopHP) {
     return nullptr;
 }
 
-inline void ClassSectionRepository::displayAll() const {
-    auto cur = sectionList.getHead();
-    while (cur != nullptr) {
-        cur->data.xuat();
-        cur = cur->next;
-    }
+inline const ClassSection* ClassSectionRepository::findById(const string& maLopHP) const {
+    NodeDLL<ClassSection>* node = nullptr;
+    if (sectionTable.get(maLopHP, node)) return &(node->data);
+    return nullptr;
 }
 
 // ----- Chuc nang mo rong -----
@@ -150,15 +148,20 @@ inline Queue<string>* ClassSectionRepository::getWaitlist(const string& maLopHP)
     return q;
 }
 
+inline const Queue<string>* ClassSectionRepository::getWaitlist(const string& maLopHP) const {
+    Queue<string>* q = nullptr;
+    waitlistTable.get(maLopHP, q);
+    return q;
+}
+
 inline bool ClassSectionRepository::exists(const string& maLopHP) const {
     return sectionTable.search(maLopHP);
 }
 
 // Tim kiem theo tu khoa (maLopHP, maMon, nhomLopHP, giangVien)
-inline void ClassSectionRepository::search(const string& keyword) const {
+inline void ClassSectionRepository::search(const string& keyword, DoubleLinkedList<ClassSection>& outResults) const {
+    outResults.clear();
     string kw = toLower(keyword);
-    cout << "  KET QUA TIM KIEM LOP HOC PHAN (Tu khoa: \"" << keyword << "\")\n";
-    int count = 0;
     auto cur = sectionList.getHead();
     while (cur != nullptr) {
         string id   = toLower(cur->data.getMaLopHP());
@@ -167,12 +170,10 @@ inline void ClassSectionRepository::search(const string& keyword) const {
         string gv   = toLower(cur->data.getGiangVien());
         if (id.find(kw)   != string::npos || mon.find(kw)  != string::npos ||
             nhom.find(kw) != string::npos || gv.find(kw)   != string::npos) {
-            count++;
-            cur->data.xuat();
+            outResults.pushBack(cur->data);
         }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Khong tim thay lop hoc phan nao phu hop)\n";
 }
 
 // Lay danh sach cac nhom lop HP duy nhat trong ki hoc cho truoc
@@ -196,6 +197,18 @@ inline int ClassSectionRepository::getGroupsForSemester(int hocKy, string groupN
 // Duyet toan bo danh sach de loc theo ki hoc (dung cho timetable, ...)
 inline const DoubleLinkedList<ClassSection>& ClassSectionRepository::getList() const {
     return sectionList;
+}
+
+inline void ClassSectionRepository::clear() {
+    auto cur = sectionList.getHead();
+    while (cur != nullptr) {
+        Queue<string>* q = nullptr;
+        if (waitlistTable.get(cur->data.getMaLopHP(), q)) delete q;
+        cur = cur->next;
+    }
+    waitlistTable.clear();
+    sectionTable.clear();
+    sectionList.clear();
 }
 
 #endif // CLASSSECTION_REPOSITORY_H

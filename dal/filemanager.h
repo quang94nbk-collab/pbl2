@@ -7,10 +7,18 @@
 #include <sstream>
 #include <string>
 
-#include "system.h"
+#include "StudentRepository.h"
+#include "CourseRepository.h"
+#include "ClassSectionRepository.h"
+#include "RegistrationRepository.h"
 
 using namespace std;
 
+// ============================================================
+//  FileManager - Thuoc tang Data Access Layer (DAL)
+//  Chiu trach nhiem doc/ghi du lieu tu cac tep van ban vao cac Repository
+//  Khong phu thuoc vao tang BLL (SystemManager) hay Presentation
+// ============================================================
 class FileManager {
 private:
     const string studentFile = "students.txt";
@@ -19,19 +27,33 @@ private:
     const string registrationFile = "registrations.txt";
     const string semesterFile = "semester.txt";
 
-    bool loadSemester(SystemManager& system, string& error) const;
-    bool saveSemester(const SystemManager& system, string& error) const;
-    bool loadStudents(SystemManager& system, string& error) const;
-    bool loadCourses(SystemManager& system, string& error) const;
-    bool loadSections(SystemManager& system, string& error) const;
-    bool loadRegistrations(SystemManager& system, string& error) const;
+    bool loadSemester(int& currentSemester, string& error) const;
+    bool saveSemester(int currentSemester, string& error) const;
+    bool loadStudents(StudentRepository& studentRepo, string& error) const;
+    bool loadCourses(CourseRepository& courseRepo, string& error) const;
+    bool loadSections(ClassSectionRepository& sectionRepo, const CourseRepository& courseRepo, string& error) const;
+    bool loadRegistrations(RegistrationRepository& registrationRepo,
+                           const StudentRepository& studentRepo,
+                           ClassSectionRepository& sectionRepo,
+                           string& error) const;
 
 public:
-    bool loadAllData(SystemManager& system, string& error) const;
-    bool saveAllData(const SystemManager& system, string& error) const;
+    bool loadAllData(StudentRepository& studentRepo,
+                     CourseRepository& courseRepo,
+                     ClassSectionRepository& sectionRepo,
+                     RegistrationRepository& registrationRepo,
+                     int& currentSemester,
+                     string& error) const;
+
+    bool saveAllData(const StudentRepository& studentRepo,
+                     const CourseRepository& courseRepo,
+                     const ClassSectionRepository& sectionRepo,
+                     const RegistrationRepository& registrationRepo,
+                     int currentSemester,
+                     string& error) const;
 };
 
-inline bool FileManager::loadSemester(SystemManager& system, string& error) const {
+inline bool FileManager::loadSemester(int& currentSemester, string& error) const {
     errno = 0;
     ifstream file(semesterFile.c_str());
     if (!file.is_open()) {
@@ -44,7 +66,7 @@ inline bool FileManager::loadSemester(SystemManager& system, string& error) cons
     int sem = 1;
     if (file >> sem) {
         if (sem == 1 || sem == 2) {
-            system.setCurrentSemester(sem);
+            currentSemester = sem;
         }
     }
     if (file.bad()) {
@@ -54,17 +76,17 @@ inline bool FileManager::loadSemester(SystemManager& system, string& error) cons
     return true;
 }
 
-inline bool FileManager::saveSemester(const SystemManager& system, string& error) const {
+inline bool FileManager::saveSemester(int currentSemester, string& error) const {
     ofstream file(semesterFile.c_str());
     if (!file) {
         error = "Khong mo duoc tep " + semesterFile + " de ghi.";
         return false;
     }
-    file << system.getCurrentSemester() << '\n';
+    file << currentSemester << '\n';
     return true;
 }
 
-inline bool FileManager::loadStudents(SystemManager& system, string& error) const {
+inline bool FileManager::loadStudents(StudentRepository& studentRepo, string& error) const {
     errno = 0;
     ifstream file(studentFile.c_str());
     if (!file.is_open()) {
@@ -89,7 +111,7 @@ inline bool FileManager::loadStudents(SystemManager& system, string& error) cons
         string khoaHoc = "";
         if (row >> quoted(khoa) >> quoted(khoaHoc)) {
         }
-        if (!system.addStudent(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
+        if (!studentRepo.add(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
             error = "Khong the nap sinh vien: " + id;
             return false;
         }
@@ -101,7 +123,7 @@ inline bool FileManager::loadStudents(SystemManager& system, string& error) cons
     return true;
 }
 
-inline bool FileManager::loadCourses(SystemManager& system, string& error) const {
+inline bool FileManager::loadCourses(CourseRepository& courseRepo, string& error) const {
     errno = 0;
     ifstream file(courseFile.c_str());
     if (!file.is_open()) {
@@ -135,7 +157,7 @@ inline bool FileManager::loadCourses(SystemManager& system, string& error) const
                 }
             }
         }
-        if (!system.addCourse(Course(id, name, credits, khoa, khoaHoc, nganh, hocKy))) {
+        if (!courseRepo.add(Course(id, name, credits, khoa, khoaHoc, nganh, hocKy))) {
             error = "Khong the nap mon hoc: " + id;
             return false;
         }
@@ -147,7 +169,9 @@ inline bool FileManager::loadCourses(SystemManager& system, string& error) const
     return true;
 }
 
-inline bool FileManager::loadSections(SystemManager& system, string& error) const {
+inline bool FileManager::loadSections(ClassSectionRepository& sectionRepo,
+                                      const CourseRepository& courseRepo,
+                                      string& error) const {
     errno = 0;
     ifstream file(sectionFile.c_str());
     if (!file.is_open()) {
@@ -178,7 +202,7 @@ inline bool FileManager::loadSections(SystemManager& system, string& error) cons
         }
         ClassSection section(id, courseID, instructor, day, startPeriod,
                              endPeriod, room, capacity, hocKy, nhomLopHP);
-        if (!system.addClassSection(section)) {
+        if (!courseRepo.exists(courseID) || !sectionRepo.add(section)) {
             error = "Khong the nap lop hoc phan: " + id;
             return false;
         }
@@ -190,7 +214,10 @@ inline bool FileManager::loadSections(SystemManager& system, string& error) cons
     return true;
 }
 
-inline bool FileManager::loadRegistrations(SystemManager& system, string& error) const {
+inline bool FileManager::loadRegistrations(RegistrationRepository& registrationRepo,
+                                           const StudentRepository& studentRepo,
+                                           ClassSectionRepository& sectionRepo,
+                                           string& error) const {
     errno = 0;
     ifstream file(registrationFile.c_str());
     if (!file.is_open()) {
@@ -211,7 +238,17 @@ inline bool FileManager::loadRegistrations(SystemManager& system, string& error)
             error = "Du lieu dang ky khong hop le.";
             return false;
         }
-        if (!system.registerClass(studentID, sectionID, date, false)) {
+        const Student* student = studentRepo.findById(studentID);
+        ClassSection* section = sectionRepo.findById(sectionID);
+        if (student == nullptr || section == nullptr ||
+            registrationRepo.isRegistered(studentID, sectionID) ||
+            !section->tangSoLuong()) {
+            error = "Khong the nap dang ky: " + id;
+            return false;
+        }
+        const string regID = id.empty() ? registrationRepo.getRegID(studentID, sectionID) : id;
+        if (!registrationRepo.add(Registration(regID, studentID, sectionID, date))) {
+            section->giamSoLuong();
             error = "Khong the nap dang ky: " + id;
             return false;
         }
@@ -223,16 +260,26 @@ inline bool FileManager::loadRegistrations(SystemManager& system, string& error)
     return true;
 }
 
-inline bool FileManager::loadAllData(SystemManager& system, string& error) const {
-    return loadSemester(system, error) &&
-           loadStudents(system, error) &&
-           loadCourses(system, error) &&
-           loadSections(system, error) &&
-           loadRegistrations(system, error);
+inline bool FileManager::loadAllData(StudentRepository& studentRepo,
+                                     CourseRepository& courseRepo,
+                                     ClassSectionRepository& sectionRepo,
+                                     RegistrationRepository& registrationRepo,
+                                     int& currentSemester,
+                                     string& error) const {
+    return loadSemester(currentSemester, error) &&
+           loadStudents(studentRepo, error) &&
+           loadCourses(courseRepo, error) &&
+           loadSections(sectionRepo, courseRepo, error) &&
+           loadRegistrations(registrationRepo, studentRepo, sectionRepo, error);
 }
 
-inline bool FileManager::saveAllData(const SystemManager& system, string& error) const {
-    if (!saveSemester(system, error)) {
+inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
+                                     const CourseRepository& courseRepo,
+                                     const ClassSectionRepository& sectionRepo,
+                                     const RegistrationRepository& registrationRepo,
+                                     int currentSemester,
+                                     string& error) const {
+    if (!saveSemester(currentSemester, error)) {
         return false;
     }
 
@@ -245,7 +292,7 @@ inline bool FileManager::saveAllData(const SystemManager& system, string& error)
         return false;
     }
 
-    auto student = system.getStudents().getHead();
+    auto student = studentRepo.getList().getHead();
     while (student != nullptr) {
         students << quoted(student->data.getMaSV()) << ' '
                  << quoted(student->data.getHoTen()) << ' '
@@ -258,7 +305,7 @@ inline bool FileManager::saveAllData(const SystemManager& system, string& error)
         student = student->next;
     }
 
-    auto course = system.getCourses().getHead();
+    auto course = courseRepo.getList().getHead();
     while (course != nullptr) {
         courses << quoted(course->data.getMaMon()) << ' '
                 << quoted(course->data.getTenMon()) << ' '
@@ -271,7 +318,7 @@ inline bool FileManager::saveAllData(const SystemManager& system, string& error)
         course = course->next;
     }
 
-    auto section = system.getSections().getHead();
+    auto section = sectionRepo.getList().getHead();
     while (section != nullptr) {
         sections << quoted(section->data.getMaLopHP()) << ' '
                  << quoted(section->data.getMaMon()) << ' '
@@ -286,7 +333,7 @@ inline bool FileManager::saveAllData(const SystemManager& system, string& error)
         section = section->next;
     }
 
-    auto registration = system.getRegistrations().getHead();
+    auto registration = registrationRepo.getList().getHead();
     while (registration != nullptr) {
         registrations << quoted(registration->data.getMaDangKy()) << ' '
                       << quoted(registration->data.getMaSV()) << ' '

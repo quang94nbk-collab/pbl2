@@ -2,7 +2,6 @@
 #define STUDENT_H
 
 #include "person.h"
-#include <iostream>
 #include <string>
 using namespace std;
 
@@ -30,12 +29,7 @@ public:
     void setKhoa(string k);
     void setKhoaHoc(string kh);
 
-    void nhap() override;
-    void xuat() const override;
     bool operator==(const Student& other) const;
-
-    friend ostream& operator<<(ostream& os, const Student& s);
-    friend istream& operator>>(istream& is, Student& s);
 };
 inline Student::Student() : Person() {
     lop = "";
@@ -65,48 +59,8 @@ inline void Student::setNganhHoc(string nganh) { nganhHoc = nganh; }
 inline void Student::setKhoa(string k) { khoa = k; }
 inline void Student::setKhoaHoc(string kh) { khoaHoc = kh; }
 
-inline void Student::nhap() {
-    cout << "Ma sinh vien: ";
-    getline(cin >> ws, maNguoi);
-    cout << "Ho ten: ";
-    getline(cin, hoTen);
-    cout << "So dien thoai: ";
-    getline(cin, soDienThoai);
-    cout << "Email: ";
-    getline(cin, email);
-    cout << "Khoa: ";
-    getline(cin, khoa);
-    cout << "Khoa hoc: ";
-    getline(cin, khoaHoc);
-    cout << "Lop: ";
-    getline(cin, lop);
-    cout << "Nganh hoc: ";
-    getline(cin, nganhHoc);
-}
-
-inline void Student::xuat() const {
-    cout << "Ma sinh vien: " << maNguoi << '\n';
-    cout << "Ho ten: " << hoTen << '\n';
-    cout << "So dien thoai: " << soDienThoai << '\n';
-    cout << "Email: " << email << '\n';
-    cout << "Khoa: " << (khoa.empty() ? "Chua cap nhat" : khoa) << '\n';
-    cout << "Khoa hoc: " << (khoaHoc.empty() ? "Chua cap nhat" : khoaHoc) << '\n';
-    cout << "Lop: " << lop << '\n';
-    cout << "Nganh hoc: " << nganhHoc << '\n';
-}
-
 inline bool Student::operator==(const Student& other) const {
     return maNguoi == other.maNguoi;
-}
-
-inline ostream& operator<<(ostream& os, const Student& s) {
-    s.xuat();
-    return os;
-}
-
-inline istream& operator>>(istream& is, Student& s) {
-    s.nhap();
-    return is;
 }
 
 #endif

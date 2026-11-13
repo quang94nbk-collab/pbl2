@@ -6,7 +6,6 @@
 #include "../DSA/hashtable.h"
 #include "../model/student.h"
 #include <string>
-#include <iostream>
 using namespace std;
 
 // ============================================================
@@ -23,6 +22,7 @@ using namespace std;
 //    - findById : Tim nhanh O(1) qua HashTable
 //    - search   : Tim kiem theo tu khoa (ten, lop, khoa...)
 //    - displayAll / displayFiltered
+//      (da tach sang Presentation; DAL cung cap getList / search)
 // ============================================================
 class StudentRepository : public IRepository<Student, string> {
 private:
@@ -43,16 +43,17 @@ public:
     bool remove(const string& maSV) override;
 
     Student* findById(const string& maSV) override;
-
-    void displayAll() const override;
+    const Student* findById(const string& maSV) const;
 
     // ----- Chuc nang mo rong -----
 
     // Tim kiem theo tu khoa (maSV, hoTen, lop, khoa)
-    void search(const string& keyword) const;
+    void search(const string& keyword, DoubleLinkedList<Student>& outResults) const;
 
     // Truy cap danh sach de doc (dung trong SystemManager khi can duyet)
-    const DoubleLinkedList<Student>& getList() const;
+    const DoubleLinkedList<Student>& getList() const override;
+
+    void clear();
 };
 
 // Lay node cuoi trong danh sach de luu vao hashtable
@@ -64,9 +65,7 @@ inline NodeDLL<Student>* StudentRepository::getLastNode() const {
 }
 
 inline string StudentRepository::toLower(string s) {
-    for (char& c : s)
-        if (c >= 'A' && c <= 'Z') c = c + 32;
-    return s;
+    return utf8ToLower(s);
 }
 
 // ----- IRepository interface -----
@@ -94,22 +93,18 @@ inline Student* StudentRepository::findById(const string& maSV) {
     return nullptr;
 }
 
-inline void StudentRepository::displayAll() const {
-    auto cur = studentList.getHead();
-    while (cur != nullptr) {
-        cur->data.xuat();
-        cout << "----------------------\n";
-        cur = cur->next;
-    }
+inline const Student* StudentRepository::findById(const string& maSV) const {
+    NodeDLL<Student>* node = nullptr;
+    if (studentTable.get(maSV, node)) return &(node->data);
+    return nullptr;
 }
 
 // ----- Chuc nang mo rong -----
 
 // Tim kiem theo tu khoa (maSV, hoTen, lop, khoa)
-inline void StudentRepository::search(const string& keyword) const {
+inline void StudentRepository::search(const string& keyword, DoubleLinkedList<Student>& outResults) const {
+    outResults.clear();
     string kw = toLower(keyword);
-    cout << "  KET QUA TIM KIEM SINH VIEN (Tu khoa: \"" << keyword << "\")\n";
-    int count = 0;
     auto cur = studentList.getHead();
     while (cur != nullptr) {
         string id   = toLower(cur->data.getMaSV());
@@ -118,17 +113,20 @@ inline void StudentRepository::search(const string& keyword) const {
         string khoa = toLower(cur->data.getKhoa());
         if (id.find(kw)   != string::npos || name.find(kw) != string::npos ||
             lop.find(kw)  != string::npos || khoa.find(kw) != string::npos) {
-            count++;
-            cur->data.xuat();
+            outResults.pushBack(cur->data);
         }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Khong tim thay sinh vien nao phu hop)\n";
 }
 
 // Truy cap danh sach de doc (dung trong SystemManager khi can duyet)
 inline const DoubleLinkedList<Student>& StudentRepository::getList() const {
     return studentList;
+}
+
+inline void StudentRepository::clear() {
+    studentTable.clear();
+    studentList.clear();
 }
 
 #endif // STUDENT_REPOSITORY_H

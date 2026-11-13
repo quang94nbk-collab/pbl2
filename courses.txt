@@ -1,0 +1,6 @@
+"IT101" "Cấu trúc dữ liệu và Giải thuật" 3 "CNTT" "K23" "CNTT" 0 1
+"IT102" "Lập trình hướng đối tượng" 3 "CNTT" "K23" "CNTT" 0 1
+"IT103" "Cơ sở dữ liệu" 3 "CNTT" "K23" "CNTT" 0 1
+"IT201" "Mạng máy tính" 3 "CNTT" "K23" "CNTT" 0 2
+"IT202" "Hệ điều hành" 3 "CNTT" "K23" "CNTT" 0 2
+"IT203" "Công nghệ phần mềm" 3 "CNTT" "K23" "CNTT" 0 2

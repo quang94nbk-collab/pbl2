@@ -29,6 +29,7 @@ public:
     void push(const T& x);
     bool pop(T &x);
     bool front(T &x) const;
+    bool contains(const T& x) const;
     void print() const;
     void clear();
 };
@@ -75,6 +76,16 @@ bool Queue<T>::front(T &x) const {
     if (empty()) return false;
     x = frontNode->value;
     return true;
+}
+
+template <typename T>
+bool Queue<T>::contains(const T& x) const {
+    QueueNode<T> *p = frontNode;
+    while (p != nullptr) {
+        if (p->value == x) return true;
+        p = p->next;
+    }
+    return false;
 }
 
 template <typename T>

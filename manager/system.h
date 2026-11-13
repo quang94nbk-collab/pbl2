@@ -2,8 +2,6 @@
 #define SYSTEM_H
 
 #include <ctime>
-#include <iomanip>
-#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -14,6 +12,7 @@
 #include "../dal/CourseRepository.h"
 #include "../dal/ClassSectionRepository.h"
 #include "../dal/RegistrationRepository.h"
+#include "../dal/filemanager.h"
 
 // DSA
 #include "../DSA/DoublyLinkedList.h"
@@ -23,6 +22,7 @@
 // Models (gian tiep qua DAL, nhung van can include de dung kieu du lieu)
 #include "../model/classsection.h"
 #include "../model/course.h"
+#include "../model/dtos.h"
 #include "../model/registration.h"
 #include "../model/student.h"
 
@@ -58,6 +58,7 @@ inline GroupInfo::GroupInfo()
 //      +-- CourseRepository       (DAL: Course)
 //      +-- ClassSectionRepository (DAL: ClassSection + Waitlist)
 //      +-- RegistrationRepository (DAL: Registration)
+//      +-- FileManager            (DAL: File persistence)
 //
 //  Nhiem vu cua SystemManager:
 //    - Dieu phoi nghiep vu lien quan nhieu bang (cross-entity)
@@ -75,14 +76,26 @@ private:
     CourseRepository       courseRepo;
     ClassSectionRepository sectionRepo;
     RegistrationRepository registrationRepo;
+    FileManager            fileManager;
 
     int currentSemester;
 
     static string today();
     static string toLower(string s);
 
+    template <typename T>
+    static void copyList(const DoubleLinkedList<T>& src, DoubleLinkedList<T>& dst);
+
+    SectionDetailInfo buildSectionDetail(const ClassSection& sec) const;
+
 public:
     SystemManager();
+
+    // =========================================================
+    //  DATA PERSISTENCE (Giao tiep voi DAL FileManager)
+    // =========================================================
+    bool loadData(string& error);
+    bool saveData(string& error) const;
 
     int  getCurrentSemester() const;
     bool setCurrentSemester(int semester);
@@ -91,21 +104,24 @@ public:
     //  STUDENT
     // =========================================================
     bool addStudent(const Student& s);
-    bool deleteStudent(const string& maSV);
+    bool deleteStudent(const string& maSV, DoubleLinkedList<string>* outWaitlistNotices = nullptr);
     Student* findStudent(const string& maSV);
-    void displayAllStudents() const;
-    void searchStudents(const string& kw) const;
+    const Student* findStudent(const string& maSV) const;
+    void getAllStudents(DoubleLinkedList<Student>& outList) const;
+    void searchStudents(const string& kw, DoubleLinkedList<Student>& outList) const;
 
     // =========================================================
     //  COURSE
     // =========================================================
     bool addCourse(const Course& c);
-    bool deleteCourse(const string& maMon);
+    bool deleteCourse(const string& maMon, string* outMessage = nullptr);
     Course* findCourse(const string& maMon);
-    void displayAllCourses() const;
-    void searchCourses(const string& kw) const;
-    void displayCoursesByFilter(const string& khoa, const string& khoaHoc,
-                                const string& nganh = "", int hocKy = 0) const;
+    const Course* findCourse(const string& maMon) const;
+    void getAllCourses(DoubleLinkedList<Course>& outList) const;
+    void searchCourses(const string& kw, DoubleLinkedList<Course>& outList) const;
+    void filterCourses(const string& khoa, const string& khoaHoc,
+                       const string& nganh, int hocKy,
+                       DoubleLinkedList<Course>& outList) const;
 
     // =========================================================
     //  CLASS SECTION
@@ -113,10 +129,15 @@ public:
     bool addClassSection(const ClassSection& sec);
     bool deleteClassSection(const string& maLopHP);
     ClassSection* findClassSection(const string& maLopHP);
-    void displayAllSections() const;
-    void searchSections(const string& kw) const;
-    void displayStudentsInSection(const string& maLopHP);
-    void displaySectionsByGroup() const;
+    const ClassSection* findClassSection(const string& maLopHP) const;
+    void getAllSections(DoubleLinkedList<ClassSection>& outList) const;
+    void searchSections(const string& kw, DoubleLinkedList<ClassSection>& outList) const;
+    bool getStudentsInSection(const string& maLopHP, ClassSection& outSection,
+                              DoubleLinkedList<SectionStudentInfo>& outStudents) const;
+    int getGroupsForCurrentSemester(string groupNames[], int maxGroups) const;
+    void getSectionsByGroupInCurrentSemester(const string& groupName,
+                                             DoubleLinkedList<SectionDetailInfo>& outSections) const;
+    void getUngroupedSectionsInCurrentSemester(DoubleLinkedList<SectionDetailInfo>& outSections) const;
 
     // =========================================================
     //  REGISTRATION - Logic nghiep vu chinh
@@ -125,32 +146,39 @@ public:
     // Tim maLopHP sinh vien da dang ky cho 1 mon hoc cu the (neu co)
     string getRegisteredSectionForCourse(const string& maSV, const string& maMon) const;
     bool isSectionRegistered(const string& maSV, const string& maLopHP) const;
+    bool isStudentInWaitlist(const string& maSV, const string& maLopHP) const;
     int getStudentRegisteredSections(const string& maSV, string outSectionIDs[], int maxCount) const;
-    bool isTimeConflict(const string& maSV, const string& newSectionID);
+    bool isTimeConflict(const string& maSV, const string& newSectionID) const;
     bool registerClass(const string& maSV, const string& maLopHP,
                        const string& registrationDate = "", bool checkSemester = true);
-    bool cancelRegistration(const string& maSV, const string& maLopHP);
-    void displayStudentRegistrations(const string& maSV) const;
-    void displayAllRegistrations() const;
+    bool cancelRegistration(const string& maSV, const string& maLopHP,
+                            DoubleLinkedList<string>* outWaitlistNotices = nullptr);
+    void getStudentRegistrations(const string& maSV,
+                                 DoubleLinkedList<StudentRegistrationDetail>& outDetails,
+                                 int semester = 0) const;
+    void getAllRegistrations(DoubleLinkedList<Registration>& outList) const;
 
     // =========================================================
     //  TINH TOAN & THONG KE
     // =========================================================
-    int calculateTotalCredits(const string& maSV) const;
-    void displayStudentTimetable(const string& maSV) const;
-    void checkTimeConflictInteractive(const string& maSV, const string& maLopHP) const;
+    int calculateTotalCredits(const string& maSV,
+                              DoubleLinkedList<CreditSummaryItem>* outDetails = nullptr,
+                              int semester = 0) const;
+    void getStudentTimetable(const string& maSV, DoubleLinkedList<TimetableEntry>& outEntries) const;
+    bool checkTimeConflictDetails(const string& maSV, const string& maLopHP,
+                                  ClassSection& outTarget,
+                                  DoubleLinkedList<ClassSection>& outConflicts) const;
     int getSemesterRequiredCourses(const string& maSV, string courseIDs[], int maxCourses) const;
     int getMissingCoursesCount(const string& maSV, string missingIDs[], int maxMissing) const;
-    void displaySemesterRegistrationStatus(const string& maSV) const;
+    bool getSemesterRegistrationStatus(const string& maSV,
+                                       SemesterProgressSummary& outSummary,
+                                       DoubleLinkedList<CourseProgressItem>& outItems) const;
     int getEligibleGroupsForStudent(const string& maSV, GroupInfo eligibleGroups[], int maxGroups) const;
 
     // =========================================================
     //  Accessor truc tiep (tuong thich nguoc voi code cu)
+    //  -> Da chuyen sang cac ham truy van getAll... / DTOs de dam bao dong goi 3 layer
     // =========================================================
-    const DoubleLinkedList<Student>&      getStudents()      const;
-    const DoubleLinkedList<Course>&       getCourses()       const;
-    const DoubleLinkedList<ClassSection>& getSections()      const;
-    const DoubleLinkedList<Registration>& getRegistrations() const;
 };
 
 // =============================================================
@@ -161,18 +189,55 @@ inline string SystemManager::today() {
     time_t now = time(nullptr);
     tm* localTime = localtime(&now);
     if (localTime == nullptr) return "";
-    ostringstream date;
-    date << put_time(localTime, "%Y-%m-%d");
-    return date.str();
+    char buf[16];
+    if (strftime(buf, sizeof(buf), "%Y-%m-%d", localTime) == 0) return "";
+    return string(buf);
 }
 
 inline string SystemManager::toLower(string s) {
-    for (char& c : s)
-        if (c >= 'A' && c <= 'Z') c = c + 32;
-    return s;
+    return utf8ToLower(s);
+}
+
+template <typename T>
+inline void SystemManager::copyList(const DoubleLinkedList<T>& src, DoubleLinkedList<T>& dst) {
+    dst.clear();
+    auto cur = src.getHead();
+    while (cur != nullptr) {
+        dst.pushBack(cur->data);
+        cur = cur->next;
+    }
+}
+
+inline SectionDetailInfo SystemManager::buildSectionDetail(const ClassSection& sec) const {
+    SectionDetailInfo info;
+    info.maLopHP = sec.getMaLopHP();
+    info.maMon = sec.getMaMon();
+    info.nhomLopHP = sec.getNhomLopHP();
+    info.giangVien = sec.getGiangVien();
+    info.thu = sec.getThu();
+    info.tietBatDau = sec.getTietBatDau();
+    info.tietKetThuc = sec.getTietKetThuc();
+    info.phong = sec.getPhong();
+    info.siSoToiDa = sec.getSiSoToiDa();
+    info.soLuongDaDangKy = sec.getSoLuongDaDangKy();
+    info.hocKy = sec.getHocKy();
+    const Course* c = findCourse(sec.getMaMon());
+    info.tenMon = c ? c->getTenMon() : sec.getMaMon();
+    info.soTinChi = c ? c->getSoTinChi() : 0;
+    return info;
 }
 
 inline SystemManager::SystemManager() : currentSemester(1) {}
+
+inline bool SystemManager::loadData(string& error) {
+    return fileManager.loadAllData(studentRepo, courseRepo, sectionRepo, registrationRepo,
+                                   currentSemester, error);
+}
+
+inline bool SystemManager::saveData(string& error) const {
+    return fileManager.saveAllData(studentRepo, courseRepo, sectionRepo, registrationRepo,
+                                   currentSemester, error);
+}
 
 inline int SystemManager::getCurrentSemester() const {
     return currentSemester;
@@ -194,13 +259,14 @@ inline bool SystemManager::addStudent(const Student& s) {
     return studentRepo.add(s);
 }
 
-inline bool SystemManager::deleteStudent(const string& maSV) {
+inline bool SystemManager::deleteStudent(const string& maSV,
+                                         DoubleLinkedList<string>* outWaitlistNotices) {
     // 1. Xoa het dang ky cua sinh vien (can update lai so luong lop HP)
     const int MAX = 100;
     string secIDs[MAX];
     int cnt = registrationRepo.getSectionsByStudent(maSV, secIDs, MAX);
     for (int i = 0; i < cnt; i++)
-        cancelRegistration(maSV, secIDs[i]);
+        cancelRegistration(maSV, secIDs[i], outWaitlistNotices);
 
     // 2. Xoa sinh vien
     return studentRepo.remove(maSV);
@@ -210,12 +276,16 @@ inline Student* SystemManager::findStudent(const string& maSV) {
     return studentRepo.findById(maSV);
 }
 
-inline void SystemManager::displayAllStudents() const {
-    studentRepo.displayAll();
+inline const Student* SystemManager::findStudent(const string& maSV) const {
+    return studentRepo.findById(maSV);
 }
 
-inline void SystemManager::searchStudents(const string& kw) const {
-    studentRepo.search(kw);
+inline void SystemManager::getAllStudents(DoubleLinkedList<Student>& outList) const {
+    copyList(studentRepo.getList(), outList);
+}
+
+inline void SystemManager::searchStudents(const string& kw, DoubleLinkedList<Student>& outList) const {
+    studentRepo.search(kw, outList);
 }
 
 // =========================================================
@@ -226,13 +296,15 @@ inline bool SystemManager::addCourse(const Course& c) {
     return courseRepo.add(c);
 }
 
-inline bool SystemManager::deleteCourse(const string& maMon) {
+inline bool SystemManager::deleteCourse(const string& maMon, string* outMessage) {
     // Kiem tra con ClassSection thuoc mon nay khong
     auto cur = sectionRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaMon() == maMon) {
-            cout << "Khong the xoa: Lop hoc phan '" << cur->data.getMaLopHP()
-                 << "' dang thuoc mon nay. Vui long xoa lop hoc phan truoc!\n";
+            if (outMessage != nullptr) {
+                *outMessage = "Khong the xoa: Lop hoc phan '" + cur->data.getMaLopHP() +
+                              "' dang thuoc mon nay. Vui long xoa lop hoc phan truoc!";
+            }
             return false;
         }
         cur = cur->next;
@@ -244,17 +316,22 @@ inline Course* SystemManager::findCourse(const string& maMon) {
     return courseRepo.findById(maMon);
 }
 
-inline void SystemManager::displayAllCourses() const {
-    courseRepo.displayAll();
+inline const Course* SystemManager::findCourse(const string& maMon) const {
+    return courseRepo.findById(maMon);
 }
 
-inline void SystemManager::searchCourses(const string& kw) const {
-    courseRepo.search(kw);
+inline void SystemManager::getAllCourses(DoubleLinkedList<Course>& outList) const {
+    copyList(courseRepo.getList(), outList);
 }
 
-inline void SystemManager::displayCoursesByFilter(const string& khoa, const string& khoaHoc,
-                                                 const string& nganh, int hocKy) const {
-    courseRepo.displayByFilter(khoa, khoaHoc, nganh, hocKy);
+inline void SystemManager::searchCourses(const string& kw, DoubleLinkedList<Course>& outList) const {
+    courseRepo.search(kw, outList);
+}
+
+inline void SystemManager::filterCourses(const string& khoa, const string& khoaHoc,
+                                         const string& nganh, int hocKy,
+                                         DoubleLinkedList<Course>& outList) const {
+    courseRepo.filter(khoa, khoaHoc, nganh, hocKy, outList);
 }
 
 // =========================================================
@@ -278,92 +355,64 @@ inline ClassSection* SystemManager::findClassSection(const string& maLopHP) {
     return sectionRepo.findById(maLopHP);
 }
 
-inline void SystemManager::displayAllSections() const {
-    sectionRepo.displayAll();
+inline const ClassSection* SystemManager::findClassSection(const string& maLopHP) const {
+    return sectionRepo.findById(maLopHP);
 }
 
-inline void SystemManager::searchSections(const string& kw) const {
-    sectionRepo.search(kw);
+inline void SystemManager::getAllSections(DoubleLinkedList<ClassSection>& outList) const {
+    copyList(sectionRepo.getList(), outList);
 }
 
-inline void SystemManager::displayStudentsInSection(const string& maLopHP) {
-    ClassSection* sec = findClassSection(maLopHP);
-    if (!sec) { cout << "Khong tim thay lop hoc phan: " << maLopHP << "\n"; return; }
-    cout << "  DANH SACH SINH VIEN DANG KY LOP HOC PHAN: " << maLopHP << "\n";
-    cout << "  Mon: " << sec->getMaMon()
-         << " | Nhom: " << (sec->getNhomLopHP().empty() ? "(Chua gan nhom)" : sec->getNhomLopHP())
-         << " | Thu: "  << sec->getThu()
-         << " | Tiet: " << sec->getTietBatDau() << "-" << sec->getTietKetThuc() << "\n";
-    cout << "  Si so hien tai: " << sec->getSoLuongDaDangKy() << "/" << sec->getSiSoToiDa() << "\n";
+inline void SystemManager::searchSections(const string& kw, DoubleLinkedList<ClassSection>& outList) const {
+    sectionRepo.search(kw, outList);
+}
 
-    int count = 0;
+inline bool SystemManager::getStudentsInSection(const string& maLopHP, ClassSection& outSection,
+                                                DoubleLinkedList<SectionStudentInfo>& outStudents) const {
+    outStudents.clear();
+    const ClassSection* sec = findClassSection(maLopHP);
+    if (!sec) return false;
+    outSection = *sec;
+
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaLopHP() == maLopHP) {
-            count++;
-            string svID = cur->data.getMaSV();
-            Student* sv = findStudent(svID);
-            cout << left << setw(4) << count
-                 << "MSSV: " << setw(12) << svID
-                 << " | Ho ten: "  << setw(22) << (sv ? sv->getHoTen() : "(Chua cap nhat)")
-                 << " | Lop: "     << setw(10) << (sv ? sv->getLop()   : "-")
-                 << " | Ngay DK: " << cur->data.getNgayDangKy() << "\n";
+            SectionStudentInfo item;
+            item.maSV = cur->data.getMaSV();
+            const Student* sv = findStudent(item.maSV);
+            item.hoTen = sv ? sv->getHoTen() : "(Chua cap nhat)";
+            item.lop = sv ? sv->getLop() : "-";
+            item.ngayDangKy = cur->data.getNgayDangKy();
+            outStudents.pushBack(item);
         }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Chua co sinh vien nao dang ky vao lop hoc phan nay)\n";
+    return true;
 }
 
-inline void SystemManager::displaySectionsByGroup() const {
-    cout << "  DANH SACH NHOM LOP HOC PHAN - HOC KY " << currentSemester << "\n";
-    const int MAX_GROUPS = 100;
-    string groupNames[MAX_GROUPS];
-    int groupCount = sectionRepo.getGroupsForSemester(currentSemester, groupNames, MAX_GROUPS);
+inline int SystemManager::getGroupsForCurrentSemester(string groupNames[], int maxGroups) const {
+    return sectionRepo.getGroupsForSemester(currentSemester, groupNames, maxGroups);
+}
 
-    if (groupCount == 0) {
-        cout << "(Khong co nhom lop hoc phan nao trong hoc ky " << currentSemester << ")\n";
-        return;
-    }
-    for (int g = 0; g < groupCount; g++) {
-        cout << "\n>>> NHOM: " << groupNames[g] << "\n";
-        int secCount = 0;
-        auto cur = sectionRepo.getList().getHead();
-        while (cur != nullptr) {
-            if (cur->data.getHocKy() == currentSemester &&
-                cur->data.getNhomLopHP() == groupNames[g]) {
-                secCount++;
-                string tenMon = cur->data.getMaMon();
-                Course* c = const_cast<SystemManager*>(this)->findCourse(cur->data.getMaMon());
-                if (c) tenMon = c->getTenMon();
-                cout << "  [" << secCount << "] " << cur->data.getMaLopHP()
-                     << " | Mon: " << tenMon
-                     << " | GV: "  << cur->data.getGiangVien()
-                     << " | Thu "  << cur->data.getThu()
-                     << " | Tiet " << cur->data.getTietBatDau() << "-" << cur->data.getTietKetThuc()
-                     << " | Phong: "<< cur->data.getPhong()
-                     << " | SS: "  << cur->data.getSoLuongDaDangKy() << "/" << cur->data.getSiSoToiDa()
-                     << "\n";
-            }
-            cur = cur->next;
-        }
-        if (secCount == 0) cout << "  (Khong co lop hoc phan nao trong nhom nay)\n";
-    }
-    // Chua gan nhom
-    bool hasUngrouped = false;
+inline void SystemManager::getSectionsByGroupInCurrentSemester(const string& groupName,
+                                                                 DoubleLinkedList<SectionDetailInfo>& outSections) const {
+    outSections.clear();
     auto cur = sectionRepo.getList().getHead();
     while (cur != nullptr) {
+        if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP() == groupName) {
+            outSections.pushBack(buildSectionDetail(cur->data));
+        }
+        cur = cur->next;
+    }
+}
+
+inline void SystemManager::getUngroupedSectionsInCurrentSemester(DoubleLinkedList<SectionDetailInfo>& outSections) const {
+    outSections.clear();
+    auto cur = sectionRepo.getList().getHead();
+    while (cur != nullptr) {
+        // Chua gan nhom
         if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP().empty()) {
-            if (!hasUngrouped) { cout << "\n>>> CHUA GAN NHOM:\n"; hasUngrouped = true; }
-            string tenMon = cur->data.getMaMon();
-            Course* c = const_cast<SystemManager*>(this)->findCourse(cur->data.getMaMon());
-            if (c) tenMon = c->getTenMon();
-            cout << "  " << cur->data.getMaLopHP()
-                 << " | Mon: " << tenMon
-                 << " | GV: "  << cur->data.getGiangVien()
-                 << " | Thu "  << cur->data.getThu()
-                 << " | Tiet " << cur->data.getTietBatDau() << "-" << cur->data.getTietKetThuc()
-                 << " | SS: "  << cur->data.getSoLuongDaDangKy() << "/" << cur->data.getSiSoToiDa()
-                 << "\n";
+            outSections.pushBack(buildSectionDetail(cur->data));
         }
         cur = cur->next;
     }
@@ -378,8 +427,7 @@ inline string SystemManager::getRegisteredSectionForCourse(const string& maSV, c
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaSV() == maSV) {
-            ClassSection* sec =
-                const_cast<SystemManager*>(this)->findClassSection(cur->data.getMaLopHP());
+            const ClassSection* sec = findClassSection(cur->data.getMaLopHP());
             if (sec && sec->getMaMon() == maMon)
                 return sec->getMaLopHP();
         }
@@ -392,18 +440,26 @@ inline bool SystemManager::isSectionRegistered(const string& maSV, const string&
     return registrationRepo.isRegistered(maSV, maLopHP);
 }
 
+inline bool SystemManager::isStudentInWaitlist(const string& maSV, const string& maLopHP) const {
+    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    return q != nullptr && q->contains(maSV);
+}
+
 inline int SystemManager::getStudentRegisteredSections(const string& maSV, string outSectionIDs[], int maxCount) const {
     return registrationRepo.getSectionsByStudent(maSV, outSectionIDs, maxCount);
 }
 
-inline bool SystemManager::isTimeConflict(const string& maSV, const string& newSectionID) {
-    ClassSection* target = findClassSection(newSectionID);
+inline bool SystemManager::isTimeConflict(const string& maSV, const string& newSectionID) const {
+    const ClassSection* target = findClassSection(newSectionID);
     if (!target) return false;
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaSV() == maSV) {
-            ClassSection* existing = findClassSection(cur->data.getMaLopHP());
-            if (existing && existing->trungLichVoi(*target)) return true;
+            const ClassSection* existing = findClassSection(cur->data.getMaLopHP());
+            if (existing && existing->getHocKy() == target->getHocKy() &&
+                existing->trungLichVoi(*target)) {
+                return true;
+            }
         }
         cur = cur->next;
     }
@@ -476,6 +532,10 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
     if (!section->conCho()) {
         Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
         if (q) {
+            if (q->contains(maSV)) {
+                throw DuplicateException(
+                    "Sinh vien '" + maSV + "' da nam trong hang doi cho cua lop '" + maLopHP + "' roi");
+            }
             q->push(maSV);
             throw ClassFullException(
                 "Lop '" + maLopHP + "' da het cho. Sinh vien '" + maSV + "' duoc them vao hang doi cho");
@@ -492,7 +552,8 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
     return true;
 }
 
-inline bool SystemManager::cancelRegistration(const string& maSV, const string& maLopHP) {
+inline bool SystemManager::cancelRegistration(const string& maSV, const string& maLopHP,
+                                              DoubleLinkedList<string>* outWaitlistNotices) {
     const string regID = registrationRepo.getRegID(maSV, maLopHP);
     if (!registrationRepo.findById(regID)) return false;
 
@@ -520,11 +581,16 @@ inline bool SystemManager::cancelRegistration(const string& maSV, const string& 
                     section->tangSoLuong();
                     const string newRegID = registrationRepo.getRegID(nextSV, maLopHP);
                     registrationRepo.add(Registration(newRegID, nextSV, maLopHP, today()));
-                    cout << "Tu dong dang ky cho sinh vien " << nextSV
-                         << " tu hang doi vao lop " << maLopHP << ".\n";
+                    if (outWaitlistNotices != nullptr) {
+                        outWaitlistNotices->pushBack("Tu dong dang ky cho sinh vien " + nextSV +
+                                                     " tu hang doi vao lop " + maLopHP + ".");
+                    }
                     break;
                 } else {
-                    cout << "Sinh vien " << nextSV << " bi trung lich, chuyen sang ban tiep theo.\n";
+                    if (outWaitlistNotices != nullptr) {
+                        outWaitlistNotices->pushBack("Sinh vien " + nextSV +
+                                                     " bi trung lich, chuyen sang ban tiep theo.");
+                    }
                 }
             }
         }
@@ -532,133 +598,128 @@ inline bool SystemManager::cancelRegistration(const string& maSV, const string& 
     return true;
 }
 
-inline void SystemManager::displayStudentRegistrations(const string& maSV) const {
-    cout << "  DANH SACH LOP DA DANG KY - SV: " << maSV << "\n";
-    int count = 0;
+inline void SystemManager::getStudentRegistrations(const string& maSV,
+                                                   DoubleLinkedList<StudentRegistrationDetail>& outDetails,
+                                                   int semester) const {
+    outDetails.clear();
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaSV() == maSV) {
-            count++;
-            cout << "[" << count << "] Lop HP: " << cur->data.getMaLopHP()
-                 << " | Ngay DK: " << cur->data.getNgayDangKy() << "\n";
-            ClassSection* sec =
-                const_cast<SystemManager*>(this)->findClassSection(cur->data.getMaLopHP());
+            const ClassSection* sec = findClassSection(cur->data.getMaLopHP());
             if (sec) {
-                string tenMon = sec->getMaMon();
-                Course* c = const_cast<SystemManager*>(this)->findCourse(sec->getMaMon());
-                if (c) tenMon = c->getTenMon();
-                cout << "    Mon: " << tenMon
-                     << " | Nhom: " << (sec->getNhomLopHP().empty() ? "(Khong)" : sec->getNhomLopHP())
-                     << " | Thu "   << sec->getThu()
-                     << " | Tiet "  << sec->getTietBatDau() << "-" << sec->getTietKetThuc()
-                     << " | GV: "   << sec->getGiangVien() << "\n";
+                if (semester != 0 && sec->getHocKy() != semester) {
+                    cur = cur->next;
+                    continue;
+                }
+                StudentRegistrationDetail item;
+                item.maDangKy = cur->data.getMaDangKy();
+                item.maLopHP = cur->data.getMaLopHP();
+                item.ngayDangKy = cur->data.getNgayDangKy();
+                const Course* c = findCourse(sec->getMaMon());
+                item.tenMon = c ? c->getTenMon() : sec->getMaMon();
+                item.nhomLopHP = sec->getNhomLopHP();
+                item.thu = sec->getThu();
+                item.tietBatDau = sec->getTietBatDau();
+                item.tietKetThuc = sec->getTietKetThuc();
+                item.giangVien = sec->getGiangVien();
+                item.hocKy = sec->getHocKy();
+                outDetails.pushBack(item);
             }
         }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Chua dang ky lop hoc phan nao)\n";
 }
 
-inline void SystemManager::displayAllRegistrations() const {
-    registrationRepo.displayAll();
+inline void SystemManager::getAllRegistrations(DoubleLinkedList<Registration>& outList) const {
+    copyList(registrationRepo.getList(), outList);
 }
 
 // =========================================================
 //  TINH TOAN & THONG KE
 // =========================================================
 
-inline int SystemManager::calculateTotalCredits(const string& maSV) const {
+inline int SystemManager::calculateTotalCredits(const string& maSV,
+                                                DoubleLinkedList<CreditSummaryItem>* outDetails,
+                                                int semester) const {
+    if (outDetails != nullptr) outDetails->clear();
     int totalCredits = 0;
-    cout << "  TONG KET TIN CHI DA DANG KY - MSSV: " << maSV << "\n";
-    int count = 0;
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaSV() == maSV) {
-            ClassSection* sec =
-                const_cast<SystemManager*>(this)->findClassSection(cur->data.getMaLopHP());
+            const ClassSection* sec = findClassSection(cur->data.getMaLopHP());
             if (sec) {
-                Course* c = const_cast<SystemManager*>(this)->findCourse(sec->getMaMon());
+                if (semester != 0 && sec->getHocKy() != semester) {
+                    cur = cur->next;
+                    continue;
+                }
+                const Course* c = findCourse(sec->getMaMon());
                 int tc = (c ? c->getSoTinChi() : 0);
                 totalCredits += tc;
-                count++;
-                cout << "[" << count << "] Lop HP: " << setw(22) << left << sec->getMaLopHP()
-                     << " | Mon: " << setw(20) << (c ? c->getTenMon() : sec->getMaMon())
-                     << " | So tin chi: " << tc << "\n";
+                if (outDetails != nullptr) {
+                    CreditSummaryItem item;
+                    item.maLopHP = sec->getMaLopHP();
+                    item.tenMon = c ? c->getTenMon() : sec->getMaMon();
+                    item.soTinChi = tc;
+                    outDetails->pushBack(item);
+                }
             }
         }
         cur = cur->next;
     }
-    cout << ">> TONG SO TIN CHI DA DANG KY: " << totalCredits
-         << " tin chi (" << count << " lop hoc phan)\n";
     return totalCredits;
 }
 
-inline void SystemManager::displayStudentTimetable(const string& maSV) const {
-    cout << "                   THOI KHOA BIEU SINH VIEN: " << maSV << "\n";
-    cout << "                   (Hoc ky he thong: Hoc ky " << currentSemester << ")\n";
-    const string days[]     = {"2","3","4","5","6","7","CN"};
-    const string dayNames[] = {"THU HAI (Thu 2)","THU BA (Thu 3)","THU TU (Thu 4)",
-                               "THU NAM (Thu 5)","THU SAU (Thu 6)","THU BAY (Thu 7)","CHU NHAT"};
-    int totalClasses = 0;
+inline void SystemManager::getStudentTimetable(const string& maSV,
+                                               DoubleLinkedList<TimetableEntry>& outEntries) const {
+    outEntries.clear();
+    const string days[] = {"2", "3", "4", "5", "6", "7", "CN"};
     for (int d = 0; d < 7; d++) {
-        bool hasClass = false;
         auto cur = registrationRepo.getList().getHead();
         while (cur != nullptr) {
             if (cur->data.getMaSV() == maSV) {
-                ClassSection* sec =
-                    const_cast<SystemManager*>(this)->findClassSection(cur->data.getMaLopHP());
-                if (sec && sec->getThu() == days[d]) {
-                    if (!hasClass) { cout << "\n>>> " << dayNames[d] << ":\n"; hasClass = true; }
-                    Course* c = const_cast<SystemManager*>(this)->findCourse(sec->getMaMon());
-                    cout << "  - Tiet " << setw(2) << right << sec->getTietBatDau()
-                         << " -> " << setw(2) << left << sec->getTietKetThuc()
-                         << " | Lop HP: " << setw(22) << sec->getMaLopHP()
-                         << " | Mon: "    << setw(20) << (c ? c->getTenMon() : sec->getMaMon())
-                         << " | Phong: "  << setw(8)  << sec->getPhong()
-                         << " | GV: "     << sec->getGiangVien() << "\n";
-                    totalClasses++;
+                const ClassSection* sec = findClassSection(cur->data.getMaLopHP());
+                if (sec && sec->getHocKy() == currentSemester && sec->getThu() == days[d]) {
+                    const Course* c = findCourse(sec->getMaMon());
+                    TimetableEntry entry;
+                    entry.thu = sec->getThu();
+                    entry.tietBatDau = sec->getTietBatDau();
+                    entry.tietKetThuc = sec->getTietKetThuc();
+                    entry.maLopHP = sec->getMaLopHP();
+                    entry.tenMon = c ? c->getTenMon() : sec->getMaMon();
+                    entry.phong = sec->getPhong();
+                    entry.giangVien = sec->getGiangVien();
+                    outEntries.pushBack(entry);
                 }
             }
             cur = cur->next;
         }
     }
-    if (totalClasses == 0)
-        cout << "\n(Ban chua dang ky lop hoc phan nao trong thoi khoa bieu)\n";
 }
 
-inline void SystemManager::checkTimeConflictInteractive(const string& maSV, const string& maLopHP) const {
-    ClassSection* target =
-        const_cast<SystemManager*>(this)->findClassSection(maLopHP);
-    if (!target) { cout << "Khong tim thay lop hoc phan: " << maLopHP << "\n"; return; }
-    cout << "\n--- KIEM TRA TRUNG LICH HOC ---\n";
-    cout << "Lop can kiem tra: " << target->getMaLopHP()
-         << " | Thu " << target->getThu()
-         << " | Tiet " << target->getTietBatDau() << "-" << target->getTietKetThuc()
-         << " | Phong: " << target->getPhong() << "\n";
-    bool conflict = false;
+inline bool SystemManager::checkTimeConflictDetails(const string& maSV, const string& maLopHP,
+                                                    ClassSection& outTarget,
+                                                    DoubleLinkedList<ClassSection>& outConflicts) const {
+    outConflicts.clear();
+    const ClassSection* target = findClassSection(maLopHP);
+    if (!target) return false;
+    outTarget = *target;
+
     auto cur = registrationRepo.getList().getHead();
     while (cur != nullptr) {
         if (cur->data.getMaSV() == maSV) {
-            ClassSection* existing =
-                const_cast<SystemManager*>(this)->findClassSection(cur->data.getMaLopHP());
-            if (existing && existing->trungLichVoi(*target)) {
-                conflict = true;
-                cout << ">> [CANH BAO] TRUNG LICH voi lop da dang ky: "
-                     << existing->getMaLopHP()
-                     << " (Mon: " << existing->getMaMon()
-                     << ", Thu " << existing->getThu()
-                     << ", Tiet " << existing->getTietBatDau() << "-" << existing->getTietKetThuc()
-                     << ", Phong: " << existing->getPhong() << ")\n";
+            const ClassSection* existing = findClassSection(cur->data.getMaLopHP());
+            if (existing && existing->getHocKy() == target->getHocKy() &&
+                existing->trungLichVoi(*target)) {
+                outConflicts.pushBack(*existing);
             }
         }
         cur = cur->next;
     }
-    if (!conflict)
-        cout << ">> [HOP LE] Lop hoc phan KHONG BI TRUNG LICH voi bat ky lop nao ban da dang ky!\n";
+    return true;
 }
 
 inline int SystemManager::getSemesterRequiredCourses(const string& maSV, string courseIDs[], int maxCourses) const {
-    Student* student = const_cast<SystemManager*>(this)->findStudent(maSV);
+    const Student* student = findStudent(maSV);
     if (!student) return 0;
     return courseRepo.getMatchingCourses(
         student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(),
@@ -679,69 +740,55 @@ inline int SystemManager::getMissingCoursesCount(const string& maSV, string miss
     return missing;
 }
 
-inline void SystemManager::displaySemesterRegistrationStatus(const string& maSV) const {
-    Student* student = const_cast<SystemManager*>(this)->findStudent(maSV);
-    if (!student) return;
-    cout << "  RANG BUOC & TIEN DO DANG KY TAT CA MON HOC - HOC KY " << currentSemester << "\n";
-    cout << "  Sinh vien: " << student->getHoTen()
-         << " (MSSV: " << student->getMaSV()
-         << " | Lop: "  << student->getLop() << ")\n";
+inline bool SystemManager::getSemesterRegistrationStatus(const string& maSV,
+                                                         SemesterProgressSummary& outSummary,
+                                                         DoubleLinkedList<CourseProgressItem>& outItems) const {
+    outItems.clear();
+    const Student* student = findStudent(maSV);
+    if (!student) return false;
+
+    outSummary.maSV = student->getMaSV();
+    outSummary.hoTen = student->getHoTen();
+    outSummary.lop = student->getLop();
+    outSummary.currentSemester = currentSemester;
+    outSummary.totalRequiredCourses = 0;
+    outSummary.registeredCourses = 0;
+    outSummary.totalCredits = 0;
+    outSummary.registeredCredits = 0;
 
     const int MAX_REQ = 50;
     string reqIDs[MAX_REQ];
     int reqCount = getSemesterRequiredCourses(maSV, reqIDs, MAX_REQ);
-    if (reqCount == 0) {
-        cout << "(Khong tim thay mon hoc nao duoc mo cho chuong trinh cua ban trong hoc ky "
-             << currentSemester << ")\n";
-        return;
-    }
+    outSummary.totalRequiredCourses = reqCount;
 
-    int registeredCount = 0, totalCredits = 0, registeredCredits = 0;
     for (int i = 0; i < reqCount; i++) {
-        Course* c = const_cast<SystemManager*>(this)->findCourse(reqIDs[i]);
-        string tenMon = (c ? c->getTenMon() : reqIDs[i]);
-        int tc = (c ? c->getSoTinChi() : 0);
-        totalCredits += tc;
-        string regSec = getRegisteredSectionForCourse(maSV, reqIDs[i]);
-        cout << "[" << (i + 1) << "] [" << reqIDs[i] << "] "
-             << setw(26) << left << tenMon << " (" << tc << " TC) -> ";
-        if (!regSec.empty()) {
-            registeredCount++;
-            registeredCredits += tc;
-            ClassSection* s = const_cast<SystemManager*>(this)->findClassSection(regSec);
-            cout << "[DA DANG KY: " << regSec;
-            if (s) cout << " | Thu " << s->getThu() << " Tiet " << s->getTietBatDau() << "-" << s->getTietKetThuc();
-            cout << "]\n";
-        } else {
-            cout << "[CHUA DANG KY - CAN BO SUNG]\n";
-        }
-    }
-    cout << "Tong so mon can hoc trong ky: " << reqCount << " mon (" << totalCredits << " tin chi)\n";
-    cout << "So mon da dang ky:           " << registeredCount << "/" << reqCount
-         << " mon (" << registeredCredits << "/" << totalCredits << " tin chi)\n";
+        const Course* c = findCourse(reqIDs[i]);
+        CourseProgressItem item;
+        item.maMon = reqIDs[i];
+        item.tenMon = c ? c->getTenMon() : reqIDs[i];
+        item.soTinChi = c ? c->getSoTinChi() : 0;
+        outSummary.totalCredits += item.soTinChi;
 
-    if (registeredCount == reqCount) {
-        cout << ">> [TIEN DO HOC TAP]: HOAN THANH! Ban da dang ky DAY DU tat ca cac mon trong Hoc ky "
-             << currentSemester << "!\n";
-    } else {
-        int missing = reqCount - registeredCount;
-        cout << ">> [CANH BAO TIEN DO]: CHUA HOAN THANH! Ban con thieu " << missing
-             << " mon trong Hoc ky " << currentSemester << ".\n";
-        cout << ">> Cac mon con thieu:\n";
-        for (int i = 0; i < reqCount; i++) {
-            if (getRegisteredSectionForCourse(maSV, reqIDs[i]).empty()) {
-                Course* c = const_cast<SystemManager*>(this)->findCourse(reqIDs[i]);
-                cout << "   - [" << reqIDs[i] << "] "
-                     << (c ? c->getTenMon() : reqIDs[i])
-                     << " (" << (c ? c->getSoTinChi() : 0) << " TC)\n";
+        string regSec = getRegisteredSectionForCourse(maSV, reqIDs[i]);
+        if (!regSec.empty()) {
+            item.daDangKy = true;
+            item.maLopHP = regSec;
+            outSummary.registeredCourses++;
+            outSummary.registeredCredits += item.soTinChi;
+            const ClassSection* s = findClassSection(regSec);
+            if (s) {
+                item.thu = s->getThu();
+                item.tietBatDau = s->getTietBatDau();
+                item.tietKetThuc = s->getTietKetThuc();
             }
         }
-        cout << ">> Khuyen nghi: Ban nen dang ky bo sung day du cac mon de dam bao dung tien do chuong trinh dao tao!\n";
+        outItems.pushBack(item);
     }
+    return true;
 }
 
 inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupInfo eligibleGroups[], int maxGroups) const {
-    Student* student = const_cast<SystemManager*>(this)->findStudent(maSV);
+    const Student* student = findStudent(maSV);
     if (!student) return 0;
 
     const int MAX_ALL = 100;
@@ -761,7 +808,7 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
         while (cur != nullptr) {
             if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP() == gName) {
                 if (g.totalSections < 50) g.sectionIDs[g.totalSections++] = cur->data.getMaLopHP();
-                Course* c = const_cast<SystemManager*>(this)->findCourse(cur->data.getMaMon());
+                const Course* c = findCourse(cur->data.getMaMon());
                 if (c) {
                     g.totalCredits += c->getSoTinChi();
                     if (g.khoa.empty()     && !c->getKhoa().empty()     && c->getKhoa()     != "Chung") g.khoa     = c->getKhoa();
@@ -789,7 +836,7 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
             while (cur != nullptr) {
                 if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP() == gName) {
                     if (g.totalSections < 50) g.sectionIDs[g.totalSections++] = cur->data.getMaLopHP();
-                    Course* c = const_cast<SystemManager*>(this)->findCourse(cur->data.getMaMon());
+                    const Course* c = findCourse(cur->data.getMaMon());
                     if (c) g.totalCredits += c->getSoTinChi();
                 }
                 cur = cur->next;
@@ -802,22 +849,7 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
 
 // =========================================================
 //  Accessor truc tiep (tuong thich nguoc voi code cu)
+//  -> Da thay the bang cac phuong thuc truy van getAll... / DTO de bao dam tinh dong goi 3 layer
 // =========================================================
-
-inline const DoubleLinkedList<Student>& SystemManager::getStudents() const {
-    return studentRepo.getList();
-}
-
-inline const DoubleLinkedList<Course>& SystemManager::getCourses() const {
-    return courseRepo.getList();
-}
-
-inline const DoubleLinkedList<ClassSection>& SystemManager::getSections() const {
-    return sectionRepo.getList();
-}
-
-inline const DoubleLinkedList<Registration>& SystemManager::getRegistrations() const {
-    return registrationRepo.getList();
-}
 
 #endif // SYSTEM_H

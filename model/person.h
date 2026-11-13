@@ -1,7 +1,6 @@
 #ifndef person_h
 #define person_h
-#include<iostream>
-#include<string>
+#include <string>
 using namespace std;
 
 class Person {
@@ -25,12 +24,6 @@ public:
     void setHoTen(string ten);
     void setSoDienThoai(string sdt);
     void setEmail(string mail);
-
-    virtual void nhap();
-    virtual void xuat() const;
-
-    friend ostream& operator<<(ostream& os, const Person& p);
-    friend istream& operator>>(istream& is, Person& p);
 };
 
 inline Person::Person() {
@@ -58,33 +51,5 @@ inline void Person::setMaNguoi(string ma) { maNguoi = ma; }
 inline void Person::setHoTen(string ten) { hoTen = ten; }
 inline void Person::setSoDienThoai(string sdt) { soDienThoai = sdt; }
 inline void Person::setEmail(string mail) { email = mail; }
-
-inline void Person::nhap() {
-    cout << "Ma nguoi: ";
-    getline(cin >> ws, maNguoi);
-    cout << "Ho ten: ";
-    getline(cin, hoTen);
-    cout << "So dien thoai: ";
-    getline(cin, soDienThoai);
-    cout << "Email: ";
-    getline(cin, email);
-}
-
-inline void Person::xuat() const {
-    cout << "Ma: " << maNguoi << '\n';
-    cout << "Ho ten: " << hoTen << '\n';
-    cout << "So dien thoai: " << soDienThoai << '\n';
-    cout << "Email: " << email << '\n';
-}
-
-inline ostream& operator<<(ostream& os, const Person& p) {
-    p.xuat();
-    return os;
-}
-
-inline istream& operator>>(istream& is, Person& p) {
-    p.nhap();
-    return is;
-}
 
 #endif

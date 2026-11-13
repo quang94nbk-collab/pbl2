@@ -6,7 +6,6 @@
 #include "../DSA/hashtable.h"
 #include "../model/course.h"
 #include <string>
-#include <iostream>
 using namespace std;
 
 // ============================================================
@@ -23,6 +22,7 @@ using namespace std;
 //    - findById : Tim nhanh qua HashTable
 //    - search   : Tim theo tu khoa (maMon, tenMon, khoa, nganh)
 //    - displayAll / displayByFilter
+//      (da tach sang Presentation; DAL cung cap getList / filter / search)
 // ============================================================
 class CourseRepository : public IRepository<Course, string> {
 private:
@@ -42,17 +42,18 @@ public:
     bool remove(const string& maMon) override;
 
     Course* findById(const string& maMon) override;
-
-    void displayAll() const override;
+    const Course* findById(const string& maMon) const;
 
     // ----- Chuc nang mo rong -----
 
     // Hien thi mon hoc theo bo loc (khoa, khoaHoc, nganh, hocKy)
-    void displayByFilter(const string& khoa, const string& khoaHoc,
-                         const string& nganh = "", int hocKy = 0) const;
+    // (DAL loc du lieu tra ve outResults)
+    void filter(const string& khoa, const string& khoaHoc,
+                const string& nganh, int hocKy,
+                DoubleLinkedList<Course>& outResults) const;
 
     // Tim kiem theo tu khoa
-    void search(const string& keyword) const;
+    void search(const string& keyword, DoubleLinkedList<Course>& outResults) const;
 
     // Lay danh sach cac mon hoc phu hop voi sinh vien trong hoc ky
     // (khoa, khoaHoc, nganhHoc cua sinh vien, hocKy hien tai)
@@ -62,7 +63,9 @@ public:
 
     bool exists(const string& maMon) const;
 
-    const DoubleLinkedList<Course>& getList() const;
+    const DoubleLinkedList<Course>& getList() const override;
+
+    void clear();
 };
 
 inline NodeDLL<Course>* CourseRepository::getLastNode() const {
@@ -73,9 +76,7 @@ inline NodeDLL<Course>* CourseRepository::getLastNode() const {
 }
 
 inline string CourseRepository::toLower(string s) {
-    for (char& c : s)
-        if (c >= 'A' && c <= 'Z') c = c + 32;
-    return s;
+    return utf8ToLower(s);
 }
 
 // ----- IRepository interface -----
@@ -104,25 +105,20 @@ inline Course* CourseRepository::findById(const string& maMon) {
     return nullptr;
 }
 
-inline void CourseRepository::displayAll() const {
-    auto cur = courseList.getHead();
-    while (cur != nullptr) {
-        cur->data.xuat();
-        cur = cur->next;
-    }
+inline const Course* CourseRepository::findById(const string& maMon) const {
+    NodeDLL<Course>* node = nullptr;
+    if (courseTable.get(maMon, node)) return &(node->data);
+    return nullptr;
 }
 
 // ----- Chuc nang mo rong -----
 
 // Hien thi mon hoc theo bo loc (khoa, khoaHoc, nganh, hocKy)
-inline void CourseRepository::displayByFilter(const string& khoa, const string& khoaHoc,
-                                              const string& nganh, int hocKy) const {
-    cout << "  DANH SACH MON HOC\n";
-    cout << "  - Khoa:      " << (khoa.empty()     ? "TAT CA" : khoa)     << "\n";
-    cout << "  - Khoa hoc:  " << (khoaHoc.empty()  ? "TAT CA" : khoaHoc)  << "\n";
-    cout << "  - Nganh hoc: " << (nganh.empty()    ? "TAT CA" : nganh)    << "\n";
-    cout << "  - Hoc ky:    " << (hocKy == 0       ? "TAT CA" : to_string(hocKy)) << "\n";
-    int count = 0;
+// (DAL loc du lieu tra ve outResults)
+inline void CourseRepository::filter(const string& khoa, const string& khoaHoc,
+                                     const string& nganh, int hocKy,
+                                     DoubleLinkedList<Course>& outResults) const {
+    outResults.clear();
     auto cur = courseList.getHead();
     while (cur != nullptr) {
         const Course& c = cur->data;
@@ -130,17 +126,15 @@ inline void CourseRepository::displayByFilter(const string& khoa, const string& 
         bool mKH = khoaHoc.empty() || c.getKhoaHoc().empty() || c.getKhoaHoc() == "Chung" || c.getKhoaHoc() == khoaHoc;
         bool mNg = nganh.empty()   || c.getNganhHoc().empty()|| c.getNganhHoc()== "Chung" || c.getNganhHoc()== nganh;
         bool mHK = (hocKy == 0)    || (c.getHocKy() == hocKy);
-        if (mK && mKH && mNg && mHK) { count++; c.xuat(); }
+        if (mK && mKH && mNg && mHK) { outResults.pushBack(c); }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Khong co mon hoc phu hop)\n";
 }
 
 // Tim kiem theo tu khoa
-inline void CourseRepository::search(const string& keyword) const {
+inline void CourseRepository::search(const string& keyword, DoubleLinkedList<Course>& outResults) const {
+    outResults.clear();
     string kw = toLower(keyword);
-    cout << "  KET QUA TIM KIEM MON HOC (Tu khoa: \"" << keyword << "\")\n";
-    int count = 0;
     auto cur = courseList.getHead();
     while (cur != nullptr) {
         string id   = toLower(cur->data.getMaMon());
@@ -149,12 +143,10 @@ inline void CourseRepository::search(const string& keyword) const {
         string ng   = toLower(cur->data.getNganhHoc());
         if (id.find(kw) != string::npos || ten.find(kw) != string::npos ||
             khoa.find(kw)!= string::npos || ng.find(kw) != string::npos) {
-            count++;
-            cur->data.xuat();
+            outResults.pushBack(cur->data);
         }
         cur = cur->next;
     }
-    if (count == 0) cout << "(Khong tim thay mon hoc nao phu hop)\n";
 }
 
 // Lay danh sach cac mon hoc phu hop voi sinh vien trong hoc ky
@@ -184,6 +176,11 @@ inline bool CourseRepository::exists(const string& maMon) const {
 
 inline const DoubleLinkedList<Course>& CourseRepository::getList() const {
     return courseList;
+}
+
+inline void CourseRepository::clear() {
+    courseTable.clear();
+    courseList.clear();
 }
 
 #endif // COURSE_REPOSITORY_H

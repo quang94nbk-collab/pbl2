@@ -1,177 +1,89 @@
-#include <iostream>
 #include <iomanip>
-#include <limits>
+#include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "../manager/authmanager.h"
-#include "../manager/filemanager.h"
 #include "../manager/exception.h"
+#include "../manager/system.h"
+#include "../ui/ConsoleView.h"
 
 using namespace std;
 
 namespace {
 
-void showAdminMenu() {
-    cout << "\n=== MENU QUAN TRI ===\n"
-         << "1. Them sinh vien\n"
-         << "2. Them mon hoc\n"
-         << "3. Them lop hoc phan\n"
-         << "4. Dang ky lop hoc phan cho sinh vien\n"
-         << "5. Huy dang ky\n"
-         << "6. Xem sinh vien\n"
-         << "7. Xem mon hoc\n"
-         << "8. Xem lop hoc phan\n"
-         << "9. Xem tat ca dang ky\n"
-         << "10. Dang xuat\n"
-         << "0. Luu va thoat\n"
-         << "Chon: ";
-}
-
-void showStudentMenu() {
-    cout << "\n=== MENU SINH VIEN ===\n"
-         << "1. Xem mon hoc\n"
-         << "2. Xem lop hoc phan\n"
-         << "3. Dang ky lop hoc phan\n"
-         << "4. Huy dang ky cua toi\n"
-         << "5. Xem dang ky cua toi\n"
-         << "6. Xem thong tin ca nhan\n"
-         << "7. Dang xuat\n"
-         << "0. Luu va thoat\n"
-         << "Chon: ";
-}
-
-bool readChoice(int& choice) {
-    if (cin >> choice) {
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        return true;
-    }
-    if (cin.eof()) {
-        return false;
-    }
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    return false;
-}
-
-void showStudentRegistrations(const SystemManager& system,
-                              const string& studentID) {
-    auto current = system.getRegistrations().getHead();
-    bool found = false;
-    while (current != nullptr) {
-        if (current->data.getMaSV() == studentID) {
-            current->data.xuat();
-            found = true;
-        }
-        current = current->next;
-    }
-    if (!found) {
-        cout << "Ban chua co dang ky nao.\n";
-    }
-}
-
-bool readRegistrationIDs(string& studentID, string& sectionID,
-                         bool includeStudentID) {
-    if (includeStudentID) {
-        cout << "Ma sinh vien: ";
-        if (!getline(cin, studentID)) {
-            return false;
-        }
-    }
-    cout << "Ma lop hoc phan: ";
-    return static_cast<bool>(getline(cin, sectionID));
-}
-
-bool saveAndExit(const FileManager& files, const SystemManager& system,
-                 string& error) {
-    if (!files.saveAllData(system, error)) {
+bool saveAndExit(const SystemManager& system, string& error) {
+    if (!system.saveData(error)) {
         cerr << "Khong the luu du lieu: " << error << '\n';
         return false;
     }
-    cout << "Da luu du lieu.\n";
+    cout << "\n>> Da luu toan bo du lieu. Tam biet!\n";
     return true;
 }
 
-void showRoleMenu(int currentSemester) {
-    cout << "\n============================================================\n"
-         << "           HE THONG DANG KY TIN CHI (PBL2)\n"
-         << "              Hoc ky he thong: Hoc ky " << currentSemester << "\n"
-         << "============================================================\n"
-         << "1. Dang nhap SINH VIEN\n"
-         << "2. Dang nhap QUAN TRI VIEN (ADMIN)\n"
-         << "0. Luu va Thoat\n"
-         << "------------------------------------------------------------\n"
-         << "Nhap lua chon: ";
+void showSectionsByGroupView(const SystemManager& system) {
+    cout << "  DANH SACH NHOM LOP HOC PHAN - HOC KY " << system.getCurrentSemester() << "\n";
+    const int MAX_GROUPS = 100;
+    string groupNames[MAX_GROUPS];
+    int groupCount = system.getGroupsForCurrentSemester(groupNames, MAX_GROUPS);
+
+    if (groupCount == 0) {
+        cout << "(Khong co nhom lop hoc phan nao trong hoc ky " << system.getCurrentSemester() << ")\n";
+    } else {
+        for (int g = 0; g < groupCount; g++) {
+            cout << "\n>>> NHOM: " << groupNames[g] << "\n";
+            DoubleLinkedList<SectionDetailInfo> list;
+            system.getSectionsByGroupInCurrentSemester(groupNames[g], list);
+            ConsoleView::displayGroupSectionList(list, true);
+        }
+    }
+
+    DoubleLinkedList<SectionDetailInfo> ungrouped;
+    system.getUngroupedSectionsInCurrentSemester(ungrouped);
+    if (!ungrouped.empty()) {
+        cout << "\n>>> CHUA GAN NHOM:\n";
+        ConsoleView::displayGroupSectionList(ungrouped, false);
+    }
 }
 
-void showStudentMenu(int currentSemester, const Student& student) {
-    cout << "\n============================================================\n"
-         << "   MENU SINH VIEN - " << student.getHoTen() << " (MSSV: " << student.getMaSV() << ")\n"
-         << "   Lop: " << (student.getLop().empty() ? "-" : student.getLop())
-         << " | Khoa: " << (student.getKhoa().empty() ? "-" : student.getKhoa())
-         << " | Nganh: " << (student.getNganhHoc().empty() ? "-" : student.getNganhHoc())
-         << " | Hoc ky: " << currentSemester << "\n"
-         << "============================================================\n"
-         << " 1. Xem thong tin ca nhan\n"
-         << " 2. Xem danh sach mon hoc (chuong trinh dao tao)\n"
-         << " 3. Tim kiem mon hoc\n"
-         << " 4. Xem danh sach lop hoc phan (theo nhom lop)\n"
-         << " 5. Dang ky lop hoc phan (chon nhom -> chon lop)\n"
-         << " 6. Huy dang ky lop hoc phan (chon tu danh sach da dang ky)\n"
-         << " 7. Kiem tra tien do dang ky mon hoc trong hoc ky\n"
-         << " 8. Kiem tra trung lich hoc\n"
-         << " 9. Xem cac hoc phan da dang ky\n"
-         << "10. Xem thoi khoa bieu\n"
-         << "11. Tinh so tin chi da dang ky\n"
-         << " 0. Dang xuat (Quay ve man hinh chinh)\n"
-         << "------------------------------------------------------------\n"
-         << "Nhap lua chon: ";
+void tryRegisterWithFeedback(SystemManager& system, const string& studentID, const string& sectionID) {
+    try {
+        system.registerClass(studentID, sectionID);
+        cout << ">> Dang ky lop hoc phan thanh cong!\n";
+    } catch (const ClassFullException& e) {
+        cout << ">> [Lop day] " << e.what() << "\n";
+    } catch (const TimeConflictException& e) {
+        cout << ">> [Trung lich] " << e.what() << "\n";
+    } catch (const DuplicateException& e) {
+        cout << ">> [Trung lap] " << e.what() << "\n";
+    } catch (const WrongSemesterException& e) {
+        cout << ">> [Sai hoc ky] " << e.what() << "\n";
+    } catch (const NotEligibleException& e) {
+        cout << ">> [Khong du dieu kien] " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << ">> Dang ky that bai: " << e.what() << "\n";
+    }
 }
 
-void showAdminMenu(int currentSemester) {
-    cout << "\n============================================================\n"
-         << "                     MENU QUAN TRI VIEN\n"
-         << "                  Hoc ky he thong: Hoc ky " << currentSemester << "\n"
-         << "============================================================\n"
-         << "--- QUAN LY SINH VIEN ---\n"
-         << " 1. Them sinh vien\n"
-         << " 2. Xoa sinh vien\n"
-         << " 3. Sua thong tin sinh vien\n"
-         << " 4. Tim kiem sinh vien\n"
-         << " 5. Xem danh sach tat ca sinh vien\n"
-         << "\n--- QUAN LY MON HOC ---\n"
-         << " 6. Them mon hoc\n"
-         << " 7. Xoa mon hoc\n"
-         << " 8. Sua thong tin mon hoc\n"
-         << " 9. Tim kiem mon hoc\n"
-         << "10. Xem danh sach mon hoc (tat ca / theo bo loc)\n"
-         << "\n--- QUAN LY LOP HOC PHAN ---\n"
-         << "11. Them lop hoc phan (co nhom lop HP)\n"
-         << "12. Xoa lop hoc phan\n"
-         << "13. Sua thong tin lop hoc phan\n"
-         << "14. Tim kiem lop hoc phan\n"
-         << "15. Xem danh sach lop hoc phan (theo nhom / tat ca)\n"
-         << "16. Xem danh sach sinh vien theo lop hoc phan\n"
-         << "\n--- DANG KY & HOC KY ---\n"
-         << "17. Dang ky lop hoc phan cho sinh vien\n"
-         << "18. Huy dang ky lop hoc phan cho sinh vien\n"
-         << "19. Xem tat ca dang ky trong he thong\n"
-         << "20. Thiet lap hoc ky he thong (Admin quyet dinh ki 1 hoac 2)\n"
-         << "\n 0. Dang xuat (Quay ve man hinh chinh)\n"
-         << "------------------------------------------------------------\n"
-         << "Nhap lua chon: ";
+void showSemesterStatusView(const SystemManager& system, const string& studentID) {
+    SemesterProgressSummary summary;
+    DoubleLinkedList<CourseProgressItem> items;
+    if (system.getSemesterRegistrationStatus(studentID, summary, items)) {
+        ConsoleView::displaySemesterRegistrationStatus(summary, items);
+    }
 }
 
-void studentSession(SystemManager& system, FileManager& files, const string& studentID) {
-    Student* student = system.findStudent(studentID);
+void studentSession(SystemManager& system, const string& studentID) {
+    const Student* student = system.findStudent(studentID);
     if (student == nullptr) {
         cout << "Loi: Khong tim thay thong tin sinh vien!\n";
         return;
     }
 
     while (true) {
-        showStudentMenu(system.getCurrentSemester(), *student);
+        ConsoleView::showStudentMenu(system.getCurrentSemester(), *student);
         int choice;
-        if (!readChoice(choice)) {
+        if (!ConsoleView::readChoice(choice)) {
             if (cin.eof()) break;
             cout << "Lua chon khong hop le.\n";
             continue;
@@ -185,7 +97,7 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
                 cout << "  [CANH BAO TIEN DO HOC TAP - HOC KY " << system.getCurrentSemester() << "]\n";
                 cout << "  Ban dang dang ky THIEU " << missingCount << " mon trong hoc ky nay:\n";
                 for (int m = 0; m < missingCount; m++) {
-                    Course* c = system.findCourse(missingIDs[m]);
+                    const Course* c = system.findCourse(missingIDs[m]);
                     cout << "    - [" << missingIDs[m] << "] "
                          << (c ? c->getTenMon() : missingIDs[m])
                          << " (" << (c ? c->getSoTinChi() : 0) << " TC)\n";
@@ -198,7 +110,7 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
                 cout << "0. Khong, toi muon o lai de tiep tuc dang ky cho du mon\n";
                 cout << "Nhap lua chon (1 hoac 0): ";
                 int exitChoice = 0;
-                if (!readChoice(exitChoice) || exitChoice != 1) {
+                if (!ConsoleView::readChoice(exitChoice) || exitChoice != 1) {
                     cout << ">> Quay lai menu de tiep tuc dang ky mon con thieu.\n";
                     continue;
                 }
@@ -206,10 +118,10 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
 
             cout << "\n>>> Da dang xuat khoi tai khoan sinh vien.\n";
             string err;
-            files.saveAllData(system, err);
+            system.saveData(err);
             break;
         } else if (choice == 1) {
-            student->xuat();
+            cout << *student;
         } else if (choice == 2) {
             cout << "\n--- XEM DANH SACH MON HOC ---\n";
             cout << "1. Xem mon hoc theo chuong trinh cua toi (Khoa: "
@@ -221,22 +133,29 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
             cout << "3. Xem tat ca mon hoc trong chuong trinh dao tao\n";
             cout << "Chon (1-3): ";
             int subChoice = 1;
-            readChoice(subChoice);
+            ConsoleView::readChoice(subChoice);
+            DoubleLinkedList<Course> courses;
             if (subChoice == 1) {
-                system.displayCoursesByFilter(student->getKhoa(), student->getKhoaHoc(),
-                                              student->getNganhHoc(), system.getCurrentSemester());
+                system.filterCourses(student->getKhoa(), student->getKhoaHoc(),
+                                     student->getNganhHoc(), system.getCurrentSemester(), courses);
+                ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(),
+                                                    student->getNganhHoc(), system.getCurrentSemester(), courses);
             } else if (subChoice == 2) {
-                system.displayCoursesByFilter("", "", "", system.getCurrentSemester());
+                system.filterCourses("", "", "", system.getCurrentSemester(), courses);
+                ConsoleView::displayFilteredCourses("", "", "", system.getCurrentSemester(), courses);
             } else {
-                system.displayAllCourses();
+                system.getAllCourses(courses);
+                ConsoleView::displayCourses(courses);
             }
         } else if (choice == 3) {
             cout << "Nhap tu khoa tim kiem mon hoc (ma mon, ten mon): ";
             string kw;
             getline(cin, kw);
-            system.searchCourses(kw);
+            DoubleLinkedList<Course> results;
+            system.searchCourses(kw, results);
+            ConsoleView::displayCourseSearchResults(kw, results);
         } else if (choice == 4) {
-            system.displaySectionsByGroup();
+            showSectionsByGroupView(system);
         } else if (choice == 5) {
             const int MAX_GROUPS = 50;
             GroupInfo eligibleGroups[MAX_GROUPS];
@@ -256,7 +175,7 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
             cout << "[0] Quay lai\n";
             cout << "Chon so thu tu nhom lop hoc phan (1 - " << groupCount << ", hoac 0 de quay lai): ";
             int gIndex = 0;
-            if (!readChoice(gIndex) || gIndex <= 0 || gIndex > groupCount) {
+            if (!ConsoleView::readChoice(gIndex) || gIndex <= 0 || gIndex > groupCount) {
                 if (gIndex != 0) cout << "Lua chon khong hop le.\n";
                 continue;
             }
@@ -265,19 +184,14 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
 
             cout << "\n  BUOC 2: CHON LOP HOC PHAN TRONG NHOM '" << chosenGroup.groupName << "'\n";
             for (int j = 0; j < chosenGroup.totalSections; j++) {
-                ClassSection* sec = system.findClassSection(chosenGroup.sectionIDs[j]);
+                const ClassSection* sec = system.findClassSection(chosenGroup.sectionIDs[j]);
                 if (sec != nullptr) {
-                    Course* c = system.findCourse(sec->getMaMon());
+                    const Course* c = system.findCourse(sec->getMaMon());
                     bool daDK = system.isSectionRegistered(studentID, sec->getMaLopHP());
                     string lopKhac = system.getRegisteredSectionForCourse(studentID, sec->getMaMon());
 
-                    cout << "[" << (j + 1) << "] " << setw(22) << left << sec->getMaLopHP()
-                         << " | Mon: " << setw(20) << left << (c ? c->getTenMon() : sec->getMaMon())
-                         << " (" << (c ? c->getSoTinChi() : 0) << " TC)\n"
-                         << "      Thu " << sec->getThu()
-                         << " | Tiet " << sec->getTietBatDau() << "-" << sec->getTietKetThuc()
-                         << " | Phong: " << setw(6) << sec->getPhong()
-                         << " | GV: " << setw(18) << sec->getGiangVien()
+                    ConsoleView::printSectionChoiceHeader(j + 1, *sec, c);
+                    cout << setw(18) << sec->getGiangVien()
                          << " | Si so: " << sec->getSoLuongDaDangKy() << "/" << sec->getSiSoToiDa();
                     if (daDK) {
                         cout << " -> [DA DANG KY]";
@@ -292,30 +206,15 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
             cout << "[0] Quay lai\n";
             cout << "Nhap so thu tu lop hoc phan muon dang ky (1 - " << chosenGroup.totalSections << ", hoac 0 de quay lai): ";
             int sIndex = 0;
-            if (!readChoice(sIndex) || sIndex <= 0 || sIndex > chosenGroup.totalSections) {
+            if (!ConsoleView::readChoice(sIndex) || sIndex <= 0 || sIndex > chosenGroup.totalSections) {
                 if (sIndex != 0) cout << "Lua chon khong hop le.\n";
                 continue;
             }
 
             string targetSectionID = chosenGroup.sectionIDs[sIndex - 1];
-            try {
-                system.registerClass(studentID, targetSectionID);
-                cout << ">> Dang ky lop hoc phan thanh cong!\n";
-            } catch (const ClassFullException& e) {
-                cout << ">> [Lop day] " << e.what() << "\n";
-            } catch (const TimeConflictException& e) {
-                cout << ">> [Trung lich] " << e.what() << "\n";
-            } catch (const DuplicateException& e) {
-                cout << ">> [Trung lap] " << e.what() << "\n";
-            } catch (const WrongSemesterException& e) {
-                cout << ">> [Sai hoc ky] " << e.what() << "\n";
-            } catch (const NotEligibleException& e) {
-                cout << ">> [Khong du dieu kien] " << e.what() << "\n";
-            } catch (const AppException& e) {
-                cout << ">> Dang ky that bai: " << e.what() << "\n";
-            }
+            tryRegisterWithFeedback(system, studentID, targetSectionID);
 
-            system.displaySemesterRegistrationStatus(studentID);
+            showSemesterStatusView(system, studentID);
         } else if (choice == 6) {
             const int MAX_REG = 50;
             string regSectionIDs[MAX_REG];
@@ -328,31 +227,28 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
 
             cout << "  DANH SACH LOP HOC PHAN DA DANG KY - CHON LOP DE HUY\n";
             for (int i = 0; i < regCount; i++) {
-                ClassSection* sec = system.findClassSection(regSectionIDs[i]);
+                const ClassSection* sec = system.findClassSection(regSectionIDs[i]);
                 if (sec != nullptr) {
-                    Course* c = system.findCourse(sec->getMaMon());
-                    cout << "[" << (i + 1) << "] " << setw(22) << left << sec->getMaLopHP()
-                         << " | Mon: " << setw(20) << left << (c ? c->getTenMon() : sec->getMaMon())
-                         << " (" << (c ? c->getSoTinChi() : 0) << " TC)\n"
-                         << "      Thu " << sec->getThu()
-                         << " | Tiet " << sec->getTietBatDau() << "-" << sec->getTietKetThuc()
-                         << " | Phong: " << setw(6) << sec->getPhong()
-                         << " | GV: " << sec->getGiangVien() << "\n";
+                    const Course* c = system.findCourse(sec->getMaMon());
+                    ConsoleView::printSectionChoiceHeader(i + 1, *sec, c);
+                    cout << sec->getGiangVien() << "\n";
                 }
             }
             cout << "[0] Quay lai (Khong huy)\n";
             cout << "Nhap so thu tu lop hoc phan ban muon huy (1 - " << regCount << ", hoac 0 de quay lai): ";
             int cancelIndex = 0;
-            if (!readChoice(cancelIndex) || cancelIndex <= 0 || cancelIndex > regCount) {
+            if (!ConsoleView::readChoice(cancelIndex) || cancelIndex <= 0 || cancelIndex > regCount) {
                 if (cancelIndex != 0) cout << "Lua chon khong hop le.\n";
                 continue;
             }
 
             string secToCancel = regSectionIDs[cancelIndex - 1];
-            ClassSection* sec = system.findClassSection(secToCancel);
-            Course* c = (sec ? system.findCourse(sec->getMaMon()) : nullptr);
+            const ClassSection* sec = system.findClassSection(secToCancel);
+            const Course* c = (sec ? system.findCourse(sec->getMaMon()) : nullptr);
 
-            bool success = system.cancelRegistration(studentID, secToCancel);
+            DoubleLinkedList<string> waitlistNotices;
+            bool success = system.cancelRegistration(studentID, secToCancel, &waitlistNotices);
+            ConsoleView::printNotices(waitlistNotices);
             if (success) {
                 cout << ">> Da huy thanh cong lop hoc phan '" << secToCancel << "' ("
                      << (c ? c->getTenMon() : "") << ")!\n";
@@ -360,32 +256,44 @@ void studentSession(SystemManager& system, FileManager& files, const string& stu
                 cout << ">> Huy dang ky that bai!\n";
             }
 
-            system.displaySemesterRegistrationStatus(studentID);
+            showSemesterStatusView(system, studentID);
         } else if (choice == 7) {
-            system.displaySemesterRegistrationStatus(studentID);
+            showSemesterStatusView(system, studentID);
         } else if (choice == 8) {
             cout << "Nhap ma lop hoc phan can kiem tra lich: ";
             string sectionID;
             getline(cin, sectionID);
-            system.checkTimeConflictInteractive(studentID, sectionID);
+            ClassSection target;
+            DoubleLinkedList<ClassSection> conflicts;
+            if (!system.checkTimeConflictDetails(studentID, sectionID, target, conflicts)) {
+                cout << "Khong tim thay lop hoc phan: " << sectionID << "\n";
+            } else {
+                ConsoleView::displayTimeConflictResult(target, conflicts);
+            }
         } else if (choice == 9) {
-            system.displayStudentRegistrations(studentID);
+            DoubleLinkedList<StudentRegistrationDetail> details;
+            system.getStudentRegistrations(studentID, details, system.getCurrentSemester());
+            ConsoleView::displayStudentRegistrations(studentID, details);
         } else if (choice == 10) {
-            system.displayStudentTimetable(studentID);
+            DoubleLinkedList<TimetableEntry> timetable;
+            system.getStudentTimetable(studentID, timetable);
+            ConsoleView::displayStudentTimetable(studentID, system.getCurrentSemester(), timetable);
         } else if (choice == 11) {
-            system.calculateTotalCredits(studentID);
-            system.displaySemesterRegistrationStatus(studentID);
+            DoubleLinkedList<CreditSummaryItem> items;
+            int totalCredits = system.calculateTotalCredits(studentID, &items, system.getCurrentSemester());
+            ConsoleView::displayCreditSummary(studentID, totalCredits, items);
+            showSemesterStatusView(system, studentID);
         } else {
             cout << "Lua chon khong hop le.\n";
         }
     }
 }
 
-void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) {
+void adminSession(SystemManager& system, AuthManager& auth) {
     while (true) {
-        showAdminMenu(system.getCurrentSemester());
+        ConsoleView::showAdminMenu(system.getCurrentSemester());
         int choice;
-        if (!readChoice(choice)) {
+        if (!ConsoleView::readChoice(choice)) {
             if (cin.eof()) break;
             cout << "Lua chon khong hop le.\n";
             continue;
@@ -394,13 +302,13 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
         if (choice == 0) {
             cout << "\n>>> Da dang xuat khoi quyen quan tri vien.\n";
             string err;
-            files.saveAllData(system, err);
+            system.saveData(err);
             break;
         }
 
         if (choice == 1) {
             Student sv;
-            sv.nhap();
+            cin >> sv;
             const string studentID = sv.getMaSV();
             if (auth.hasAccount(studentID)) {
                 cout << ">> Them that bai: Ma sinh vien da ton tai.\n";
@@ -420,7 +328,9 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
             cout << "Nhap ma sinh vien can xoa: ";
             string svID;
             getline(cin, svID);
-            if (system.deleteStudent(svID)) {
+            DoubleLinkedList<string> waitlistNotices;
+            if (system.deleteStudent(svID, &waitlistNotices)) {
+                ConsoleView::printNotices(waitlistNotices);
                 auth.removeAccount(svID);
                 cout << ">> Da xoa sinh vien " << svID << " va tat ca cac dang ky lien quan.\n";
             } else {
@@ -434,50 +344,23 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
             if (sv == nullptr) {
                 cout << ">> Khong tim thay sinh vien voi ma: " << svID << "\n";
             } else {
-                cout << "\n--- THONG TIN SINH VIEN HIEN TAI ---\n";
-                sv->xuat();
-                cout << "\n--- NHAP THONG TIN MOI (Nhan Enter de giu nguyen) ---\n";
-                string val;
-                cout << "Ho ten moi [" << sv->getHoTen() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setHoTen(val);
-
-                cout << "So dien thoai moi [" << sv->getSoDienThoai() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setSoDienThoai(val);
-
-                cout << "Email moi [" << sv->getEmail() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setEmail(val);
-
-                cout << "Khoa moi [" << sv->getKhoa() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setKhoa(val);
-
-                cout << "Khoa hoc moi [" << sv->getKhoaHoc() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setKhoaHoc(val);
-
-                cout << "Lop moi [" << sv->getLop() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setLop(val);
-
-                cout << "Nganh hoc moi [" << sv->getNganhHoc() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sv->setNganhHoc(val);
-
+                ConsoleView::editStudentInteractive(*sv);
                 cout << ">> Cap nhat thong tin sinh vien thanh cong!\n";
             }
         } else if (choice == 4) {
             cout << "Nhap tu khoa tim kiem sinh vien (ma SV, ho ten, lop, khoa): ";
             string kw;
             getline(cin, kw);
-            system.searchStudents(kw);
+            DoubleLinkedList<Student> results;
+            system.searchStudents(kw, results);
+            ConsoleView::displayStudentSearchResults(kw, results);
         } else if (choice == 5) {
-            system.displayAllStudents();
+            DoubleLinkedList<Student> students;
+            system.getAllStudents(students);
+            ConsoleView::displayStudents(students);
         } else if (choice == 6) {
             Course c;
-            c.nhap();
+            cin >> c;
             if (system.addCourse(c)) {
                 cout << ">> Them mon hoc moi thanh cong!\n";
             } else {
@@ -487,9 +370,11 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
             cout << "Nhap ma mon hoc can xoa: ";
             string courseID;
             getline(cin, courseID);
-            if (system.deleteCourse(courseID)) {
+            string errMsg;
+            if (system.deleteCourse(courseID, &errMsg)) {
                 cout << ">> Xoa mon hoc thanh cong!\n";
             } else {
+                if (!errMsg.empty()) cout << errMsg << '\n';
                 cout << ">> Xoa mon hoc that bai.\n";
             }
         } else if (choice == 8) {
@@ -500,65 +385,23 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
             if (c == nullptr) {
                 cout << ">> Khong tim thay mon hoc voi ma: " << courseID << "\n";
             } else {
-                cout << "\n--- THONG TIN MON HOC HIEN TAI ---\n";
-                c->xuat();
-                cout << "\n--- NHAP THONG TIN MOI (Nhan Enter de giu nguyen) ---\n";
-                string val;
-                cout << "Ten mon moi [" << c->getTenMon() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) c->setTenMon(val);
-
-                cout << "So tin chi moi [" << c->getSoTinChi() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int tc = stoi(val);
-                        if (tc > 0) c->setSoTinChi(tc);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri so tin chi khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri so tin chi vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
-                cout << "Khoa quan ly moi [" << c->getKhoa() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) c->setKhoa(val);
-
-                cout << "Khoa hoc ap dung moi [" << c->getKhoaHoc() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) c->setKhoaHoc(val);
-
-                cout << "Nganh hoc ap dung moi [" << c->getNganhHoc() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) c->setNganhHoc(val);
-
-                cout << "Hoc ky ap dung moi  [" << c->getHocKy() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int hk = stoi(val);
-                        if (hk == 1 || hk == 2) c->setHocKy(hk);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri hoc ky khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri hoc ky vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
+                ConsoleView::editCourseInteractive(*c);
                 cout << ">> Cap nhat mon hoc thanh cong!\n";
             }
         } else if (choice == 9) {
             cout << "Nhap tu khoa tim kiem mon hoc (ma mon, ten mon, khoa, nganh): ";
             string kw;
             getline(cin, kw);
-            system.searchCourses(kw);
+            DoubleLinkedList<Course> results;
+            system.searchCourses(kw, results);
+            ConsoleView::displayCourseSearchResults(kw, results);
         } else if (choice == 10) {
             cout << "1. Xem tat ca mon hoc\n";
             cout << "2. Loc theo Khoa, Khoa hoc, Nganh, Hoc ky\n";
             cout << "Chon (1-2): ";
             int subChoice = 1;
-            readChoice(subChoice);
+            ConsoleView::readChoice(subChoice);
+            DoubleLinkedList<Course> courses;
             if (subChoice == 2) {
                 string khoa, khoaHoc, nganh;
                 cout << "Khoa: ";
@@ -578,13 +421,15 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
                 } catch (const out_of_range&) {
                     hk = 0;
                 }
-                system.displayCoursesByFilter(khoa, khoaHoc, nganh, hk);
+                system.filterCourses(khoa, khoaHoc, nganh, hk, courses);
+                ConsoleView::displayFilteredCourses(khoa, khoaHoc, nganh, hk, courses);
             } else {
-                system.displayAllCourses();
+                system.getAllCourses(courses);
+                ConsoleView::displayCourses(courses);
             }
         } else if (choice == 11) {
             ClassSection sec;
-            sec.nhap();
+            cin >> sec;
             if (system.addClassSection(sec)) {
                 cout << ">> Them lop hoc phan thanh cong!\n";
             } else {
@@ -607,135 +452,61 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
             if (sec == nullptr) {
                 cout << ">> Khong tim thay lop hoc phan voi ma: " << secID << "\n";
             } else {
-                cout << "\n--- THONG TIN LOP HOC PHAN HIEN TAI ---\n";
-                sec->xuat();
-                cout << "\n--- NHAP THONG TIN MOI (Nhan Enter de giu nguyen) ---\n";
-                string val;
-                cout << "Nhom lop HP moi [" << sec->getNhomLopHP() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sec->setNhomLopHP(val);
-
-                cout << "Giang vien moi [" << sec->getGiangVien() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sec->setGiangVien(val);
-
-                cout << "Thu hoc moi [" << sec->getThu() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sec->setThu(val);
-
-                cout << "Tiet bat dau moi [" << sec->getTietBatDau() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int t = stoi(val);
-                        if (t > 0) sec->setTietBatDau(t);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri tiet bat dau khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri tiet bat dau vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
-                cout << "Tiet ket thuc moi [" << sec->getTietKetThuc() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int t = stoi(val);
-                        if (t > sec->getTietBatDau()) sec->setTietKetThuc(t);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri tiet ket thuc khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri tiet ket thuc vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
-                cout << "Phong hoc moi [" << sec->getPhong() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) sec->setPhong(val);
-
-                cout << "Si so toi da moi [" << sec->getSiSoToiDa() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int ss = stoi(val);
-                        if (ss > 0) sec->setSiSoToiDa(ss);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri si so khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri si so vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
-                cout << "Hoc ky mo lop moi [" << sec->getHocKy() << "]: ";
-                getline(cin, val);
-                if (!val.empty()) {
-                    try {
-                        int hk = stoi(val);
-                        if (hk == 1 || hk == 2) sec->setHocKy(hk);
-                    } catch (const invalid_argument&) {
-                        cout << ">> Gia tri hoc ky khong hop le, giu nguyen gia tri cu.\n";
-                    } catch (const out_of_range&) {
-                        cout << ">> Gia tri hoc ky vuot gioi han, giu nguyen gia tri cu.\n";
-                    }
-                }
-
+                ConsoleView::editClassSectionInteractive(*sec);
                 cout << ">> Cap nhat thong tin lop hoc phan thanh cong!\n";
             }
         } else if (choice == 14) {
             cout << "Nhap tu khoa tim kiem (Ma lop HP, ma mon, nhom, giang vien): ";
             string kw;
             getline(cin, kw);
-            system.searchSections(kw);
+            DoubleLinkedList<ClassSection> results;
+            system.searchSections(kw, results);
+            ConsoleView::displaySectionSearchResults(kw, results);
         } else if (choice == 15) {
             cout << "1. Xem theo tung NHOM lop hoc phan (theo hoc ky " << system.getCurrentSemester() << ")\n";
             cout << "2. Xem tat ca cac lop hoc phan\n";
             cout << "Chon (1-2): ";
             int subChoice = 1;
-            readChoice(subChoice);
+            ConsoleView::readChoice(subChoice);
             if (subChoice == 1) {
-                system.displaySectionsByGroup();
+                showSectionsByGroupView(system);
             } else {
-                system.displayAllSections();
+                DoubleLinkedList<ClassSection> sections;
+                system.getAllSections(sections);
+                ConsoleView::displaySections(sections);
             }
         } else if (choice == 16) {
             cout << "Nhap ma lop hoc phan can xem danh sach sinh vien: ";
             string secID;
             getline(cin, secID);
-            system.displayStudentsInSection(secID);
-        }
-
-        else if (choice == 17) {
+            ClassSection sec;
+            DoubleLinkedList<SectionStudentInfo> students;
+            if (!system.getStudentsInSection(secID, sec, students)) {
+                cout << "Khong tim thay lop hoc phan: " << secID << "\n";
+            } else {
+                ConsoleView::displayStudentsInSection(sec, students);
+            }
+        } else if (choice == 17) {
             string svID, secID;
             cout << "Ma sinh vien: ";
             getline(cin, svID);
             cout << "Ma lop hoc phan: ";
             getline(cin, secID);
-            try {
-                system.registerClass(svID, secID);
-                cout << ">> Dang ky lop hoc phan thanh cong!\n";
-            } catch (const ClassFullException& e) {
-                cout << ">> [Lop day] " << e.what() << "\n";
-            } catch (const TimeConflictException& e) {
-                cout << ">> [Trung lich] " << e.what() << "\n";
-            } catch (const DuplicateException& e) {
-                cout << ">> [Trung lap] " << e.what() << "\n";
-            } catch (const WrongSemesterException& e) {
-                cout << ">> [Sai hoc ky] " << e.what() << "\n";
-            } catch (const NotEligibleException& e) {
-                cout << ">> [Khong du dieu kien] " << e.what() << "\n";
-            } catch (const AppException& e) {
-                cout << ">> Dang ky that bai: " << e.what() << "\n";
-            }
+            tryRegisterWithFeedback(system, svID, secID);
         } else if (choice == 18) {
             string svID, secID;
             cout << "Ma sinh vien: ";
             getline(cin, svID);
             cout << "Ma lop hoc phan: ";
             getline(cin, secID);
-            bool success = system.cancelRegistration(svID, secID);
+            DoubleLinkedList<string> waitlistNotices;
+            bool success = system.cancelRegistration(svID, secID, &waitlistNotices);
+            ConsoleView::printNotices(waitlistNotices);
             cout << (success ? ">> Huy dang ky lop hoc phan thanh cong!\n" : ">> Huy dang ky that bai!\n");
         } else if (choice == 19) {
-            system.displayAllRegistrations();
+            DoubleLinkedList<Registration> registrations;
+            system.getAllRegistrations(registrations);
+            ConsoleView::displayRegistrations(registrations);
         } else if (choice == 20) {
             cout << "\n--- THIET LAP KI HOC HE THONG ---\n";
             cout << "Ki hoc hien tai: Ki " << system.getCurrentSemester() << '\n';
@@ -761,12 +532,13 @@ void adminSession(SystemManager& system, FileManager& files, AuthManager& auth) 
     }
 }
 
+} // namespace
+
 int main() {
     SystemManager system;
-    FileManager files;
     string error;
 
-    if (!files.loadAllData(system, error)) {
+    if (!system.loadData(error)) {
         cerr << "Khong the nap du lieu: " << error << '\n';
         return 1;
     }
@@ -776,27 +548,46 @@ int main() {
         cerr << "Khong the tao tai khoan quan tri mac dinh.\n";
         return 1;
     }
-    auto student = system.getStudents().getHead();
-    while (student != nullptr) {
-        const string& studentID = student->data.getMaSV();
+    DoubleLinkedList<Student> loadedStudents;
+    system.getAllStudents(loadedStudents);
+    auto studentNode = loadedStudents.getHead();
+    while (studentNode != nullptr) {
+        const string& studentID = studentNode->data.getMaSV();
         if (!auth.addAccount(studentID, studentID, UserRole::Student, studentID)) {
             cerr << "Khong the tao tai khoan cho sinh vien: " << studentID
                  << ". Ma sinh vien co the trung ten tai khoan.\n";
             return 1;
         }
-        student = student->next;
+        studentNode = studentNode->next;
     }
 
     while (true) {
         if (!auth.isLoggedIn()) {
+            ConsoleView::showMainMenu(system.getCurrentSemester());
+            int menuChoice;
+            if (!ConsoleView::readChoice(menuChoice)) {
+                if (cin.eof()) {
+                    return saveAndExit(system, error) ? 0 : 1;
+                }
+                cout << "Lua chon khong hop le.\n";
+                continue;
+            }
+            if (menuChoice == 0) {
+                return saveAndExit(system, error) ? 0 : 1;
+            }
+            if (menuChoice != 1) {
+                cout << "Lua chon khong hop le.\n";
+                continue;
+            }
+
             string username, password;
             cout << "\n=== DANG NHAP ===\nTai khoan: ";
             if (!getline(cin >> ws, username)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
+                return saveAndExit(system, error) ? 0 : 1;
             }
             cout << "Mat khau: ";
             if (!getline(cin, password)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
+                return saveAndExit(system, error) ? 0 : 1;
             }
             if (!auth.login(username, password)) {
                 cout << "Tai khoan hoac mat khau khong dung.\n";
@@ -812,133 +603,12 @@ int main() {
         }
         const bool isAdministrator = user->role == UserRole::Administrator;
         if (isAdministrator) {
-            adminSession(system, files, auth);
+            adminSession(system, auth);
             auth.logout();
             continue;
         }
-        studentSession(system, files, user->studentID);
+        studentSession(system, user->studentID);
         auth.logout();
         continue;
-
-#if 0
-        int choice;
-        if (!readChoice(choice)) {
-            if (!cin.eof()) {
-                cout << "Lua chon khong hop le.\n";
-                continue;
-            }
-            return saveAndExit(files, system, error) ? 0 : 1;
-        }
-
-        if (choice == 0) {
-            return saveAndExit(files, system, error) ? 0 : 1;
-        }
-
-        if ((isAdministrator && choice == 10) ||
-            (!isAdministrator && choice == 7)) {
-            auth.logout();
-            continue;
-        }
-
-        bool success = false;
-        if (isAdministrator && choice == 1) {
-            Student newStudent;
-            newStudent.nhap();
-            const string studentID = newStudent.getMaSV();
-            if (auth.hasAccount(studentID)) {
-                cout << "Ma sinh vien trung voi ten tai khoan da ton tai.\n";
-                continue;
-            }
-            success = system.addStudent(newStudent);
-            if (success &&
-                !auth.addAccount(studentID, studentID, UserRole::Student,
-                                 studentID)) {
-                system.deleteStudent(studentID);
-                success = false;
-            }
-            if (success) {
-                cout << "Tai khoan sinh vien: " << studentID
-                     << " | Mat khau khoi tao: " << studentID << '\n';
-            }
-        } else if (isAdministrator && choice == 2) {
-            Course course;
-            course.nhap();
-            success = system.addCourse(course);
-        } else if (isAdministrator && choice == 3) {
-            ClassSection section;
-            section.nhap();
-            success = system.addClassSection(section);
-        } else if (isAdministrator && choice == 4) {
-            string studentID, sectionID;
-            if (!readRegistrationIDs(studentID, sectionID, true)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
-            }
-            success = system.registerClass(studentID, sectionID);
-        } else if (isAdministrator && choice == 5) {
-            string studentID, sectionID;
-            if (!readRegistrationIDs(studentID, sectionID, true)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
-            }
-            success = system.cancelRegistration(studentID, sectionID);
-        } else if (isAdministrator && choice == 6) {
-            system.displayAllStudents();
-            continue;
-        } else if (isAdministrator && choice == 7) {
-            system.displayAllCourses();
-            continue;
-        } else if (isAdministrator && choice == 8) {
-            system.displayAllSections();
-            continue;
-        } else if (isAdministrator && choice == 9) {
-            system.displayAllRegistrations();
-            continue;
-        } else if (!isAdministrator && choice == 1) {
-            system.displayAllCourses();
-            continue;
-        } else if (!isAdministrator && choice == 2) {
-            system.displayAllSections();
-            continue;
-        } else if (!isAdministrator && choice == 3) {
-            string studentID, sectionID;
-            if (!readRegistrationIDs(studentID, sectionID, false)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
-            }
-            success = system.registerClass(user->studentID, sectionID);
-        } else if (!isAdministrator && choice == 4) {
-            string studentID, sectionID;
-            if (!readRegistrationIDs(studentID, sectionID, false)) {
-                return saveAndExit(files, system, error) ? 0 : 1;
-            }
-            success = system.cancelRegistration(user->studentID, sectionID);
-        } else if (!isAdministrator && choice == 5) {
-            showStudentRegistrations(system, user->studentID);
-            continue;
-        } else if (!isAdministrator && choice == 6) {
-            const Student* currentStudent = system.findStudent(user->studentID);
-            if (currentStudent == nullptr) {
-                cerr << "Khong tim thay thong tin sinh vien dang dang nhap.\n";
-                return 1;
-            }
-            currentStudent->xuat();
-            continue;
-        showRoleMenu(system.getCurrentSemester());
-        int roleChoice;
-        if (!readChoice(roleChoice)) {
-            if (cin.eof()) {
-                roleChoice = 0;
-            } else {
-                cout << "Lua chon khong hop le.\n";
-                continue;
-            }
-        }
-
-        if (roleChoice == 0) {
-            if (!files.saveAllData(system, error)) {
-                cerr << "Khong the luu du lieu: " << error << '\n';
-                return 1;
-            }
-            cout << "\n>> Da luu toan bo du lieu. Tam biet!\n";
-            return 0;
-#endif
     }
 }
