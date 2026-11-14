@@ -1,14 +1,3 @@
-tạo quan hệ các class
-struct của dsa
-lạm dụng const
-tách file main
-định nghĩa ngoài class
-try catch
-xử lí ngoại lệ
-typename dsa
-mô hình layer
-thêm nạp chông toán tử nhập xuất 
-
 ## Build and run
 
 From the project root, compile with a C++14-compatible compiler:
@@ -17,6 +6,7 @@ From the project root, compile with a C++14-compatible compiler:
 g++ -std=c++14 -Wall -Wextra -pedantic main\main.cpp -o pbl2.exe
 .\pbl2.exe
 ```
+----.\run_gui.bat chạy gui
 
 The program creates its data files in the current working directory when you
 save and exit. Keep `students.txt`, `courses.txt`, `sections.txt`, and
