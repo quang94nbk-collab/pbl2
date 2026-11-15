@@ -109,9 +109,12 @@ inline bool FileManager::loadStudents(StudentRepository& studentRepo, string& er
         }
         string khoa = "";
         string khoaHoc = "";
+        int soKiDaHoc = 0;
         if (row >> quoted(khoa) >> quoted(khoaHoc)) {
+            if (row >> soKiDaHoc) {
+            }
         }
-        if (!studentRepo.add(Student(id, name, phone, email, className, major, khoa, khoaHoc))) {
+        if (!studentRepo.add(Student(id, name, phone, email, className, major, khoa, khoaHoc, soKiDaHoc))) {
             error = "Khong the nap sinh vien: " + id;
             return false;
         }
@@ -301,7 +304,8 @@ inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
                  << quoted(student->data.getLop()) << ' '
                  << quoted(student->data.getNganhHoc()) << ' '
                  << quoted(student->data.getKhoa()) << ' '
-                 << quoted(student->data.getKhoaHoc()) << '\n';
+                 << quoted(student->data.getKhoaHoc()) << ' '
+                 << student->data.getSoKiDaHoc() << '\n';
         student = student->next;
     }
 

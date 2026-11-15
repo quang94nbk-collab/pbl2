@@ -52,16 +52,18 @@ inline ostream& operator<<(ostream& os, const Student& s) {
        << "Ho ten: " << s.getHoTen() << '\n'
        << "So dien thoai: " << s.getSoDienThoai() << '\n'
        << "Email: " << s.getEmail() << '\n'
-       << "Khoa: " << (s.getKhoa().empty() ? "Chua cap nhat" : s.getKhoa()) << '\n'
+       << "Khoa: " << (s.getKhoa().empty() ? "Chua cap nhat" : s.getKhoa())
+       << " (" << getTenKhoaDayDu(s.getKhoa()) << ")\n"
        << "Khoa hoc: " << (s.getKhoaHoc().empty() ? "Chua cap nhat" : s.getKhoaHoc()) << '\n'
        << "Lop: " << s.getLop() << '\n'
-       << "Nganh hoc: " << s.getNganhHoc() << '\n';
+       << "Nganh hoc: " << s.getNganhHoc() << '\n'
+       << "So ky da hoc: " << s.getSoKiDaHoc() << " -> Tien trinh: Hoc ky " << s.getHocKyHienTai() << '\n';
     return os;
 }
 
 inline istream& operator>>(istream& is, Student& s) {
-    string ma, ten, sdt, mail, khoa, khoaHoc, lop, nganh;
-    cout << "Ma sinh vien: ";
+    string ma, ten, sdt, mail, khoa, khoaHoc, lop, nganh, soKiStr;
+    cout << "Ma sinh vien (VD: 102230001): ";
     getline(is >> ws, ma);
     cout << "Ho ten: ";
     getline(is, ten);
@@ -69,14 +71,34 @@ inline istream& operator>>(istream& is, Student& s) {
     getline(is, sdt);
     cout << "Email: ";
     getline(is, mail);
-    cout << "Khoa: ";
+
+    string defaultKhoa = getKhoaFromMaSV(ma);
+    string defaultKhoaHoc = getKhoaHocFromMaSV(ma);
+
+    cout << "Khoa" << (defaultKhoa.empty() ? ": " : " [" + defaultKhoa + "]: ");
     getline(is, khoa);
-    cout << "Khoa hoc: ";
+    if (khoa.empty()) khoa = defaultKhoa;
+
+    cout << "Khoa hoc" << (defaultKhoaHoc.empty() ? ": " : " [" + defaultKhoaHoc + "]: ");
     getline(is, khoaHoc);
+    if (khoaHoc.empty()) khoaHoc = defaultKhoaHoc;
+
     cout << "Lop: ";
     getline(is, lop);
-    cout << "Nganh hoc: ";
+
+    cout << "Nganh hoc" << (khoa.empty() ? ": " : " [" + khoa + "]: ");
     getline(is, nganh);
+    if (nganh.empty()) nganh = khoa;
+
+    int soKi = 0;
+    cout << "So ky da hoc [0]: ";
+    getline(is, soKiStr);
+    try {
+        if (!soKiStr.empty()) soKi = stoi(soKiStr);
+    } catch (...) {
+        soKi = 0;
+    }
+
     s.setMaSV(ma);
     s.setHoTen(ten);
     s.setSoDienThoai(sdt);
@@ -85,6 +107,7 @@ inline istream& operator>>(istream& is, Student& s) {
     s.setKhoaHoc(khoaHoc);
     s.setLop(lop);
     s.setNganhHoc(nganh);
+    s.setSoKiDaHoc(soKi);
     return is;
 }
 
@@ -272,12 +295,16 @@ inline void showMainMenu(int currentSemester) {
 }
 
 inline void showStudentMenu(int currentSemester, const Student& student) {
+    (void)currentSemester;
     cout << "\n============================================================\n"
          << "   MENU SINH VIEN - " << student.getHoTen() << " (MSSV: " << student.getMaSV() << ")\n"
-         << "   Lop: " << (student.getLop().empty() ? "-" : student.getLop())
-         << " | Khoa: " << (student.getKhoa().empty() ? "-" : student.getKhoa())
-         << " | Nganh: " << (student.getNganhHoc().empty() ? "-" : student.getNganhHoc())
-         << " | Hoc ky: " << currentSemester << "\n"
+         << "   Khoa: " << (student.getKhoa().empty() ? "-" : student.getKhoa())
+         << " (" << getTenKhoaDayDu(student.getKhoa()) << ")"
+         << " | Lop: " << (student.getLop().empty() ? "-" : student.getLop()) << "\n"
+         << "   Nganh: " << (student.getNganhHoc().empty() ? "-" : student.getNganhHoc())
+         << " | Khoa hoc: " << (student.getKhoaHoc().empty() ? "-" : student.getKhoaHoc())
+         << " | Tien trinh: Hoc ky " << student.getHocKyHienTai()
+         << " (Da hoc " << student.getSoKiDaHoc() << " ky)\n"
          << "============================================================\n"
          << " 1. Xem thong tin ca nhan\n"
          << " 2. Xem danh sach mon hoc (chuong trinh dao tao)\n"
@@ -702,6 +729,15 @@ inline void editStudentInteractive(Student& sv) {
     cout << "Nganh hoc moi [" << sv.getNganhHoc() << "]: ";
     getline(cin, val);
     if (!val.empty()) sv.setNganhHoc(val);
+
+    cout << "So ky da hoc moi [" << sv.getSoKiDaHoc() << "]: ";
+    getline(cin, val);
+    if (!val.empty()) {
+        try {
+            int k = stoi(val);
+            if (k >= 0) sv.setSoKiDaHoc(k);
+        } catch (...) {}
+    }
 }
 
 inline void editCourseInteractive(Course& c) {

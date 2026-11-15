@@ -112,7 +112,7 @@ inline void ClassSection::setSoLuongDaDangKy(int soLuong) {
 }
 
 inline bool ClassSection::setHocKy(int hk) {
-    if (hk == 1 || hk == 2) {
+    if (hk >= 0 && hk <= 10) {
         hocKy = hk;
         return true;
     }

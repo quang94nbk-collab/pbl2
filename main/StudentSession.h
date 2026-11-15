@@ -35,7 +35,7 @@ public:
                 int missingCount = system.getMissingCoursesCount(studentID, missingIDs, 50);
                 if (missingCount > 0) {
                     cout << "\n======================================================================\n";
-                    cout << "  [CANH BAO TIEN DO HOC TAP - HOC KY " << system.getCurrentSemester() << "]\n";
+                    cout << "  [CANH BAO TIEN DO HOC TAP - HOC KY " << student->getHocKyHienTai() << "]\n";
                     cout << "  Ban dang dang ky THIEU " << missingCount << " mon trong hoc ky nay:\n";
                     for (int m = 0; m < missingCount; m++) {
                         const Course* c = system.findCourse(missingIDs[m]);
@@ -69,21 +69,21 @@ public:
                      << (student->getKhoa().empty() ? "Tat ca" : student->getKhoa())
                      << ", Khoa hoc: " << (student->getKhoaHoc().empty() ? "Tat ca" : student->getKhoaHoc())
                      << ", Nganh: " << (student->getNganhHoc().empty() ? "Tat ca" : student->getNganhHoc())
-                     << ", Hoc ky " << system.getCurrentSemester() << ")\n";
-                cout << "2. Xem tat ca mon hoc mo trong Hoc ky " << system.getCurrentSemester() << "\n";
-                cout << "3. Xem tat ca mon hoc trong chuong trinh dao tao\n";
+                     << ", Tien trinh: Hoc ky " << student->getHocKyHienTai() << ")\n";
+                cout << "2. Xem tat ca mon hoc thuoc nganh " << (student->getNganhHoc().empty() ? "cua toi" : student->getNganhHoc()) << "\n";
+                cout << "3. Xem tat ca mon hoc trong chuong trinh dao tao toan truong\n";
                 cout << "Chon (1-3): ";
                 int subChoice = 1;
                 ConsoleView::readChoice(subChoice);
                 DoubleLinkedList<Course> courses;
                 if (subChoice == 1) {
                     system.filterCourses(student->getKhoa(), student->getKhoaHoc(),
-                                         student->getNganhHoc(), system.getCurrentSemester(), courses);
+                                         student->getNganhHoc(), student->getHocKyHienTai(), courses);
                     ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(),
-                                                        student->getNganhHoc(), system.getCurrentSemester(), courses);
+                                                        student->getNganhHoc(), student->getHocKyHienTai(), courses);
                 } else if (subChoice == 2) {
-                    system.filterCourses("", "", "", system.getCurrentSemester(), courses);
-                    ConsoleView::displayFilteredCourses("", "", "", system.getCurrentSemester(), courses);
+                    system.filterCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), 0, courses);
+                    ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), 0, courses);
                 } else {
                     system.getAllCourses(courses);
                     ConsoleView::displayCourses(courses);

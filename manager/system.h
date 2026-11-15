@@ -244,7 +244,7 @@ inline int SystemManager::getCurrentSemester() const {
 }
 
 inline bool SystemManager::setCurrentSemester(int semester) {
-    if (semester == 1 || semester == 2) {
+    if (semester >= 1 && semester <= 10) {
         currentSemester = semester;
         return true;
     }
@@ -476,19 +476,21 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
     if (!section)
         throw NotFoundException("Khong tim thay lop hoc phan voi ma: " + maLopHP);
 
-    if (checkSemester && section->getHocKy() != currentSemester)
+    int svHocKy = student->getHocKyHienTai();
+
+    if (checkSemester && section->getHocKy() != 0 && section->getHocKy() != svHocKy)
         throw WrongSemesterException(
             "Lop hoc phan '" + maLopHP + "' mo cho Hoc ky " +
             to_string(section->getHocKy()) +
-            ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
+            ", trong khi tien trinh hoc cua sinh vien dang o Hoc ky " + to_string(svHocKy));
 
     Course* course = findCourse(section->getMaMon());
     if (course) {
-        if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != currentSemester)
+        if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != svHocKy)
             throw WrongSemesterException(
                 "Mon hoc '" + course->getTenMon() + "' thuoc chuong trinh Hoc ky " +
                 to_string(course->getHocKy()) +
-                ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
+                ", trong khi tien trinh hoc cua sinh vien dang o Hoc ky " + to_string(svHocKy));
 
         if (!course->getKhoa().empty() && course->getKhoa() != "Chung") {
             if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa())
@@ -721,9 +723,10 @@ inline bool SystemManager::checkTimeConflictDetails(const string& maSV, const st
 inline int SystemManager::getSemesterRequiredCourses(const string& maSV, string courseIDs[], int maxCourses) const {
     const Student* student = findStudent(maSV);
     if (!student) return 0;
+    int svHocKy = student->getHocKyHienTai();
     return courseRepo.getMatchingCourses(
         student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(),
-        currentSemester, courseIDs, maxCourses);
+        svHocKy, courseIDs, maxCourses);
 }
 
 inline int SystemManager::getMissingCoursesCount(const string& maSV, string missingIDs[], int maxMissing) const {
@@ -750,7 +753,7 @@ inline bool SystemManager::getSemesterRegistrationStatus(const string& maSV,
     outSummary.maSV = student->getMaSV();
     outSummary.hoTen = student->getHoTen();
     outSummary.lop = student->getLop();
-    outSummary.currentSemester = currentSemester;
+    outSummary.currentSemester = student->getHocKyHienTai();
     outSummary.totalRequiredCourses = 0;
     outSummary.registeredCourses = 0;
     outSummary.totalCredits = 0;
@@ -791,22 +794,27 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
     const Student* student = findStudent(maSV);
     if (!student) return 0;
 
+    int targetHk = student->getHocKyHienTai();
     const int MAX_ALL = 100;
     string allGroupNames[MAX_ALL];
-    int allGroupCount = sectionRepo.getGroupsForSemester(currentSemester, allGroupNames, MAX_ALL);
+    int allGroupCount = sectionRepo.getGroupsForSemester(targetHk, allGroupNames, MAX_ALL);
+    if (allGroupCount == 0) {
+        allGroupCount = sectionRepo.getGroupsForSemester(currentSemester, allGroupNames, MAX_ALL);
+        targetHk = currentSemester;
+    }
     int count = 0;
 
     for (int i = 0; i < allGroupCount && count < maxGroups; i++) {
         string gName = allGroupNames[i];
         GroupInfo g;
         g.groupName = gName;
-        g.hocKy = currentSemester;
+        g.hocKy = targetHk;
         bool groupMatchesStudent = true;
         bool hasMatchingSection  = false;
 
         auto cur = sectionRepo.getList().getHead();
         while (cur != nullptr) {
-            if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP() == gName) {
+            if (cur->data.getHocKy() == targetHk && cur->data.getNhomLopHP() == gName) {
                 if (g.totalSections < 50) g.sectionIDs[g.totalSections++] = cur->data.getMaLopHP();
                 const Course* c = findCourse(cur->data.getMaMon());
                 if (c) {
@@ -831,10 +839,10 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
             string gName = allGroupNames[i];
             GroupInfo g;
             g.groupName = gName;
-            g.hocKy = currentSemester;
+            g.hocKy = targetHk;
             auto cur = sectionRepo.getList().getHead();
             while (cur != nullptr) {
-                if (cur->data.getHocKy() == currentSemester && cur->data.getNhomLopHP() == gName) {
+                if (cur->data.getHocKy() == targetHk && cur->data.getNhomLopHP() == gName) {
                     if (g.totalSections < 50) g.sectionIDs[g.totalSections++] = cur->data.getMaLopHP();
                     const Course* c = findCourse(cur->data.getMaMon());
                     if (c) g.totalCredits += c->getSoTinChi();
