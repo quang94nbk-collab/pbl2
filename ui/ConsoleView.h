@@ -52,7 +52,8 @@ inline ostream& operator<<(ostream& os, const Student& s) {
        << "Ho ten: " << s.getHoTen() << '\n'
        << "So dien thoai: " << s.getSoDienThoai() << '\n'
        << "Email: " << s.getEmail() << '\n'
-       << "Khoa: " << (s.getKhoa().empty() ? "Chua cap nhat" : s.getKhoa()) << '\n'
+       << "Khoa: " << (s.getKhoa().empty() ? "Chua cap nhat" : s.getKhoa())
+       << (getTenKhoaDayDu(s.getKhoa()).empty() || getTenKhoaDayDu(s.getKhoa()) == s.getKhoa() ? "" : " (" + getTenKhoaDayDu(s.getKhoa()) + ")") << '\n'
        << "Khoa hoc: " << (s.getKhoaHoc().empty() ? "Chua cap nhat" : s.getKhoaHoc()) << '\n'
        << "Lop: " << s.getLop() << '\n'
        << "Nganh hoc: " << s.getNganhHoc() << '\n';
@@ -61,7 +62,7 @@ inline ostream& operator<<(ostream& os, const Student& s) {
 
 inline istream& operator>>(istream& is, Student& s) {
     string ma, ten, sdt, mail, khoa, khoaHoc, lop, nganh;
-    cout << "Ma sinh vien: ";
+    cout << "Ma sinh vien (VD: 102230001): ";
     getline(is >> ws, ma);
     cout << "Ho ten: ";
     getline(is, ten);
@@ -69,14 +70,25 @@ inline istream& operator>>(istream& is, Student& s) {
     getline(is, sdt);
     cout << "Email: ";
     getline(is, mail);
-    cout << "Khoa: ";
+
+    string defaultKhoa = getKhoaFromMaSV(ma);
+    string defaultKhoaHoc = getKhoaHocFromMaSV(ma);
+
+    cout << "Khoa" << (defaultKhoa.empty() ? ": " : " [" + defaultKhoa + "]: ");
     getline(is, khoa);
-    cout << "Khoa hoc: ";
+    if (khoa.empty()) khoa = defaultKhoa;
+
+    cout << "Khoa hoc" << (defaultKhoaHoc.empty() ? ": " : " [" + defaultKhoaHoc + "]: ");
     getline(is, khoaHoc);
+    if (khoaHoc.empty()) khoaHoc = defaultKhoaHoc;
+
     cout << "Lop: ";
     getline(is, lop);
-    cout << "Nganh hoc: ";
+
+    cout << "Nganh hoc" << (khoa.empty() ? ": " : " [" + khoa + "]: ");
     getline(is, nganh);
+    if (nganh.empty()) nganh = khoa;
+
     s.setMaSV(ma);
     s.setHoTen(ten);
     s.setSoDienThoai(sdt);
