@@ -63,7 +63,9 @@ public:
     string getKhoa() const;
     string getKhoaHoc() const;
     int getSoKiDaHoc() const;
-    int getHocKyHienTai() const; // Tien trinh hoc ky hien tai = soKiDaHoc + 1
+    int getHocKyHienTai() const;
+    int getHocKyHienTai(int systemSemester) const;
+    int getHocKyTienTrinh(int systemSemester = 1) const;
 
     void setMaSV(string maSV);
     void setLop(string lopSV);
@@ -111,7 +113,25 @@ inline string Student::getNganhHoc() const { return nganhHoc; }
 inline string Student::getKhoa() const { return khoa; }
 inline string Student::getKhoaHoc() const { return khoaHoc; }
 inline int Student::getSoKiDaHoc() const { return soKiDaHoc; }
-inline int Student::getHocKyHienTai() const { return soKiDaHoc + 1; }
+inline int Student::getHocKyTienTrinh(int systemSemester) const {
+    string kh = khoaHoc;
+    if (kh.empty()) kh = getKhoaHocFromMaSV(maNguoi);
+    if (kh.length() >= 3 && (kh[0] == 'K' || kh[0] == 'k')) {
+        try {
+            int khoaNum = stoi(kh.substr(1)); // vd: 23, 24, 22
+            const int currentBaseYear = 24;   // Nam 2024: K24 la nam 1
+            int namThu = (currentBaseYear - khoaNum) + 1;
+            if (namThu < 1) namThu = 1;
+            int sem = (namThu - 1) * 2 + (systemSemester == 2 ? 2 : 1);
+            if (sem > 0) return sem;
+        } catch (...) {}
+    }
+    if (soKiDaHoc > 0) return soKiDaHoc + 1;
+    return (systemSemester > 0 ? systemSemester : 1);
+}
+
+inline int Student::getHocKyHienTai() const { return getHocKyTienTrinh(1); }
+inline int Student::getHocKyHienTai(int systemSemester) const { return getHocKyTienTrinh(systemSemester); }
 
 inline void Student::setMaSV(string maSV) {
     maNguoi = maSV;

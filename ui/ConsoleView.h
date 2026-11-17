@@ -295,16 +295,16 @@ inline void showMainMenu(int currentSemester) {
 }
 
 inline void showStudentMenu(int currentSemester, const Student& student) {
-    (void)currentSemester;
+    int stdSemester = student.getHocKyTienTrinh(currentSemester);
     cout << "\n============================================================\n"
          << "   MENU SINH VIEN - " << student.getHoTen() << " (MSSV: " << student.getMaSV() << ")\n"
          << "   Khoa: " << (student.getKhoa().empty() ? "-" : student.getKhoa())
          << " (" << getTenKhoaDayDu(student.getKhoa()) << ")"
          << " | Lop: " << (student.getLop().empty() ? "-" : student.getLop()) << "\n"
          << "   Nganh: " << (student.getNganhHoc().empty() ? "-" : student.getNganhHoc())
-         << " | Khoa hoc: " << (student.getKhoaHoc().empty() ? "-" : student.getKhoaHoc())
-         << " | Tien trinh: Hoc ky " << student.getHocKyHienTai()
-         << " (Da hoc " << student.getSoKiDaHoc() << " ky)\n"
+         << " | Khoa hoc: " << (student.getKhoaHoc().empty() ? "-" : student.getKhoaHoc()) << "\n"
+         << "   [Dot mo lop: Hoc ky " << currentSemester
+         << " | Tien trinh chuan cua ban: Hoc ky " << stdSemester << "]\n"
          << "============================================================\n"
          << " 1. Xem thong tin ca nhan\n"
          << " 2. Xem danh sach mon hoc (chuong trinh dao tao)\n"

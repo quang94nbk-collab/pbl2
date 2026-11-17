@@ -31,12 +31,13 @@ public:
             }
 
             if (choice == 0) {
+                int stdSemester = student->getHocKyTienTrinh(system.getCurrentSemester());
                 string missingIDs[50];
                 int missingCount = system.getMissingCoursesCount(studentID, missingIDs, 50);
                 if (missingCount > 0) {
                     cout << "\n======================================================================\n";
-                    cout << "  [CANH BAO TIEN DO HOC TAP - HOC KY " << student->getHocKyHienTai() << "]\n";
-                    cout << "  Ban dang dang ky THIEU " << missingCount << " mon trong hoc ky nay:\n";
+                    cout << "  [CANH BAO TIEN DO HOC TAP - HOC KY " << stdSemester << "]\n";
+                    cout << "  Ban dang dang ky THIEU " << missingCount << " mon thuoc tien trinh chuan:\n";
                     for (int m = 0; m < missingCount; m++) {
                         const Course* c = system.findCourse(missingIDs[m]);
                         cout << "    - [" << missingIDs[m] << "] "
@@ -64,13 +65,15 @@ public:
             } else if (choice == 1) {
                 cout << *student;
             } else if (choice == 2) {
+                int stdSemester = student->getHocKyTienTrinh(system.getCurrentSemester());
                 cout << "\n--- XEM DANH SACH MON HOC ---\n";
-                cout << "1. Xem mon hoc theo chuong trinh cua toi (Khoa: "
+                cout << "1. Xem mon hoc dung tien trinh chuan cua toi (Khoa: "
                      << (student->getKhoa().empty() ? "Tat ca" : student->getKhoa())
                      << ", Khoa hoc: " << (student->getKhoaHoc().empty() ? "Tat ca" : student->getKhoaHoc())
                      << ", Nganh: " << (student->getNganhHoc().empty() ? "Tat ca" : student->getNganhHoc())
-                     << ", Tien trinh: Hoc ky " << student->getHocKyHienTai() << ")\n";
-                cout << "2. Xem tat ca mon hoc thuoc nganh " << (student->getNganhHoc().empty() ? "cua toi" : student->getNganhHoc()) << "\n";
+                     << ", Tien trinh chuan: Hoc ky " << stdSemester << ")\n";
+                cout << "2. Xem tat ca mon hoc mo trong dot Hoc ky " << system.getCurrentSemester() << " cua nganh "
+                     << (student->getNganhHoc().empty() ? "cua toi" : student->getNganhHoc()) << "\n";
                 cout << "3. Xem tat ca mon hoc trong chuong trinh dao tao toan truong\n";
                 cout << "Chon (1-3): ";
                 int subChoice = 1;
@@ -78,12 +81,12 @@ public:
                 DoubleLinkedList<Course> courses;
                 if (subChoice == 1) {
                     system.filterCourses(student->getKhoa(), student->getKhoaHoc(),
-                                         student->getNganhHoc(), student->getHocKyHienTai(), courses);
+                                         student->getNganhHoc(), stdSemester, courses);
                     ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(),
-                                                        student->getNganhHoc(), student->getHocKyHienTai(), courses);
+                                                        student->getNganhHoc(), stdSemester, courses);
                 } else if (subChoice == 2) {
-                    system.filterCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), 0, courses);
-                    ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), 0, courses);
+                    system.filterCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), system.getCurrentSemester(), courses);
+                    ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(), student->getNganhHoc(), system.getCurrentSemester(), courses);
                 } else {
                     system.getAllCourses(courses);
                     ConsoleView::displayCourses(courses);

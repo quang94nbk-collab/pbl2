@@ -300,21 +300,19 @@ void RegistrationWidget::populateEligibleGroups()
     GroupInfo rawGroups[MAX_GROUPS];
     int rawCount = m_sys.getEligibleGroupsForStudent(m_studentID.toStdString(), rawGroups, MAX_GROUPS);
 
-    int targetHk = sv ? sv->getHocKyHienTai() : m_sys.getCurrentSemester();
-
-    // Loc chat che theo dung Khoa, Khoa hoc, Nganh hoc va Hoc ky cua sinh vien
+    // Loc chat che theo dung Khoa, Khoa hoc, Nganh hoc va Lop HP mo trong dot nay
     for (int i = 0; i < rawCount; ++i) {
         const GroupInfo& g = rawGroups[i];
         bool allMatch = (g.totalSections > 0);
         for (int j = 0; j < g.totalSections; ++j) {
             const ClassSection* sec = m_sys.findClassSection(g.sectionIDs[j]);
-            if (!sec || (sec->getHocKy() != 0 && sec->getHocKy() != targetHk)) {
+            if (!sec || !SystemManager::isSectionOpenInSemester(sec->getHocKy(), m_sys.getCurrentSemester())) {
                 allMatch = false;
                 break;
             }
             const Course* c = m_sys.findCourse(sec->getMaMon());
             if (c) {
-                if (c->getHocKy() != 0 && c->getHocKy() != targetHk) {
+                if (!SystemManager::isSectionOpenInSemester(c->getHocKy(), m_sys.getCurrentSemester())) {
                     allMatch = false;
                     break;
                 }
