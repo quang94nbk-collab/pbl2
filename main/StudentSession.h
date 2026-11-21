@@ -64,33 +64,13 @@ public:
             } else if (choice == 1) {
                 cout << *student;
             } else if (choice == 2) {
-                cout << "\n--- KHUNG CHUONG TRINH DAO TAO ---\n";
-                cout << "1. Xem theo chuong trinh cua toi (Khoa: "
-                     << (student->getKhoa().empty() ? "Tat ca" : student->getKhoa())
-                     << ", Khoa hoc: " << (student->getKhoaHoc().empty() ? "Tat ca" : student->getKhoaHoc())
-                     << ", Nganh: " << (student->getNganhHoc().empty() ? "Tat ca" : student->getNganhHoc())
-                     << ", Hoc ky " << system.getCurrentSemester() << ")\n";
-                cout << "2. Loc khung chuong trinh dao tao (theo Khoa, Khoa hoc, Nganh, Hoc ky)\n";
-                cout << "3. Xem tat ca mon hoc mo trong Hoc ky " << system.getCurrentSemester() << "\n";
-                cout << "4. Xem tat ca mon hoc trong he thong\n";
-                cout << "Chon (1-4): ";
-                int subChoice = 1;
-                ConsoleView::readChoice(subChoice);
+                cout << "\n=== KHUNG CHUONG TRINH DAO TAO CUA BAN ===\n";
+                cout << "Khoa: " << (student->getKhoa().empty() ? "(Tat ca)" : student->getKhoa())
+                     << " | Nganh: " << (student->getNganhHoc().empty() ? "(Tat ca)" : student->getNganhHoc())
+                     << " | Khoa hoc: " << (student->getKhoaHoc().empty() ? "(Tat ca)" : student->getKhoaHoc()) << "\n";
                 DoubleLinkedList<Course> courses;
-                if (subChoice == 1) {
-                    system.filterCourses(student->getKhoa(), student->getKhoaHoc(),
-                                         student->getNganhHoc(), system.getCurrentSemester(), courses);
-                    ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(),
-                                                        student->getNganhHoc(), system.getCurrentSemester(), courses);
-                } else if (subChoice == 2) {
-                    SessionHelper::searchCoursesSpecialized(system);
-                } else if (subChoice == 3) {
-                    system.filterCourses("", "", "", system.getCurrentSemester(), courses);
-                    ConsoleView::displayFilteredCourses("", "", "", system.getCurrentSemester(), courses);
-                } else {
-                    system.getAllCourses(courses);
-                    ConsoleView::displayCourses(courses);
-                }
+                system.filterCourses(student->getKhoa(), "", student->getNganhHoc(), 0, courses);
+                ConsoleView::displayFilteredCourses(student->getKhoa(), "", student->getNganhHoc(), 0, courses);
             } else if (choice == 3) {
                 SessionHelper::showSectionsByGroupView(system);
             } else if (choice == 4) {

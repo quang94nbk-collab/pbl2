@@ -255,7 +255,7 @@ inline int SystemManager::getCurrentSemester() const {
 }
 
 inline bool SystemManager::setCurrentSemester(int semester) {
-    if (semester == 1 || semester == 2) {
+    if (semester >= 1 && semester <= 10) {
         currentSemester = semester;
         return true;
     }
@@ -504,11 +504,16 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
 
     Course* course = findCourse(section->getMaMon());
     if (course) {
-        if (checkSemester && course->getHocKy() != 0 && course->getHocKy() != currentSemester)
-            throw WrongSemesterException(
-                "Mon hoc '" + course->getTenMon() + "' thuoc chuong trinh Hoc ky " +
-                to_string(course->getHocKy()) +
-                ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
+        if (checkSemester && course->getHocKy() != 0) {
+            bool matchesSem = (course->getHocKy() == section->getHocKy()) ||
+                              (section->getHocKy() == 1 && course->getHocKy() % 2 == 1) ||
+                              (section->getHocKy() == 2 && course->getHocKy() % 2 == 0);
+            if (!matchesSem)
+                throw WrongSemesterException(
+                    "Mon hoc '" + course->getTenMon() + "' thuoc chuong trinh Hoc ky " +
+                    to_string(course->getHocKy()) +
+                    ", trong khi he thong dang o Hoc ky " + to_string(currentSemester));
+        }
 
         if (!course->getKhoa().empty() && course->getKhoa() != "Chung") {
             if (student->getKhoa().empty() || student->getKhoa() != course->getKhoa())

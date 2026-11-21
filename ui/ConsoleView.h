@@ -140,15 +140,15 @@ inline istream& operator>>(istream& is, Course& c) {
 
     int hk = 1;
     while (true) {
-        cout << "Hoc ky ap dung : ";
-        if (is >> hk && (hk == 1 || hk == 2)) {
+        cout << "Hoc ky ap dung (1 - 8): ";
+        if (is >> hk && (hk >= 1 && hk <= 8)) {
             is.ignore(numeric_limits<streamsize>::max(), '\n');
             break;
         }
         if (is.eof()) break;
         is.clear();
         is.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Vui long chon 1 hoac 2.\n";
+        cout << "Vui long chon tu 1 den 8.\n";
     }
 
     c.setMaMon(ma);
@@ -221,15 +221,15 @@ inline istream& operator>>(istream& is, ClassSection& sec) {
     is.ignore(numeric_limits<streamsize>::max(), '\n');
 
     while (true) {
-        cout << "Hoc ky mo lop: ";
-        if (is >> hk && (hk == 1 || hk == 2)) {
+        cout << "Hoc ky mo lop (1 - 8): ";
+        if (is >> hk && (hk >= 1 && hk <= 8)) {
             is.ignore(numeric_limits<streamsize>::max(), '\n');
             break;
         }
         if (is.eof()) break;
         is.clear();
         is.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Vui long chon 1 hoac 2.\n";
+        cout << "Vui long chon tu 1 den 8.\n";
     }
 
     sec.setMaLopHP(maLop);
@@ -336,7 +336,7 @@ inline void showAdminMenu(int currentSemester) {
          << "18. Dang ky lop hoc phan cho sinh vien\n"
          << "19. Huy dang ky lop hoc phan cho sinh vien\n"
          << "20. Xem tat ca dang ky trong he thong\n"
-         << "21. Thiet lap hoc ky he thong (Admin quyet dinh ki 1 hoac 2)\n"
+         << "21. Thiet lap hoc ky he thong (Admin quyet dinh ki 1 - 8)\n"
          << "\n 0. Dang xuat (Quay ve man hinh chinh)\n"
          << "------------------------------------------------------------\n"
          << "Nhap lua chon: ";
@@ -779,7 +779,7 @@ inline void editCourseInteractive(Course& c) {
     if (!val.empty()) c.setNganhHoc(val);
 
     int hk = 0;
-    if (readOptionalIntField("Hoc ky ap dung moi ", c.getHocKy(), "hoc ky", hk) && (hk == 1 || hk == 2)) {
+    if (readOptionalIntField("Hoc ky ap dung moi ", c.getHocKy(), "hoc ky", hk) && (hk >= 1 && hk <= 8)) {
         c.setHocKy(hk);
     }
 }
@@ -821,7 +821,7 @@ inline void editClassSectionInteractive(ClassSection& sec) {
     }
 
     int hk = 0;
-    if (readOptionalIntField("Hoc ky mo lop moi", sec.getHocKy(), "hoc ky", hk) && (hk == 1 || hk == 2)) {
+    if (readOptionalIntField("Hoc ky mo lop moi", sec.getHocKy(), "hoc ky", hk) && (hk >= 1 && hk <= 8)) {
         sec.setHocKy(hk);
     }
 }

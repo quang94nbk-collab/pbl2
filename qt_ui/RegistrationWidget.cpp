@@ -312,7 +312,11 @@ void RegistrationWidget::populateEligibleGroups()
             }
             const Course* c = m_sys.findCourse(sec->getMaMon());
             if (c) {
-                if (c->getHocKy() != 0 && c->getHocKy() != m_sys.getCurrentSemester()) {
+                bool matchesSem = (c->getHocKy() == 0) ||
+                                  (c->getHocKy() == m_sys.getCurrentSemester()) ||
+                                  (m_sys.getCurrentSemester() == 1 && c->getHocKy() % 2 == 1) ||
+                                  (m_sys.getCurrentSemester() == 2 && c->getHocKy() % 2 == 0);
+                if (!matchesSem) {
                     allMatch = false;
                     break;
                 }

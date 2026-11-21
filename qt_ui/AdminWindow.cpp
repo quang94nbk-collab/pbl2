@@ -262,7 +262,7 @@ void AdminWindow::setupCurriculumTab()
 
     auto* lblHocKy = new QLabel("Học kỳ:", filterGroup);
     m_currHocKyCombo = new QComboBox(filterGroup);
-    m_currHocKyCombo->addItems({"Tất cả", "Kỳ 1", "Kỳ 2"});
+    m_currHocKyCombo->addItems({"Tất cả", "Kỳ 1", "Kỳ 2", "Kỳ 3", "Kỳ 4", "Kỳ 5", "Kỳ 6", "Kỳ 7", "Kỳ 8", "Kỳ 9", "Kỳ 10"});
 
     m_currFilterBtn = new QPushButton("Lọc chương trình", filterGroup);
     m_currFilterBtn->setStyleSheet("QPushButton{background:#0D9488;} QPushButton:hover{background:#0F766E;}");
@@ -318,8 +318,7 @@ void AdminWindow::onCurriculumFilter()
     int hk = 0;
     if (m_currHocKyCombo) {
         int idx = m_currHocKyCombo->currentIndex();
-        if (idx == 1) hk = 1;
-        else if (idx == 2) hk = 2;
+        if (idx >= 1 && idx <= 10) hk = idx;
     }
 
     DoubleLinkedList<Course> list;
@@ -345,7 +344,7 @@ void AdminWindow::onCurriculumFilter()
         setCell(3, QString::fromStdString(c.getKhoa()));
         setCell(4, QString::fromStdString(c.getKhoaHoc()));
         setCell(5, QString::fromStdString(c.getNganhHoc()));
-        setCell(6, QString::number(c.getHocKy()));
+        setCell(6, QString("Kỳ %1").arg(c.getHocKy()));
 
         node = node->next;
     }
@@ -429,7 +428,7 @@ void AdminWindow::setupSettingsTab()
     semLabel->setStyleSheet("font-size:13px; color:#334155; background:transparent;");
 
     m_semesterSpinBox = new QSpinBox;
-    m_semesterSpinBox->setRange(1, 2);
+    m_semesterSpinBox->setRange(1, 8);
     m_semesterSpinBox->setValue(m_system.getCurrentSemester());
     m_semesterSpinBox->setPrefix("Học kỳ ");
     m_semesterSpinBox->setFixedWidth(120);

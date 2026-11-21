@@ -71,7 +71,7 @@ inline void Course::setKhoaHoc(string kh) { khoaHoc = kh; }
 inline void Course::setNganhHoc(string ng) { nganhHoc = ng; }
 
 inline bool Course::setHocKy(int hk) {
-    if (hk == 1 || hk == 2) {
+    if (hk >= 1 && hk <= 10) {
         hocKy = hk;
         return true;
     }
@@ -79,7 +79,7 @@ inline bool Course::setHocKy(int hk) {
 }
 
 inline bool Course::setSoTinChi(int tinChi) {
-    if (tinChi <= 0) {
+    if (tinChi < 0) {
         return false;
     }
     soTinChi = tinChi;

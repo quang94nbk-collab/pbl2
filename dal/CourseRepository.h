@@ -82,7 +82,7 @@ inline string CourseRepository::toLower(string s) {
 // ----- IRepository interface -----
 
 inline bool CourseRepository::add(const Course& course) {
-    if (course.getMaMon().empty() || course.getSoTinChi() <= 0 ||
+    if (course.getMaMon().empty() || course.getSoTinChi() < 0 ||
         courseTable.search(course.getMaMon()))
         return false;
     courseList.pushBack(course);
@@ -158,7 +158,10 @@ inline int CourseRepository::getMatchingCourses(const string& svKhoa, const stri
     auto cur = courseList.getHead();
     while (cur != nullptr) {
         const Course& c = cur->data;
-        if (c.getHocKy() == hocKy || c.getHocKy() == 0) {
+        bool semMatch = (hocKy == 0) || (c.getHocKy() == 0) || (c.getHocKy() == hocKy) ||
+                        (hocKy == 1 && c.getHocKy() % 2 == 1) ||
+                        (hocKy == 2 && c.getHocKy() % 2 == 0);
+        if (semMatch) {
             bool mK  = c.getKhoa().empty()    || c.getKhoa()    == "Chung" || svKhoa.empty()    || svKhoa    == c.getKhoa();
             bool mKH = c.getKhoaHoc().empty() || c.getKhoaHoc() == "Chung" || svKhoaHoc.empty() || svKhoaHoc == c.getKhoaHoc();
             bool mNg = c.getNganhHoc().empty()|| c.getNganhHoc()== "Chung" || svNganh.empty()   || svNganh   == c.getNganhHoc();

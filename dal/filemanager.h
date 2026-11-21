@@ -68,7 +68,7 @@ inline bool FileManager::loadSemester(int& currentSemester, string& error) const
     }
     int sem = 1;
     if (file >> sem) {
-        if (sem == 1 || sem == 2) {
+        if (sem >= 1 && sem <= 10) {
             currentSemester = sem;
         }
     }

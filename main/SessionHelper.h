@@ -97,7 +97,7 @@ inline void searchCoursesSpecialized(SystemManager& system) {
     getline(cin, khoaHoc);
     cout << "Nhap Nganh hoc (VD: CNTT, DTVT): ";
     getline(cin, nganh);
-    cout << "Nhap Hoc ky (1 hoac 2, de trong/0 de tim tat ca cac ky): ";
+    cout << "Nhap Hoc ky (1 - 10, de trong/0 de tim tat ca cac ky): ";
     getline(cin, hkStr);
     int hk = 0;
     try {

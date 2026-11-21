@@ -257,7 +257,7 @@ void CourseManagementWidget::showCourseDialog(Course* existing)
 
     tcSpin->setRange(1, 10);
     tcSpin->setValue(3);
-    hkSpin->setRange(1, 2);
+    hkSpin->setRange(1, 8);
     hkSpin->setValue(1);
 
     if (isEdit) {

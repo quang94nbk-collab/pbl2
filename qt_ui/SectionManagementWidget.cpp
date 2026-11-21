@@ -265,7 +265,7 @@ void SectionManagementWidget::onAddSection()
     auto* tietDauSpin  = new QSpinBox; tietDauSpin->setRange(1, 15); tietDauSpin->setValue(1);
     auto* tietCuoiSpin = new QSpinBox; tietCuoiSpin->setRange(1, 15); tietCuoiSpin->setValue(3);
     auto* siSoSpin     = new QSpinBox; siSoSpin->setRange(1, 200);   siSoSpin->setValue(50);
-    auto* hkSpin       = new QSpinBox; hkSpin->setRange(1, 2);       hkSpin->setValue(m_sys.getCurrentSemester());
+    auto* hkSpin       = new QSpinBox; hkSpin->setRange(1, 8);       hkSpin->setValue(m_sys.getCurrentSemester());
 
     form->addRow("Mã lớp HP (*):", maLopEdit);
     form->addRow("Mã môn (*):",    maMonEdit);

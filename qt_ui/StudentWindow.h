@@ -65,12 +65,6 @@ private:
     QWidget*            m_creditTab;
     // Tab "Khung chuong trinh dao tao"
     QWidget*            m_curriculumTab;
-    QPushButton*        m_stuCourseMyProgramBtn;
-    QComboBox*          m_stuFilterKhoaCombo;
-    QLineEdit*          m_stuFilterKhoaHocEdit;
-    QLineEdit*          m_stuFilterNganhEdit;
     QComboBox*          m_stuFilterHocKyCombo;
-    QPushButton*        m_stuCurriculumFilterBtn;
-    QPushButton*        m_stuResetFilterBtn;
     QTableWidget*       m_stuCourseTable;
 };

@@ -70,13 +70,7 @@ StudentWindow::StudentWindow(SystemManager& sys,
     , m_progressTab(nullptr)
     , m_creditTab(nullptr)
     , m_curriculumTab(nullptr)
-    , m_stuCourseMyProgramBtn(nullptr)
-    , m_stuFilterKhoaCombo(nullptr)
-    , m_stuFilterKhoaHocEdit(nullptr)
-    , m_stuFilterNganhEdit(nullptr)
     , m_stuFilterHocKyCombo(nullptr)
-    , m_stuCurriculumFilterBtn(nullptr)
-    , m_stuResetFilterBtn(nullptr)
     , m_stuCourseTable(nullptr)
 {
     setupUi();
@@ -670,55 +664,44 @@ void StudentWindow::setupCurriculumTab()
     mainLayout->setContentsMargins(14, 14, 14, 14);
     mainLayout->setSpacing(10);
 
-    // Bo loc Khung chuong trinh dao tao (Khoa, Khoa, Nganh, Ky)
-    auto* specGroup = new QGroupBox("Khung chương trình đào tạo", m_curriculumTab);
-    specGroup->setStyleSheet(
+    const Student* sv = m_sys.findStudent(m_studentID.toStdString());
+    QString khoaStr    = sv ? QString::fromStdString(sv->getKhoa()) : "";
+    QString nganhStr   = sv ? QString::fromStdString(sv->getNganhHoc()) : "";
+    QString khoaHocStr = sv ? QString::fromStdString(sv->getKhoaHoc()) : "";
+
+    // Header thong tin khung CTDT danh rieng cho sinh vien (khong cho phep tra cuu khoa/nganh khac)
+    auto* headerGroup = new QGroupBox("Khung chương trình đào tạo của sinh viên", m_curriculumTab);
+    headerGroup->setStyleSheet(
         "QGroupBox{font-weight:bold; color:#1E40AF; border:1px solid #CBD5E1; "
         "border-radius:6px; margin-top:6px; padding:10px;} "
         "QGroupBox::title{subcontrol-origin:margin; left:10px; padding:0 3px;}");
-    auto* specLayout = new QHBoxLayout(specGroup);
+    auto* headerLayout = new QHBoxLayout(headerGroup);
 
-    m_stuCourseMyProgramBtn = new QPushButton("Chương trình của tôi", specGroup);
-    m_stuCourseMyProgramBtn->setStyleSheet("QPushButton{background:#16A34A; color:#FFFFFF; font-weight:bold; padding:6px 14px; border-radius:6px;} QPushButton:hover{background:#15803D;}");
+    auto* lblInfo = new QLabel(
+        QString("Khoa: <b>%1</b> &nbsp;|&nbsp; Ngành: <b>%2</b> &nbsp;|&nbsp; Khóa: <b>%3</b>")
+            .arg(khoaStr.isEmpty() ? "Tất cả" : khoaStr)
+            .arg(nganhStr.isEmpty() ? "Tất cả" : nganhStr)
+            .arg(khoaHocStr.isEmpty() ? "Tất cả" : khoaHocStr),
+        headerGroup);
+    lblInfo->setStyleSheet("font-size:13px; color:#1E293B;");
+    headerLayout->addWidget(lblInfo);
 
-    auto* lblKhoa = new QLabel("Khoa:", specGroup);
-    m_stuFilterKhoaCombo = new QComboBox(specGroup);
-    m_stuFilterKhoaCombo->addItems({"Tất cả", "CNTT", "DTVT", "CoKhi", "Dien", "Hoa", "XayDung"});
+    headerLayout->addStretch();
 
-    auto* lblKhoaHoc = new QLabel("Khóa:", specGroup);
-    m_stuFilterKhoaHocEdit = new QLineEdit(specGroup);
-    m_stuFilterKhoaHocEdit->setPlaceholderText("VD: K23");
-    m_stuFilterKhoaHocEdit->setMaximumWidth(100);
+    auto* lblHocKy = new QLabel("Lọc theo học kỳ:", headerGroup);
+    lblHocKy->setStyleSheet("font-size:13px; color:#334155; font-weight:normal;");
+    m_stuFilterHocKyCombo = new QComboBox(headerGroup);
+    m_stuFilterHocKyCombo->addItems({
+        "Tất cả các kỳ",
+        "Kỳ 1", "Kỳ 2", "Kỳ 3", "Kỳ 4", "Kỳ 5",
+        "Kỳ 6", "Kỳ 7", "Kỳ 8", "Kỳ 9", "Kỳ 10"
+    });
+    m_stuFilterHocKyCombo->setStyleSheet("padding:4px 8px; border:1px solid #CBD5E1; border-radius:4px; font-size:13px; font-weight:normal;");
 
-    auto* lblNganh = new QLabel("Ngành:", specGroup);
-    m_stuFilterNganhEdit = new QLineEdit(specGroup);
-    m_stuFilterNganhEdit->setPlaceholderText("VD: CNTT");
-    m_stuFilterNganhEdit->setMaximumWidth(120);
+    headerLayout->addWidget(lblHocKy);
+    headerLayout->addWidget(m_stuFilterHocKyCombo);
 
-    auto* lblHocKy = new QLabel("Học kỳ:", specGroup);
-    m_stuFilterHocKyCombo = new QComboBox(specGroup);
-    m_stuFilterHocKyCombo->addItems({"Tất cả", "Kỳ 1", "Kỳ 2"});
-
-    m_stuCurriculumFilterBtn = new QPushButton("Lọc chương trình", specGroup);
-    m_stuCurriculumFilterBtn->setStyleSheet("QPushButton{background:#0D9488; color:#FFFFFF; font-weight:bold; border-radius:6px; padding:6px 14px;} QPushButton:hover{background:#0F766E;}");
-
-    m_stuResetFilterBtn = new QPushButton("Tất cả môn học", specGroup);
-    m_stuResetFilterBtn->setStyleSheet("QPushButton{background:#64748B; color:#FFFFFF; border-radius:6px; padding:6px 14px;} QPushButton:hover{background:#475569;}");
-
-    specLayout->addWidget(m_stuCourseMyProgramBtn);
-    specLayout->addSpacing(10);
-    specLayout->addWidget(lblKhoa);
-    specLayout->addWidget(m_stuFilterKhoaCombo);
-    specLayout->addWidget(lblKhoaHoc);
-    specLayout->addWidget(m_stuFilterKhoaHocEdit);
-    specLayout->addWidget(lblNganh);
-    specLayout->addWidget(m_stuFilterNganhEdit);
-    specLayout->addWidget(lblHocKy);
-    specLayout->addWidget(m_stuFilterHocKyCombo);
-    specLayout->addWidget(m_stuCurriculumFilterBtn);
-    specLayout->addWidget(m_stuResetFilterBtn);
-    specLayout->addStretch();
-    mainLayout->addWidget(specGroup);
+    mainLayout->addWidget(headerGroup);
 
     // Bang hien thi mon hoc
     m_stuCourseTable = new QTableWidget(m_curriculumTab);
@@ -734,14 +717,10 @@ void StudentWindow::setupCurriculumTab()
     m_stuCourseTable->verticalHeader()->setVisible(false);
     mainLayout->addWidget(m_stuCourseTable, 1);
 
-    // Ket noi tin hieu
-    connect(m_stuCurriculumFilterBtn,   &QPushButton::clicked,     this, &StudentWindow::onCurriculumFilter);
-    connect(m_stuFilterKhoaHocEdit,     &QLineEdit::returnPressed, this, &StudentWindow::onCurriculumFilter);
-    connect(m_stuFilterNganhEdit,       &QLineEdit::returnPressed, this, &StudentWindow::onCurriculumFilter);
-    connect(m_stuCourseMyProgramBtn,    &QPushButton::clicked,     this, &StudentWindow::onStudentCourseMyProgram);
-    connect(m_stuResetFilterBtn,        &QPushButton::clicked,     this, &StudentWindow::onStudentCourseReset);
+    connect(m_stuFilterHocKyCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &StudentWindow::onCurriculumFilter);
 
-    onStudentCourseMyProgram();
+    onCurriculumFilter();
 }
 
 /**
@@ -769,7 +748,7 @@ void StudentWindow::populateStudentCourseTable(DoubleLinkedList<Course>& list)
         setCell(3, QString::fromStdString(c.getKhoa()));
         setCell(4, QString::fromStdString(c.getKhoaHoc()));
         setCell(5, QString::fromStdString(c.getNganhHoc()));
-        setCell(6, QString::number(c.getHocKy()));
+        setCell(6, QString("Kỳ %1").arg(c.getHocKy()));
 
         node = node->next;
     }
@@ -781,63 +760,45 @@ void StudentWindow::populateStudentCourseTable(DoubleLinkedList<Course>& list)
  */
 void StudentWindow::refreshCurriculumTab()
 {
-    onStudentCourseMyProgram();
+    onCurriculumFilter();
 }
 
 /**
- * @brief Loc danh sach mon hoc theo cac tieu chi duoc chon tren bo loc (Khoa, Khoa hoc, Nganh, Hoc ky).
+ * @brief Loc danh sach mon hoc theo khung chuong trinh dao tao cua sinh vien (Khoa, Nganh) va Hoc ky (1..10).
  */
 void StudentWindow::onCurriculumFilter()
-{
-    QString khoa = m_stuFilterKhoaCombo->currentText();
-    if (khoa == "Tất cả") khoa = "";
-    QString khoaHoc = m_stuFilterKhoaHocEdit->text().trimmed();
-    QString nganh   = m_stuFilterNganhEdit->text().trimmed();
-
-    int hk = 0;
-    int hkIndex = m_stuFilterHocKyCombo->currentIndex();
-    if (hkIndex == 1) hk = 1;
-    else if (hkIndex == 2) hk = 2;
-
-    DoubleLinkedList<Course> list;
-    m_sys.filterCourses(khoa.toStdString(), khoaHoc.toStdString(),
-                        nganh.toStdString(), hk, list);
-    populateStudentCourseTable(list);
-}
-
-/**
- * @brief Tu dong dien thong tin Khoa, Khoa hoc, Nganh va Hoc ky hien tai cua chinh sinh vien de loc chuong trinh dao tao phu hop.
- */
-void StudentWindow::onStudentCourseMyProgram()
 {
     const Student* sv = m_sys.findStudent(m_studentID.toStdString());
     if (!sv) return;
 
-    if (!sv->getKhoa().empty()) {
-        int idx = m_stuFilterKhoaCombo->findText(QString::fromStdString(sv->getKhoa()));
-        if (idx >= 0) m_stuFilterKhoaCombo->setCurrentIndex(idx);
+    int hk = 0;
+    if (m_stuFilterHocKyCombo) {
+        int hkIndex = m_stuFilterHocKyCombo->currentIndex();
+        if (hkIndex >= 1 && hkIndex <= 10) hk = hkIndex;
     }
-    m_stuFilterKhoaHocEdit->setText(QString::fromStdString(sv->getKhoaHoc()));
-    m_stuFilterNganhEdit->setText(QString::fromStdString(sv->getNganhHoc()));
-    m_stuFilterHocKyCombo->setCurrentIndex(m_sys.getCurrentSemester());
 
     DoubleLinkedList<Course> list;
-    m_sys.filterCourses(sv->getKhoa(), sv->getKhoaHoc(),
-                        sv->getNganhHoc(), m_sys.getCurrentSemester(), list);
+    // Khung chuong trinh dao tao cua nganh/khoa sinh vien:
+    // truyen khoa, nganh cua sinh vien; khoaHoc = "" de xem toan bo cac ky cua chuong trinh dao tao
+    m_sys.filterCourses(sv->getKhoa(), "", sv->getNganhHoc(), hk, list);
     populateStudentCourseTable(list);
 }
 
 /**
- * @brief Dat lai tat ca bo loc ve mac dinh va hien thi toan bo mon hoc trong he thong.
+ * @brief Tu dong tai lai chuong trinh dao tao cua sinh vien.
+ */
+void StudentWindow::onStudentCourseMyProgram()
+{
+    onCurriculumFilter();
+}
+
+/**
+ * @brief Dat lai bo loc hoc ky va hien thi toan bo chuong trinh dao tao cua sinh vien.
  */
 void StudentWindow::onStudentCourseReset()
 {
-    m_stuFilterKhoaCombo->setCurrentIndex(0);
-    m_stuFilterKhoaHocEdit->clear();
-    m_stuFilterNganhEdit->clear();
-    m_stuFilterHocKyCombo->setCurrentIndex(0);
-
-    DoubleLinkedList<Course> list;
-    m_sys.getAllCourses(list);
-    populateStudentCourseTable(list);
+    if (m_stuFilterHocKyCombo) {
+        m_stuFilterHocKyCombo->setCurrentIndex(0);
+    }
+    onCurriculumFilter();
 }
