@@ -519,12 +519,27 @@ void RegistrationWidget::onGroupSelectionChanged()
 void RegistrationWidget::handleRegisterSection(const QString& maLopHP)
 {
     try {
-        m_sys.registerClass(m_studentID.toStdString(), maLopHP.toStdString());
-        QMessageBox::information(this, "Đăng ký thành công",
-            QString("Đã đăng ký lớp học phần '%1' thành công!").arg(maLopHP));
+        DoubleLinkedList<std::string> removedWaitlists;
+        m_sys.registerClass(m_studentID.toStdString(), maLopHP.toStdString(), "", true, &removedWaitlists);
+        std::string err;
+        m_sys.saveData(err);
+
+        QString msg = QString("Đã đăng ký lớp học phần '%1' thành công!").arg(maLopHP);
+        if (!removedWaitlists.empty()) {
+            QStringList outList;
+            auto* node = removedWaitlists.getHead();
+            while (node) {
+                outList << QString::fromStdString(node->data);
+                node = node->next;
+            }
+            msg += QString("\n(Đã tự động rút khỏi danh sách chờ của lớp: %1)").arg(outList.join(", "));
+        }
+        QMessageBox::information(this, "Đăng ký thành công", msg);
         refreshTable();
         emit registrationChanged();
     } catch (const ClassFullException& e) {
+        std::string err;
+        m_sys.saveData(err);
         QMessageBox::information(this, "Lớp đã đầy - Hàng chờ (Waitlist)",
             QString::fromStdString(e.what()));
         refreshTable();
@@ -575,12 +590,25 @@ void RegistrationWidget::onRegisterSelectedGroup()
             continue;
         }
         try {
-            m_sys.registerClass(sid, g.sectionIDs[i]);
-            okList << QString("• %1 (thành công)").arg(secID);
+            DoubleLinkedList<std::string> removedWaitlists;
+            m_sys.registerClass(sid, g.sectionIDs[i], "", true, &removedWaitlists);
+            QString itemMsg = QString("• %1 (thành công)").arg(secID);
+            if (!removedWaitlists.empty()) {
+                QStringList outList;
+                auto* node = removedWaitlists.getHead();
+                while (node) {
+                    outList << QString::fromStdString(node->data);
+                    node = node->next;
+                }
+                itemMsg += QString(" [Tự động out DS chờ lớp: %1]").arg(outList.join(", "));
+            }
+            okList << itemMsg;
         } catch (const AppException& e) {
             failList << QString("• %1: %2").arg(secID, QString::fromStdString(e.what()));
         }
     }
+    std::string err;
+    m_sys.saveData(err);
 
     QString summary;
     if (!okList.isEmpty()) {

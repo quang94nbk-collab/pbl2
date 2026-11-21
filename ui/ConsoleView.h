@@ -292,16 +292,15 @@ inline void showStudentMenu(int currentSemester, const Student& student) {
          << " | Hoc ky: " << currentSemester << "\n"
          << "============================================================\n"
          << " 1. Xem thong tin ca nhan\n"
-         << " 2. Xem danh sach mon hoc (chuong trinh dao tao)\n"
-         << " 3. Tim kiem mon hoc\n"
-         << " 4. Xem danh sach lop hoc phan (theo nhom lop)\n"
-         << " 5. Dang ky lop hoc phan (chon nhom -> chon lop)\n"
-         << " 6. Huy dang ky lop hoc phan (chon tu danh sach da dang ky)\n"
-         << " 7. Kiem tra tien do dang ky mon hoc trong hoc ky\n"
-         << " 8. Kiem tra trung lich hoc\n"
-         << " 9. Xem cac hoc phan da dang ky\n"
-         << "10. Xem thoi khoa bieu\n"
-         << "11. Tinh so tin chi da dang ky\n"
+         << " 2. Khung chuong trinh dao tao (chuong trinh cua toi / loc theo Khoa, Khoa, Nganh, Ky)\n"
+         << " 3. Xem danh sach lop hoc phan (theo nhom lop)\n"
+         << " 4. Dang ky lop hoc phan (chon nhom -> chon lop)\n"
+         << " 5. Huy dang ky lop hoc phan (chon tu danh sach da dang ky)\n"
+         << " 6. Kiem tra tien do dang ky mon hoc trong hoc ky\n"
+         << " 7. Kiem tra trung lich hoc\n"
+         << " 8. Xem cac hoc phan da dang ky\n"
+         << " 9. Xem thoi khoa bieu\n"
+         << "10. Tinh so tin chi da dang ky\n"
          << " 0. Dang xuat (Quay ve man hinh chinh)\n"
          << "------------------------------------------------------------\n"
          << "Nhap lua chon: ";
@@ -322,20 +321,22 @@ inline void showAdminMenu(int currentSemester) {
          << " 6. Them mon hoc\n"
          << " 7. Xoa mon hoc\n"
          << " 8. Sua thong tin mon hoc\n"
-         << " 9. Tim kiem mon hoc\n"
-         << "10. Xem danh sach mon hoc (tat ca / theo bo loc)\n"
+         << " 9. Tim kiem mon hoc theo tu khoa\n"
+         << "10. Xem danh sach tat ca mon hoc\n"
+         << "\n--- KHUNG CHUONG TRINH DAO TAO ---\n"
+         << "11. Xem khung chuong trinh dao tao (loc theo Khoa, Khoa hoc, Nganh, Hoc ky)\n"
          << "\n--- QUAN LY LOP HOC PHAN ---\n"
-         << "11. Them lop hoc phan (co nhom lop HP)\n"
-         << "12. Xoa lop hoc phan\n"
-         << "13. Sua thong tin lop hoc phan\n"
-         << "14. Tim kiem lop hoc phan\n"
-         << "15. Xem danh sach lop hoc phan (theo nhom / tat ca)\n"
-         << "16. Xem danh sach sinh vien theo lop hoc phan\n"
+         << "12. Them lop hoc phan (co nhom lop HP)\n"
+         << "13. Xoa lop hoc phan\n"
+         << "14. Sua thong tin lop hoc phan\n"
+         << "15. Tim kiem lop hoc phan\n"
+         << "16. Xem danh sach lop hoc phan (theo nhom / tat ca)\n"
+         << "17. Xem danh sach sinh vien theo lop hoc phan (hien thi danh sach cho neu lop day)\n"
          << "\n--- DANG KY & HOC KY ---\n"
-         << "17. Dang ky lop hoc phan cho sinh vien\n"
-         << "18. Huy dang ky lop hoc phan cho sinh vien\n"
-         << "19. Xem tat ca dang ky trong he thong\n"
-         << "20. Thiet lap hoc ky he thong (Admin quyet dinh ki 1 hoac 2)\n"
+         << "18. Dang ky lop hoc phan cho sinh vien\n"
+         << "19. Huy dang ky lop hoc phan cho sinh vien\n"
+         << "20. Xem tat ca dang ky trong he thong\n"
+         << "21. Thiet lap hoc ky he thong (Admin quyet dinh ki 1 hoac 2)\n"
          << "\n 0. Dang xuat (Quay ve man hinh chinh)\n"
          << "------------------------------------------------------------\n"
          << "Nhap lua chon: ";
@@ -493,6 +494,41 @@ inline void displayStudentsInSection(const ClassSection& sec,
         cur = cur->next;
     }
     if (count == 0) cout << "(Chua co sinh vien nao dang ky vao lop hoc phan nay)\n";
+}
+
+/**
+ * @brief Hien thi bang danh sach sinh vien dang trong hang doi cho (Waitlist) cua mot lop hoc phan tren Console theo thu tu FIFO.
+ * @param maLopHP Ma lop hoc phan can xem danh sach cho.
+ * @param list Danh sach cac doi tuong Student dang trong hang doi.
+ */
+inline void displayWaitlistStudents(const string& maLopHP, const DoubleLinkedList<Student>& list) {
+    cout << "\n======================================================================\n";
+    cout << "       DANH SACH SINH VIEN CHO (WAITLIST) - LOP HOC PHAN: " << maLopHP << "\n";
+    cout << "======================================================================\n";
+    auto cur = list.getHead();
+    if (cur == nullptr) {
+        cout << "(Khong co sinh vien nao trong danh sach cho)\n";
+        return;
+    }
+    cout << left << setw(6) << "STT"
+         << setw(16) << "MSSV"
+         << setw(26) << "Ho ten"
+         << setw(14) << "Lop"
+         << setw(12) << "Khoa"
+         << setw(10) << "Khoa hoc" << '\n';
+    cout << string(84, '-') << '\n';
+    int stt = 1;
+    while (cur != nullptr) {
+        const Student& s = cur->data;
+        cout << left << setw(6) << stt++
+             << setw(16) << s.getMaSV()
+             << setw(26) << s.getHoTen()
+             << setw(14) << (s.getLop().empty() ? "-" : s.getLop())
+             << setw(12) << (s.getKhoa().empty() ? "-" : s.getKhoa())
+             << setw(10) << (s.getKhoaHoc().empty() ? "-" : s.getKhoaHoc()) << '\n';
+        cur = cur->next;
+    }
+    cout << "======================================================================\n";
 }
 
 inline void displayRegistrations(const DoubleLinkedList<Registration>& list) {

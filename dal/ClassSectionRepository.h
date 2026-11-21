@@ -60,6 +60,14 @@ public:
     Queue<string>* getWaitlist(const string& maLopHP);
     const Queue<string>* getWaitlist(const string& maLopHP) const;
 
+    /**
+     * @brief Xoa mot sinh vien khoi danh sach cho (waitlist) cua lop hoc phan.
+     * @param maLopHP Ma lop hoc phan can xu ly.
+     * @param maSV Ma sinh vien can rut khoi danh sach cho.
+     * @return true neu xoa thanh cong, false neu khong co waitlist hoac khong tim thay.
+     */
+    bool removeFromWaitlist(const string& maLopHP, const string& maSV);
+
     bool exists(const string& maLopHP) const;
 
     // Tim kiem theo tu khoa (maLopHP, maMon, nhomLopHP, giangVien)
@@ -152,6 +160,13 @@ inline const Queue<string>* ClassSectionRepository::getWaitlist(const string& ma
     Queue<string>* q = nullptr;
     waitlistTable.get(maLopHP, q);
     return q;
+}
+
+// Chuc nang: Rut mot sinh vien khoi hang doi cho cua mot lop hoc phan cu the
+inline bool ClassSectionRepository::removeFromWaitlist(const string& maLopHP, const string& maSV) {
+    Queue<string>* q = getWaitlist(maLopHP);
+    if (!q) return false;
+    return q->remove(maSV);
 }
 
 inline bool ClassSectionRepository::exists(const string& maLopHP) const {

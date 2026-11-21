@@ -122,9 +122,9 @@ inline void CourseRepository::filter(const string& khoa, const string& khoaHoc,
     auto cur = courseList.getHead();
     while (cur != nullptr) {
         const Course& c = cur->data;
-        bool mK  = khoa.empty()    || c.getKhoa().empty()    || c.getKhoa()    == "Chung" || c.getKhoa()    == khoa;
-        bool mKH = khoaHoc.empty() || c.getKhoaHoc().empty() || c.getKhoaHoc() == "Chung" || c.getKhoaHoc() == khoaHoc;
-        bool mNg = nganh.empty()   || c.getNganhHoc().empty()|| c.getNganhHoc()== "Chung" || c.getNganhHoc()== nganh;
+        bool mK  = khoa.empty()    || c.getKhoa().empty()    || c.getKhoa()    == "Chung" || toLower(c.getKhoa())    == toLower(khoa);
+        bool mKH = khoaHoc.empty() || c.getKhoaHoc().empty() || c.getKhoaHoc() == "Chung" || toLower(c.getKhoaHoc()) == toLower(khoaHoc);
+        bool mNg = nganh.empty()   || c.getNganhHoc().empty()|| c.getNganhHoc()== "Chung" || toLower(c.getNganhHoc())== toLower(nganh);
         bool mHK = (hocKy == 0)    || (c.getHocKy() == hocKy);
         if (mK && mKH && mNg && mHK) { outResults.pushBack(c); }
         cur = cur->next;

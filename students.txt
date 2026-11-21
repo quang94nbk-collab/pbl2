@@ -7,3 +7,8 @@
 "101230002" "Đặng Ngọc Giang" "0901000007" "101230002@sv.dut.udn.vn" "23CK1" "CoKhi" "CoKhi" "K23"
 "102230003" "Đỗ Thị Hương" "0901000009" "102230003@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
 "102250169" "Hải" "0792312421" "ABC@GMAIL.COM" "23T_CNTT" "CNTT" "CNTT" "K25"
+"102230004" "Bùi Hữu Hải" "0901000011" "102230004@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
+"102230005" "Ngô Tuấn Kiệt" "0901000012" "102230005@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
+"102230006" "Lê Thị Mai" "0901000013" "102230006@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
+"102230007" "Vũ Hoàng Nam" "0901000014" "102230007@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
+"102230008" "Trần Quốc Toản" "0901000015" "102230008@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"

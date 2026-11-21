@@ -64,15 +64,16 @@ public:
             } else if (choice == 1) {
                 cout << *student;
             } else if (choice == 2) {
-                cout << "\n--- XEM DANH SACH MON HOC ---\n";
-                cout << "1. Xem mon hoc theo chuong trinh cua toi (Khoa: "
+                cout << "\n--- KHUNG CHUONG TRINH DAO TAO ---\n";
+                cout << "1. Xem theo chuong trinh cua toi (Khoa: "
                      << (student->getKhoa().empty() ? "Tat ca" : student->getKhoa())
                      << ", Khoa hoc: " << (student->getKhoaHoc().empty() ? "Tat ca" : student->getKhoaHoc())
                      << ", Nganh: " << (student->getNganhHoc().empty() ? "Tat ca" : student->getNganhHoc())
                      << ", Hoc ky " << system.getCurrentSemester() << ")\n";
-                cout << "2. Xem tat ca mon hoc mo trong Hoc ky " << system.getCurrentSemester() << "\n";
-                cout << "3. Xem tat ca mon hoc trong chuong trinh dao tao\n";
-                cout << "Chon (1-3): ";
+                cout << "2. Loc khung chuong trinh dao tao (theo Khoa, Khoa hoc, Nganh, Hoc ky)\n";
+                cout << "3. Xem tat ca mon hoc mo trong Hoc ky " << system.getCurrentSemester() << "\n";
+                cout << "4. Xem tat ca mon hoc trong he thong\n";
+                cout << "Chon (1-4): ";
                 int subChoice = 1;
                 ConsoleView::readChoice(subChoice);
                 DoubleLinkedList<Course> courses;
@@ -82,6 +83,8 @@ public:
                     ConsoleView::displayFilteredCourses(student->getKhoa(), student->getKhoaHoc(),
                                                         student->getNganhHoc(), system.getCurrentSemester(), courses);
                 } else if (subChoice == 2) {
+                    SessionHelper::searchCoursesSpecialized(system);
+                } else if (subChoice == 3) {
                     system.filterCourses("", "", "", system.getCurrentSemester(), courses);
                     ConsoleView::displayFilteredCourses("", "", "", system.getCurrentSemester(), courses);
                 } else {
@@ -89,15 +92,8 @@ public:
                     ConsoleView::displayCourses(courses);
                 }
             } else if (choice == 3) {
-                cout << "Nhap tu khoa tim kiem mon hoc (ma mon, ten mon): ";
-                string kw;
-                getline(cin, kw);
-                DoubleLinkedList<Course> results;
-                system.searchCourses(kw, results);
-                ConsoleView::displayCourseSearchResults(kw, results);
-            } else if (choice == 4) {
                 SessionHelper::showSectionsByGroupView(system);
-            } else if (choice == 5) {
+            } else if (choice == 4) {
                 const int MAX_GROUPS = 50;
                 GroupInfo eligibleGroups[MAX_GROUPS];
                 int groupCount = system.getEligibleGroupsForStudent(studentID, eligibleGroups, MAX_GROUPS);
@@ -156,7 +152,7 @@ public:
                 SessionHelper::tryRegisterWithFeedback(system, studentID, targetSectionID);
 
                 SessionHelper::showSemesterStatusView(system, studentID);
-            } else if (choice == 6) {
+            } else if (choice == 5) {
                 const int MAX_REG = 50;
                 string regSectionIDs[MAX_REG];
                 int regCount = system.getStudentRegisteredSections(studentID, regSectionIDs, MAX_REG);
@@ -198,9 +194,9 @@ public:
                 }
 
                 SessionHelper::showSemesterStatusView(system, studentID);
-            } else if (choice == 7) {
+            } else if (choice == 6) {
                 SessionHelper::showSemesterStatusView(system, studentID);
-            } else if (choice == 8) {
+            } else if (choice == 7) {
                 cout << "Nhap ma lop hoc phan can kiem tra lich: ";
                 string sectionID;
                 getline(cin, sectionID);
@@ -211,15 +207,15 @@ public:
                 } else {
                     ConsoleView::displayTimeConflictResult(target, conflicts);
                 }
-            } else if (choice == 9) {
+            } else if (choice == 8) {
                 DoubleLinkedList<StudentRegistrationDetail> details;
                 system.getStudentRegistrations(studentID, details, system.getCurrentSemester());
                 ConsoleView::displayStudentRegistrations(studentID, details);
-            } else if (choice == 10) {
+            } else if (choice == 9) {
                 DoubleLinkedList<TimetableEntry> timetable;
                 system.getStudentTimetable(studentID, timetable);
                 ConsoleView::displayStudentTimetable(studentID, system.getCurrentSemester(), timetable);
-            } else if (choice == 11) {
+            } else if (choice == 10) {
                 DoubleLinkedList<CreditSummaryItem> items;
                 int totalCredits = system.calculateTotalCredits(studentID, &items, system.getCurrentSemester());
                 ConsoleView::displayCreditSummary(studentID, totalCredits, items);

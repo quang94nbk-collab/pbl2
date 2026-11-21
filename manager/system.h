@@ -150,13 +150,24 @@ public:
     int getStudentRegisteredSections(const string& maSV, string outSectionIDs[], int maxCount) const;
     bool isTimeConflict(const string& maSV, const string& newSectionID) const;
     bool registerClass(const string& maSV, const string& maLopHP,
-                       const string& registrationDate = "", bool checkSemester = true);
+                       const string& registrationDate = "", bool checkSemester = true,
+                       DoubleLinkedList<string>* outRemovedWaitlists = nullptr);
     bool cancelRegistration(const string& maSV, const string& maLopHP,
                             DoubleLinkedList<string>* outWaitlistNotices = nullptr);
     void getStudentRegistrations(const string& maSV,
                                  DoubleLinkedList<StudentRegistrationDetail>& outDetails,
                                  int semester = 0) const;
     void getAllRegistrations(DoubleLinkedList<Registration>& outList) const;
+
+    // Waitlist
+    bool canShowWaitlist(const string& maLopHP) const;
+    bool hasWaitlist(const string& maLopHP) const;
+    int  getWaitlistCount(const string& maLopHP) const;
+    bool getWaitlistStudents(const string& maLopHP, DoubleLinkedList<Student>& outStudents) const;
+    int  removeStudentFromCourseWaitlists(const string& maSV, const string& maMon,
+                                          const string& exceptSectionID = "",
+                                          DoubleLinkedList<string>* outRemovedWaitlists = nullptr);
+    bool removeStudentFromWaitlist(const string& maSV, const string& maLopHP);
 
     // =========================================================
     //  TINH TOAN & THONG KE
@@ -268,7 +279,15 @@ inline bool SystemManager::deleteStudent(const string& maSV,
     for (int i = 0; i < cnt; i++)
         cancelRegistration(maSV, secIDs[i], outWaitlistNotices);
 
-    // 2. Xoa sinh vien
+    // 2. Xoa sinh vien khoi tat ca waitlist neu co
+    auto curSec = sectionRepo.getList().getHead();
+    while (curSec != nullptr) {
+        Queue<string>* q = sectionRepo.getWaitlist(curSec->data.getMaLopHP());
+        if (q) q->remove(maSV);
+        curSec = curSec->next;
+    }
+
+    // 3. Xoa sinh vien
     return studentRepo.remove(maSV);
 }
 
@@ -467,7 +486,8 @@ inline bool SystemManager::isTimeConflict(const string& maSV, const string& newS
 }
 
 inline bool SystemManager::registerClass(const string& maSV, const string& maLopHP,
-                                         const string& registrationDate, bool checkSemester) {
+                                         const string& registrationDate, bool checkSemester,
+                                         DoubleLinkedList<string>* outRemovedWaitlists) {
     Student*      student = findStudent(maSV);
     ClassSection* section = findClassSection(maLopHP);
 
@@ -536,9 +556,21 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
                 throw DuplicateException(
                     "Sinh vien '" + maSV + "' da nam trong hang doi cho cua lop '" + maLopHP + "' roi");
             }
+            // Neu sinh vien dang o danh sach cho cua mot lop khac cung mon -> tu dong out khoi lop cu
+            removeStudentFromCourseWaitlists(maSV, section->getMaMon(), maLopHP, outRemovedWaitlists);
             q->push(maSV);
-            throw ClassFullException(
-                "Lop '" + maLopHP + "' da het cho. Sinh vien '" + maSV + "' duoc them vao hang doi cho");
+            string msg = "Lop '" + maLopHP + "' da het cho. Sinh vien '" + maSV + "' duoc them vao hang doi cho";
+            if (outRemovedWaitlists && !outRemovedWaitlists->empty()) {
+                msg += " (da tu dong out khoi danh sach cho lop: ";
+                auto* n = outRemovedWaitlists->getHead();
+                while (n) {
+                    msg += n->data;
+                    if (n->next) msg += ", ";
+                    n = n->next;
+                }
+                msg += ")";
+            }
+            throw ClassFullException(msg);
         }
         throw ClassFullException("Lop '" + maLopHP + "' da het cho");
     }
@@ -549,6 +581,10 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
 
     const string regID = registrationRepo.getRegID(maSV, maLopHP);
     registrationRepo.add(Registration(regID, maSV, maLopHP, date));
+
+    // TU DONG OUT KHOI TAT CA DANH SACH CHO CUA MON HOC NAY (ke ca lop maLopHP hay cac lop khac cua cung mon)
+    removeStudentFromCourseWaitlists(maSV, section->getMaMon(), "", outRemovedWaitlists);
+
     return true;
 }
 
@@ -577,10 +613,21 @@ inline bool SystemManager::cancelRegistration(const string& maSV, const string& 
                     if (!c->getNganhHoc().empty()&& c->getNganhHoc()!= "Chung" && s->getNganhHoc()!= c->getNganhHoc())match = false;
                 }
                 if (!match) continue;
+
+                // Kiem tra xem sinh vien nay da dang ky mot lop khac cua mon nay chua!
+                string alreadySec = getRegisteredSectionForCourse(nextSV, section->getMaMon());
+                if (!alreadySec.empty()) {
+                    // Da dang ky mot lop khac cua mon nay -> bo qua va xoa khoi cac waitlist con lai cua mon
+                    removeStudentFromCourseWaitlists(nextSV, section->getMaMon());
+                    continue;
+                }
+
                 if (!isTimeConflict(nextSV, maLopHP)) {
                     section->tangSoLuong();
                     const string newRegID = registrationRepo.getRegID(nextSV, maLopHP);
                     registrationRepo.add(Registration(newRegID, nextSV, maLopHP, today()));
+                    // Tu dong out khoi cac waitlist con lai cua mon nay (neu co)
+                    removeStudentFromCourseWaitlists(nextSV, section->getMaMon());
                     if (outWaitlistNotices != nullptr) {
                         outWaitlistNotices->pushBack("Tu dong dang ky cho sinh vien " + nextSV +
                                                      " tu hang doi vao lop " + maLopHP + ".");
@@ -845,6 +892,116 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
         }
     }
     return count;
+}
+
+// =========================================================
+//  WAITLIST LOGIC
+// =========================================================
+
+/**
+ * @brief Kiem tra xem lop hoc phan co ton tai sinh vien trong hang doi waitlist khong.
+ * @param maLopHP Ma lop hoc phan can kiem tra.
+ * @return true neu co it nhat 1 sinh vien dang cho, false neu rong hoac khong co hang doi.
+ */
+inline bool SystemManager::hasWaitlist(const string& maLopHP) const {
+    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    return q != nullptr && !q->empty();
+}
+
+/**
+ * @brief Lay tong so luong sinh vien dang cho trong waitlist cua mot lop hoc phan.
+ * @param maLopHP Ma lop hoc phan can kiem tra.
+ * @return So luong sinh vien trong hang doi cho.
+ */
+inline int SystemManager::getWaitlistCount(const string& maLopHP) const {
+    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    return q ? q->size() : 0;
+}
+
+/**
+ * @brief Kiem tra xem lop hoc phan co du dieu kien de hien thi chuc nang xem danh sach cho hay khong.
+ * Dieu kien: Lop hoc phan phai DU SO LUONG (het cho) VA CO SINH VIEN trong danh sach cho.
+ * @param maLopHP Ma lop hoc phan can kiem tra.
+ * @return true neu thoa man ca 2 dieu kien, false neu khong du dieu kien.
+ */
+inline bool SystemManager::canShowWaitlist(const string& maLopHP) const {
+    const ClassSection* sec = findClassSection(maLopHP);
+    if (!sec) return false;
+    bool duSoLuong = !sec->conCho();
+    bool coSinhVienCho = hasWaitlist(maLopHP);
+    return duSoLuong && coSinhVienCho;
+}
+
+/**
+ * @brief Lay danh sach day du cac doi tuong Student dang trong hang doi cho cua lop hoc phan theo thu tu FIFO.
+ * @param maLopHP Ma lop hoc phan can lay danh sach.
+ * @param outStudents Danh sach ket qua cac sinh vien dang cho.
+ * @return true neu lay thanh cong, false neu khong tim thay hang doi.
+ */
+inline bool SystemManager::getWaitlistStudents(const string& maLopHP, DoubleLinkedList<Student>& outStudents) const {
+    outStudents.clear();
+    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    if (!q) return false;
+    DoubleLinkedList<string> ids;
+    q->copyTo(ids);
+    auto cur = ids.getHead();
+    while (cur != nullptr) {
+        const Student* sv = findStudent(cur->data);
+        if (sv) {
+            outStudents.pushBack(*sv);
+        } else {
+            Student temp;
+            temp.setMaSV(cur->data);
+            temp.setHoTen("(Chua cap nhat)");
+            outStudents.pushBack(temp);
+        }
+        cur = cur->next;
+    }
+    return true;
+}
+
+/**
+ * @brief Tu dong rut sinh vien khoi tat ca danh sach cho cua cac lop hoc phan thuoc cung mot mon hoc.
+ * Thuong duoc goi khi sinh vien da dang ky thanh cong 1 lop hoc phan khac cua mon do.
+ * @param maSV Ma so sinh vien can rut.
+ * @param maMon Ma mon hoc can quet cac lop.
+ * @param exceptSectionID Ma lop ngoai le khong rut (neu co).
+ * @param outRemovedWaitlists Danh sach chua ma cac lop da tu dong rut sinh vien ra khoi hang cho (dung de thong bao).
+ * @return So luong lop hoc phan da rut sinh vien khoi waitlist.
+ */
+inline int SystemManager::removeStudentFromCourseWaitlists(const string& maSV, const string& maMon,
+                                                           const string& exceptSectionID,
+                                                           DoubleLinkedList<string>* outRemovedWaitlists) {
+    int removedCount = 0;
+    auto cur = sectionRepo.getList().getHead();
+    while (cur != nullptr) {
+        const string& secID = cur->data.getMaLopHP();
+        if (cur->data.getMaMon() == maMon && secID != exceptSectionID) {
+            Queue<string>* q = sectionRepo.getWaitlist(secID);
+            if (q && q->contains(maSV)) {
+                if (q->remove(maSV)) {
+                    removedCount++;
+                    if (outRemovedWaitlists != nullptr) {
+                        outRemovedWaitlists->pushBack(secID);
+                    }
+                }
+            }
+        }
+        cur = cur->next;
+    }
+    return removedCount;
+}
+
+/**
+ * @brief Rut mot sinh vien cu the khoi hang doi cho cua mot lop hoc phan cu the.
+ * @param maSV Ma sinh vien can rut.
+ * @param maLopHP Ma lop hoc phan can xu ly.
+ * @return true neu tim thay va rut thanh cong, false neu khong tim thay.
+ */
+inline bool SystemManager::removeStudentFromWaitlist(const string& maSV, const string& maLopHP) {
+    Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    if (!q) return false;
+    return q->remove(maSV);
 }
 
 // =========================================================

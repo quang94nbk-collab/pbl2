@@ -113,6 +113,8 @@ public:
                     cout << ">> Khong tim thay mon hoc voi ma: " << courseID << "\n";
                 } else {
                     ConsoleView::editCourseInteractive(*c);
+                    string err;
+                    system.saveData(err);
                     cout << ">> Cap nhat mon hoc thanh cong!\n";
                 }
             } else if (choice == 9) {
@@ -123,38 +125,12 @@ public:
                 system.searchCourses(kw, results);
                 ConsoleView::displayCourseSearchResults(kw, results);
             } else if (choice == 10) {
-                cout << "1. Xem tat ca mon hoc\n";
-                cout << "2. Loc theo Khoa, Khoa hoc, Nganh, Hoc ky\n";
-                cout << "Chon (1-2): ";
-                int subChoice = 1;
-                ConsoleView::readChoice(subChoice);
                 DoubleLinkedList<Course> courses;
-                if (subChoice == 2) {
-                    string khoa, khoaHoc, nganh;
-                    cout << "Khoa: ";
-                    getline(cin, khoa);
-                    cout << "Khoa hoc: ";
-                    getline(cin, khoaHoc);
-                    cout << "Nganh: ";
-                    getline(cin, nganh);
-                    cout << "Hoc ky: ";
-                    string hkStr;
-                    getline(cin, hkStr);
-                    int hk = 0;
-                    try {
-                        if (!hkStr.empty()) hk = stoi(hkStr);
-                    } catch (const invalid_argument&) {
-                        hk = 0;
-                    } catch (const out_of_range&) {
-                        hk = 0;
-                    }
-                    system.filterCourses(khoa, khoaHoc, nganh, hk, courses);
-                    ConsoleView::displayFilteredCourses(khoa, khoaHoc, nganh, hk, courses);
-                } else {
-                    system.getAllCourses(courses);
-                    ConsoleView::displayCourses(courses);
-                }
+                system.getAllCourses(courses);
+                ConsoleView::displayCourses(courses);
             } else if (choice == 11) {
+                SessionHelper::searchCoursesSpecialized(system);
+            } else if (choice == 12) {
                 ClassSection sec;
                 cin >> sec;
                 if (system.addClassSection(sec)) {
@@ -162,7 +138,7 @@ public:
                 } else {
                     cout << ">> Them that bai: Ma lop HP da ton tai hoac ma mon khong ton tai trong he thong.\n";
                 }
-            } else if (choice == 12) {
+            } else if (choice == 13) {
                 cout << "Nhap ma lop hoc phan can xoa: ";
                 string secID;
                 getline(cin, secID);
@@ -171,7 +147,7 @@ public:
                 } else {
                     cout << ">> Xoa lop hoc phan that bai.\n";
                 }
-            } else if (choice == 13) {
+            } else if (choice == 14) {
                 cout << "Nhap ma lop hoc phan can sua: ";
                 string secID;
                 getline(cin, secID);
@@ -182,14 +158,14 @@ public:
                     ConsoleView::editClassSectionInteractive(*sec);
                     cout << ">> Cap nhat thong tin lop hoc phan thanh cong!\n";
                 }
-            } else if (choice == 14) {
+            } else if (choice == 15) {
                 cout << "Nhap tu khoa tim kiem (Ma lop HP, ma mon, nhom, giang vien): ";
                 string kw;
                 getline(cin, kw);
                 DoubleLinkedList<ClassSection> results;
                 system.searchSections(kw, results);
                 ConsoleView::displaySectionSearchResults(kw, results);
-            } else if (choice == 15) {
+            } else if (choice == 16) {
                 cout << "1. Xem theo tung NHOM lop hoc phan (theo hoc ky " << system.getCurrentSemester() << ")\n";
                 cout << "2. Xem tat ca cac lop hoc phan\n";
                 cout << "Chon (1-2): ";
@@ -202,25 +178,45 @@ public:
                     system.getAllSections(sections);
                     ConsoleView::displaySections(sections);
                 }
-            } else if (choice == 16) {
+            } else if (choice == 17) {
                 cout << "Nhap ma lop hoc phan can xem danh sach sinh vien: ";
                 string secID;
                 getline(cin, secID);
                 ClassSection sec;
                 DoubleLinkedList<SectionStudentInfo> students;
                 if (!system.getStudentsInSection(secID, sec, students)) {
-                    cout << "Khong tim thay lop hoc phan: " << secID << "\n";
+                    cout << ">> Khong tim thay lop hoc phan: " << secID << "\n";
                 } else {
                     ConsoleView::displayStudentsInSection(sec, students);
+
+                    // Kiem tra dieu kien: Lop du so luong VA co sinh vien trong danh sach cho
+                    if (system.canShowWaitlist(secID)) {
+                        int count = system.getWaitlistCount(secID);
+                        cout << "\n------------------------------------------------------------\n";
+                        cout << "  [THONG BAO]: Lop hoc phan da DU SO LUONG (" 
+                             << sec.getSoLuongDaDangKy() << "/" << sec.getSiSoToiDa()
+                             << ") va dang co " << count << " sinh vien trong danh sach cho (Waitlist).\n";
+                        cout << "------------------------------------------------------------\n";
+                        cout << "  Chuc nang mo rong:\n";
+                        cout << "  1. Show danh sach cho (Waitlist)\n";
+                        cout << "  0. Bo qua (Quay lai menu)\n";
+                        cout << "  Nhap lua chon: ";
+                        int subChoice = 0;
+                        if (ConsoleView::readChoice(subChoice) && subChoice == 1) {
+                            DoubleLinkedList<Student> waitlistStudents;
+                            system.getWaitlistStudents(secID, waitlistStudents);
+                            ConsoleView::displayWaitlistStudents(secID, waitlistStudents);
+                        }
+                    }
                 }
-            } else if (choice == 17) {
+            } else if (choice == 18) {
                 string svID, secID;
                 cout << "Ma sinh vien: ";
                 getline(cin, svID);
                 cout << "Ma lop hoc phan: ";
                 getline(cin, secID);
                 SessionHelper::tryRegisterWithFeedback(system, svID, secID);
-            } else if (choice == 18) {
+            } else if (choice == 19) {
                 string svID, secID;
                 cout << "Ma sinh vien: ";
                 getline(cin, svID);
@@ -230,11 +226,11 @@ public:
                 bool success = system.cancelRegistration(svID, secID, &waitlistNotices);
                 ConsoleView::printNotices(waitlistNotices);
                 cout << (success ? ">> Huy dang ky lop hoc phan thanh cong!\n" : ">> Huy dang ky that bai!\n");
-            } else if (choice == 19) {
+            } else if (choice == 20) {
                 DoubleLinkedList<Registration> registrations;
                 system.getAllRegistrations(registrations);
                 ConsoleView::displayRegistrations(registrations);
-            } else if (choice == 20) {
+            } else if (choice == 21) {
                 cout << "\n--- THIET LAP KI HOC HE THONG ---\n";
                 cout << "Ki hoc hien tai: Ki " << system.getCurrentSemester() << '\n';
                 cout << "Nhap ki hoc muon ap dung: ";
