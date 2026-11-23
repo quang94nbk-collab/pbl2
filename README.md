@@ -7,6 +7,7 @@ g++ -std=c++14 -Wall -Wextra -pedantic main\main.cpp -o pbl2.exe
 .\pbl2.exe
 ```
 ----.\run_gui.bat chạy gui
+--.\qt_ui\build\PBL2_QtGUI.exe
 
 The program creates its data files in the current working directory when you
 save and exit. Keep `students.txt`, `courses.txt`, `sections.txt`, and
