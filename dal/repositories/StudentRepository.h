@@ -2,61 +2,35 @@
 #define STUDENT_REPOSITORY_H
 
 #include "IRepository.h"
-#include "../DSA/DoublyLinkedList.h"
-#include "../DSA/hashtable.h"
-#include "../model/student.h"
+#include "../../DSA/DoublyLinkedList.h"
+#include "../../DSA/hashtable.h"
+#include "../../model/student.h"
 #include <string>
 using namespace std;
 
 // ============================================================
-//  StudentRepository - DAL tang du lieu cho Student
-//
-//  Quan he:
-//    - Student ke thua Person (quan he Generalization)
-//    - StudentRepository quan ly DoubleLinkedList<Student>
-//      + HashTable de truy cap O(1) theo maSV
-//
-//  Chuc nang:
-//    - add      : Them sinh vien (kiem tra trung maSV)
-//    - remove   : Xoa sinh vien theo maSV
-//    - findById : Tim nhanh O(1) qua HashTable
-//    - search   : Tim kiem theo tu khoa (ten, lop, khoa...)
-//    - displayAll / displayFiltered
-//      (da tach sang Presentation; DAL cung cap getList / search)
+//  StudentRepository - Pure Repository cho thuc the Student
 // ============================================================
 class StudentRepository : public IRepository<Student, string> {
 private:
     DoubleLinkedList<Student>              studentList;
     HashTable<string, NodeDLL<Student>*>   studentTable;
 
-    // Lay node cuoi trong danh sach de luu vao hashtable
     NodeDLL<Student>* getLastNode() const;
-
     static string toLower(string s);
 
 public:
-    // ----- IRepository interface -----
-
     bool add(const Student& student) override;
-
-    // Luu y: xoa sinh vien can kiem tra dang ky -> goi tu SystemManager
     bool remove(const string& maSV) override;
-
     Student* findById(const string& maSV) override;
     const Student* findById(const string& maSV) const;
+    bool exists(const string& maSV) const override;
 
-    // ----- Chuc nang mo rong -----
-
-    // Tim kiem theo tu khoa (maSV, hoTen, lop, khoa)
     void search(const string& keyword, DoubleLinkedList<Student>& outResults) const;
-
-    // Truy cap danh sach de doc (dung trong SystemManager khi can duyet)
     const DoubleLinkedList<Student>& getList() const override;
-
     void clear();
 };
 
-// Lay node cuoi trong danh sach de luu vao hashtable
 inline NodeDLL<Student>* StudentRepository::getLastNode() const {
     auto cur = studentList.getHead();
     NodeDLL<Student>* tail = nullptr;
@@ -68,8 +42,6 @@ inline string StudentRepository::toLower(string s) {
     return utf8ToLower(s);
 }
 
-// ----- IRepository interface -----
-
 inline bool StudentRepository::add(const Student& student) {
     if (student.getMaSV().empty() || studentTable.search(student.getMaSV()))
         return false;
@@ -78,7 +50,6 @@ inline bool StudentRepository::add(const Student& student) {
     return true;
 }
 
-// Luu y: xoa sinh vien can kiem tra dang ky -> goi tu SystemManager
 inline bool StudentRepository::remove(const string& maSV) {
     NodeDLL<Student>* node = nullptr;
     if (!studentTable.get(maSV, node)) return false;
@@ -99,9 +70,10 @@ inline const Student* StudentRepository::findById(const string& maSV) const {
     return nullptr;
 }
 
-// ----- Chuc nang mo rong -----
+inline bool StudentRepository::exists(const string& maSV) const {
+    return studentTable.search(maSV);
+}
 
-// Tim kiem theo tu khoa (maSV, hoTen, lop, khoa)
 inline void StudentRepository::search(const string& keyword, DoubleLinkedList<Student>& outResults) const {
     outResults.clear();
     string kw = toLower(keyword);
@@ -119,7 +91,6 @@ inline void StudentRepository::search(const string& keyword, DoubleLinkedList<St
     }
 }
 
-// Truy cap danh sach de doc (dung trong SystemManager khi can duyet)
 inline const DoubleLinkedList<Student>& StudentRepository::getList() const {
     return studentList;
 }

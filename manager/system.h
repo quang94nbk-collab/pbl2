@@ -8,11 +8,18 @@
 #include "exception.h"
 
 // DAL Repositories
-#include "../dal/StudentRepository.h"
-#include "../dal/CourseRepository.h"
-#include "../dal/ClassSectionRepository.h"
-#include "../dal/RegistrationRepository.h"
-#include "../dal/filemanager.h"
+#include "../dal/repositories/StudentRepository.h"
+#include "../dal/repositories/CourseRepository.h"
+#include "../dal/repositories/ClassSectionRepository.h"
+#include "../dal/repositories/RegistrationRepository.h"
+
+// DAL Relations
+#include "../dal/relations/CourseSectionRelation.h"
+#include "../dal/relations/StudentSectionRelation.h"
+#include "../dal/relations/SectionWaitlistRelation.h"
+
+// Storage
+#include "../dal/file/FileManager.h"
 
 // DSA
 #include "../DSA/DoublyLinkedList.h"
@@ -72,11 +79,16 @@ inline GroupInfo::GroupInfo()
 // ============================================================
 class SystemManager {
 private:
-    StudentRepository      studentRepo;
-    CourseRepository       courseRepo;
-    ClassSectionRepository sectionRepo;
-    RegistrationRepository registrationRepo;
-    FileManager            fileManager;
+    StudentRepository       studentRepo;
+    CourseRepository        courseRepo;
+    ClassSectionRepository  sectionRepo;
+    RegistrationRepository  registrationRepo;
+
+    CourseSectionRelation   courseSectionRel;
+    StudentSectionRelation  studentSectionRel;
+    SectionWaitlistRelation waitlistRel;
+
+    FileManager             fileManager;
 
     int currentSemester;
 
@@ -242,12 +254,12 @@ inline SystemManager::SystemManager() : currentSemester(1) {}
 
 inline bool SystemManager::loadData(string& error) {
     return fileManager.loadAllData(studentRepo, courseRepo, sectionRepo, registrationRepo,
-                                   currentSemester, error);
+                                   waitlistRel, currentSemester, error);
 }
 
 inline bool SystemManager::saveData(string& error) const {
     return fileManager.saveAllData(studentRepo, courseRepo, sectionRepo, registrationRepo,
-                                   currentSemester, error);
+                                   waitlistRel, currentSemester, error);
 }
 
 inline int SystemManager::getCurrentSemester() const {
@@ -275,17 +287,12 @@ inline bool SystemManager::deleteStudent(const string& maSV,
     // 1. Xoa het dang ky cua sinh vien (can update lai so luong lop HP)
     const int MAX = 100;
     string secIDs[MAX];
-    int cnt = registrationRepo.getSectionsByStudent(maSV, secIDs, MAX);
+    int cnt = studentSectionRel.getSectionsByStudent(maSV, registrationRepo, secIDs, MAX);
     for (int i = 0; i < cnt; i++)
         cancelRegistration(maSV, secIDs[i], outWaitlistNotices);
 
     // 2. Xoa sinh vien khoi tat ca waitlist neu co
-    auto curSec = sectionRepo.getList().getHead();
-    while (curSec != nullptr) {
-        Queue<string>* q = sectionRepo.getWaitlist(curSec->data.getMaLopHP());
-        if (q) q->remove(maSV);
-        curSec = curSec->next;
-    }
+    waitlistRel.removeStudentFromAll(maSV, sectionRepo);
 
     // 3. Xoa sinh vien
     return studentRepo.remove(maSV);
@@ -316,17 +323,9 @@ inline bool SystemManager::addCourse(const Course& c) {
 }
 
 inline bool SystemManager::deleteCourse(const string& maMon, string* outMessage) {
-    // Kiem tra con ClassSection thuoc mon nay khong
-    auto cur = sectionRepo.getList().getHead();
-    while (cur != nullptr) {
-        if (cur->data.getMaMon() == maMon) {
-            if (outMessage != nullptr) {
-                *outMessage = "Khong the xoa: Lop hoc phan '" + cur->data.getMaLopHP() +
-                              "' dang thuoc mon nay. Vui long xoa lop hoc phan truoc!";
-            }
-            return false;
-        }
-        cur = cur->next;
+    // Kiem tra con ClassSection thuoc mon nay khong qua CourseSectionRelation
+    if (!courseSectionRel.canRemoveCourse(maMon, sectionRepo, outMessage)) {
+        return false;
     }
     return courseRepo.remove(maMon);
 }
@@ -358,15 +357,17 @@ inline void SystemManager::filterCourses(const string& khoa, const string& khoaH
 // =========================================================
 
 inline bool SystemManager::addClassSection(const ClassSection& sec) {
-    // Kiem tra FK: maMon phai ton tai
-    if (!courseRepo.exists(sec.getMaMon())) return false;
+    // Kiem tra FK: maMon phai ton tai qua CourseSectionRelation
+    if (!courseSectionRel.isValidSectionCourse(sec.getMaMon(), courseRepo)) return false;
     return sectionRepo.add(sec);
 }
 
 inline bool SystemManager::deleteClassSection(const string& maLopHP) {
-    // 1. Xoa het Registration cua lop nay
-    registrationRepo.removeAllBySection(maLopHP);
-    // 2. Xoa lop HP (va waitlist ben trong repo)
+    // 1. Xoa het Registration cua lop nay (Cascade delete quan he)
+    studentSectionRel.cascadeDeleteSection(maLopHP, registrationRepo);
+    // 2. Xoa waitlist cua lop nay
+    waitlistRel.clearSectionWaitlist(maLopHP);
+    // 3. Xoa lop HP
     return sectionRepo.remove(maLopHP);
 }
 
@@ -460,8 +461,7 @@ inline bool SystemManager::isSectionRegistered(const string& maSV, const string&
 }
 
 inline bool SystemManager::isStudentInWaitlist(const string& maSV, const string& maLopHP) const {
-    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
-    return q != nullptr && q->contains(maSV);
+    return waitlistRel.contains(maLopHP, maSV);
 }
 
 inline int SystemManager::getStudentRegisteredSections(const string& maSV, string outSectionIDs[], int maxCount) const {
@@ -555,7 +555,7 @@ inline bool SystemManager::registerClass(const string& maSV, const string& maLop
         throw TimeConflictException("Trung lich hoc voi mot lop hoc phan da dang ky");
 
     if (!section->conCho()) {
-        Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+        Queue<string>* q = waitlistRel.ensureWaitlist(maLopHP);
         if (q) {
             if (q->contains(maSV)) {
                 throw DuplicateException(
@@ -605,7 +605,7 @@ inline bool SystemManager::cancelRegistration(const string& maSV, const string& 
 
     // Tu dong dang ky tu hang doi
     if (section) {
-        Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+        Queue<string>* q = waitlistRel.getWaitlist(maLopHP);
         if (q) {
             string nextSV;
             while (q->pop(nextSV)) {
@@ -909,8 +909,7 @@ inline int SystemManager::getEligibleGroupsForStudent(const string& maSV, GroupI
  * @return true neu co it nhat 1 sinh vien dang cho, false neu rong hoac khong co hang doi.
  */
 inline bool SystemManager::hasWaitlist(const string& maLopHP) const {
-    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
-    return q != nullptr && !q->empty();
+    return waitlistRel.hasWaitlist(maLopHP);
 }
 
 /**
@@ -919,8 +918,7 @@ inline bool SystemManager::hasWaitlist(const string& maLopHP) const {
  * @return So luong sinh vien trong hang doi cho.
  */
 inline int SystemManager::getWaitlistCount(const string& maLopHP) const {
-    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
-    return q ? q->size() : 0;
+    return waitlistRel.getWaitlistCount(maLopHP);
 }
 
 /**
@@ -945,7 +943,7 @@ inline bool SystemManager::canShowWaitlist(const string& maLopHP) const {
  */
 inline bool SystemManager::getWaitlistStudents(const string& maLopHP, DoubleLinkedList<Student>& outStudents) const {
     outStudents.clear();
-    const Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
+    const Queue<string>* q = waitlistRel.getWaitlist(maLopHP);
     if (!q) return false;
     DoubleLinkedList<string> ids;
     q->copyTo(ids);
@@ -977,24 +975,7 @@ inline bool SystemManager::getWaitlistStudents(const string& maLopHP, DoubleLink
 inline int SystemManager::removeStudentFromCourseWaitlists(const string& maSV, const string& maMon,
                                                            const string& exceptSectionID,
                                                            DoubleLinkedList<string>* outRemovedWaitlists) {
-    int removedCount = 0;
-    auto cur = sectionRepo.getList().getHead();
-    while (cur != nullptr) {
-        const string& secID = cur->data.getMaLopHP();
-        if (cur->data.getMaMon() == maMon && secID != exceptSectionID) {
-            Queue<string>* q = sectionRepo.getWaitlist(secID);
-            if (q && q->contains(maSV)) {
-                if (q->remove(maSV)) {
-                    removedCount++;
-                    if (outRemovedWaitlists != nullptr) {
-                        outRemovedWaitlists->pushBack(secID);
-                    }
-                }
-            }
-        }
-        cur = cur->next;
-    }
-    return removedCount;
+    return waitlistRel.removeStudentFromCourseWaitlists(maSV, maMon, sectionRepo, exceptSectionID, outRemovedWaitlists);
 }
 
 /**
@@ -1004,9 +985,7 @@ inline int SystemManager::removeStudentFromCourseWaitlists(const string& maSV, c
  * @return true neu tim thay va rut thanh cong, false neu khong tim thay.
  */
 inline bool SystemManager::removeStudentFromWaitlist(const string& maSV, const string& maLopHP) {
-    Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
-    if (!q) return false;
-    return q->remove(maSV);
+    return waitlistRel.removeFromWaitlist(maLopHP, maSV);
 }
 
 // =========================================================

@@ -7,16 +7,17 @@
 #include <sstream>
 #include <string>
 
-#include "StudentRepository.h"
-#include "CourseRepository.h"
-#include "ClassSectionRepository.h"
-#include "RegistrationRepository.h"
+#include "../repositories/StudentRepository.h"
+#include "../repositories/CourseRepository.h"
+#include "../repositories/ClassSectionRepository.h"
+#include "../repositories/RegistrationRepository.h"
+#include "../relations/SectionWaitlistRelation.h"
 
 using namespace std;
 
 // ============================================================
-//  FileManager - Thuoc tang Data Access Layer (DAL)
-//  Chiu trach nhiem doc/ghi du lieu tu cac tep van ban vao cac Repository
+//  FileManager - Thuoc tang Storage / Persistence (File I/O)
+//  Chiu trach nhiem doc/ghi du lieu tu cac tep van ban vao cac Repository va Relations
 //  Khong phu thuoc vao tang BLL (SystemManager) hay Presentation
 // ============================================================
 class FileManager {
@@ -37,14 +38,19 @@ private:
                            const StudentRepository& studentRepo,
                            ClassSectionRepository& sectionRepo,
                            string& error) const;
-    bool loadWaitlists(ClassSectionRepository& sectionRepo, string& error) const;
-    bool saveWaitlists(const ClassSectionRepository& sectionRepo, string& error) const;
+    bool loadWaitlists(SectionWaitlistRelation& waitlistRel,
+                       const ClassSectionRepository& sectionRepo,
+                       string& error) const;
+    bool saveWaitlists(const SectionWaitlistRelation& waitlistRel,
+                       const ClassSectionRepository& sectionRepo,
+                       string& error) const;
 
 public:
     bool loadAllData(StudentRepository& studentRepo,
                      CourseRepository& courseRepo,
                      ClassSectionRepository& sectionRepo,
                      RegistrationRepository& registrationRepo,
+                     SectionWaitlistRelation& waitlistRel,
                      int& currentSemester,
                      string& error) const;
 
@@ -52,6 +58,7 @@ public:
                      const CourseRepository& courseRepo,
                      const ClassSectionRepository& sectionRepo,
                      const RegistrationRepository& registrationRepo,
+                     const SectionWaitlistRelation& waitlistRel,
                      int currentSemester,
                      string& error) const;
 };
@@ -263,13 +270,9 @@ inline bool FileManager::loadRegistrations(RegistrationRepository& registrationR
     return true;
 }
 
-/**
- * @brief Doc du lieu danh sach cho (waitlist) tu tep waitlist.txt vao ClassSectionRepository.
- * @param sectionRepo Repository quan ly lop hoc phan va hang doi waitlist.
- * @param error Chuoi luu thong bao loi neu xay ra su co khi doc tep.
- * @return true neu doc thanh cong (hoac tep chua ton tai), false neu loi doc tep.
- */
-inline bool FileManager::loadWaitlists(ClassSectionRepository& sectionRepo, string& error) const {
+inline bool FileManager::loadWaitlists(SectionWaitlistRelation& waitlistRel,
+                                       const ClassSectionRepository& sectionRepo,
+                                       string& error) const {
     errno = 0;
     ifstream file(waitlistFile.c_str());
     if (!file.is_open()) {
@@ -286,9 +289,8 @@ inline bool FileManager::loadWaitlists(ClassSectionRepository& sectionRepo, stri
         istringstream row(line);
         string maLop, maSV;
         if (!(row >> quoted(maLop) >> quoted(maSV))) continue;
-        Queue<string>* q = sectionRepo.getWaitlist(maLop);
-        if (q != nullptr && !q->contains(maSV)) {
-            q->push(maSV);
+        if (sectionRepo.exists(maLop)) {
+            waitlistRel.push(maLop, maSV);
         }
     }
     if (file.bad()) {
@@ -298,13 +300,9 @@ inline bool FileManager::loadWaitlists(ClassSectionRepository& sectionRepo, stri
     return true;
 }
 
-/**
- * @brief Ghi toan bo danh sach sinh vien dang cho cua tat ca cac lop hoc phan ra tep waitlist.txt.
- * @param sectionRepo Repository chua thong tin lop hoc phan va waitlist.
- * @param error Chuoi luu thong bao loi neu khong ghi duoc tep.
- * @return true neu ghi thanh cong, false neu that bai.
- */
-inline bool FileManager::saveWaitlists(const ClassSectionRepository& sectionRepo, string& error) const {
+inline bool FileManager::saveWaitlists(const SectionWaitlistRelation& waitlistRel,
+                                       const ClassSectionRepository& sectionRepo,
+                                       string& error) const {
     ofstream file(waitlistFile.c_str());
     if (!file.is_open()) {
         error = "Khong mo duoc tep " + waitlistFile + " de ghi.";
@@ -313,7 +311,7 @@ inline bool FileManager::saveWaitlists(const ClassSectionRepository& sectionRepo
     auto cur = sectionRepo.getList().getHead();
     while (cur != nullptr) {
         const string& maLop = cur->data.getMaLopHP();
-        const Queue<string>* q = sectionRepo.getWaitlist(maLop);
+        const Queue<string>* q = waitlistRel.getWaitlist(maLop);
         if (q != nullptr && !q->empty()) {
             DoubleLinkedList<string> svIDs;
             q->copyTo(svIDs);
@@ -332,6 +330,7 @@ inline bool FileManager::loadAllData(StudentRepository& studentRepo,
                                      CourseRepository& courseRepo,
                                      ClassSectionRepository& sectionRepo,
                                      RegistrationRepository& registrationRepo,
+                                     SectionWaitlistRelation& waitlistRel,
                                      int& currentSemester,
                                      string& error) const {
     return loadSemester(currentSemester, error) &&
@@ -339,13 +338,14 @@ inline bool FileManager::loadAllData(StudentRepository& studentRepo,
            loadCourses(courseRepo, error) &&
            loadSections(sectionRepo, courseRepo, error) &&
            loadRegistrations(registrationRepo, studentRepo, sectionRepo, error) &&
-           loadWaitlists(sectionRepo, error);
+           loadWaitlists(waitlistRel, sectionRepo, error);
 }
 
 inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
                                      const CourseRepository& courseRepo,
                                      const ClassSectionRepository& sectionRepo,
                                      const RegistrationRepository& registrationRepo,
+                                     const SectionWaitlistRelation& waitlistRel,
                                      int currentSemester,
                                      string& error) const {
     if (!saveSemester(currentSemester, error)) {
@@ -415,7 +415,7 @@ inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
         error = "Loi khi ghi tep du lieu.";
         return false;
     }
-    return saveWaitlists(sectionRepo, error);
+    return saveWaitlists(waitlistRel, sectionRepo, error);
 }
 
-#endif
+#endif // FILEMANAGER_H

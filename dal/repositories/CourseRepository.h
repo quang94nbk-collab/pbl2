@@ -2,27 +2,14 @@
 #define COURSE_REPOSITORY_H
 
 #include "IRepository.h"
-#include "../DSA/DoublyLinkedList.h"
-#include "../DSA/hashtable.h"
-#include "../model/course.h"
+#include "../../DSA/DoublyLinkedList.h"
+#include "../../DSA/hashtable.h"
+#include "../../model/course.h"
 #include <string>
 using namespace std;
 
 // ============================================================
-//  CourseRepository - DAL tang du lieu cho Course (Mon hoc)
-//
-//  Quan he:
-//    - Course doc lap (khong ke thua)
-//    - Mot Course co the co nhieu ClassSection (1..n)
-//      => ClassSectionRepository giu FK: maMon -> Course
-//
-//  Chuc nang:
-//    - add      : Them mon hoc (kiem tra trung maMon, soTinChi > 0)
-//    - remove   : Xoa mon hoc (can kiem tra chua co LopHP nao thuoc)
-//    - findById : Tim nhanh qua HashTable
-//    - search   : Tim theo tu khoa (maMon, tenMon, khoa, nganh)
-//    - displayAll / displayByFilter
-//      (da tach sang Presentation; DAL cung cap getList / filter / search)
+//  CourseRepository - Pure Repository cho thuc the Course
 // ============================================================
 class CourseRepository : public IRepository<Course, string> {
 private:
@@ -30,41 +17,24 @@ private:
     HashTable<string, NodeDLL<Course>*>  courseTable;
 
     NodeDLL<Course>* getLastNode() const;
-
     static string toLower(string s);
 
 public:
-    // ----- IRepository interface -----
-
     bool add(const Course& course) override;
-
-    // Luu y: truoc khi goi remove, SystemManager phai kiem tra khong con ClassSection
     bool remove(const string& maMon) override;
-
     Course* findById(const string& maMon) override;
     const Course* findById(const string& maMon) const;
+    bool exists(const string& maMon) const override;
 
-    // ----- Chuc nang mo rong -----
-
-    // Hien thi mon hoc theo bo loc (khoa, khoaHoc, nganh, hocKy)
-    // (DAL loc du lieu tra ve outResults)
     void filter(const string& khoa, const string& khoaHoc,
                 const string& nganh, int hocKy,
                 DoubleLinkedList<Course>& outResults) const;
-
-    // Tim kiem theo tu khoa
     void search(const string& keyword, DoubleLinkedList<Course>& outResults) const;
-
-    // Lay danh sach cac mon hoc phu hop voi sinh vien trong hoc ky
-    // (khoa, khoaHoc, nganhHoc cua sinh vien, hocKy hien tai)
     int getMatchingCourses(const string& svKhoa, const string& svKhoaHoc,
                            const string& svNganh, int hocKy,
                            string outIDs[], int maxOut) const;
 
-    bool exists(const string& maMon) const;
-
     const DoubleLinkedList<Course>& getList() const override;
-
     void clear();
 };
 
@@ -79,8 +49,6 @@ inline string CourseRepository::toLower(string s) {
     return utf8ToLower(s);
 }
 
-// ----- IRepository interface -----
-
 inline bool CourseRepository::add(const Course& course) {
     if (course.getMaMon().empty() || course.getSoTinChi() < 0 ||
         courseTable.search(course.getMaMon()))
@@ -90,7 +58,6 @@ inline bool CourseRepository::add(const Course& course) {
     return true;
 }
 
-// Luu y: truoc khi goi remove, SystemManager phai kiem tra khong con ClassSection
 inline bool CourseRepository::remove(const string& maMon) {
     NodeDLL<Course>* node = nullptr;
     if (!courseTable.get(maMon, node)) return false;
@@ -111,10 +78,10 @@ inline const Course* CourseRepository::findById(const string& maMon) const {
     return nullptr;
 }
 
-// ----- Chuc nang mo rong -----
+inline bool CourseRepository::exists(const string& maMon) const {
+    return courseTable.search(maMon);
+}
 
-// Hien thi mon hoc theo bo loc (khoa, khoaHoc, nganh, hocKy)
-// (DAL loc du lieu tra ve outResults)
 inline void CourseRepository::filter(const string& khoa, const string& khoaHoc,
                                      const string& nganh, int hocKy,
                                      DoubleLinkedList<Course>& outResults) const {
@@ -131,7 +98,6 @@ inline void CourseRepository::filter(const string& khoa, const string& khoaHoc,
     }
 }
 
-// Tim kiem theo tu khoa
 inline void CourseRepository::search(const string& keyword, DoubleLinkedList<Course>& outResults) const {
     outResults.clear();
     string kw = toLower(keyword);
@@ -149,8 +115,6 @@ inline void CourseRepository::search(const string& keyword, DoubleLinkedList<Cou
     }
 }
 
-// Lay danh sach cac mon hoc phu hop voi sinh vien trong hoc ky
-// (khoa, khoaHoc, nganhHoc cua sinh vien, hocKy hien tai)
 inline int CourseRepository::getMatchingCourses(const string& svKhoa, const string& svKhoaHoc,
                                                 const string& svNganh, int hocKy,
                                                 string outIDs[], int maxOut) const {
@@ -171,10 +135,6 @@ inline int CourseRepository::getMatchingCourses(const string& svKhoa, const stri
         cur = cur->next;
     }
     return count;
-}
-
-inline bool CourseRepository::exists(const string& maMon) const {
-    return courseTable.search(maMon);
 }
 
 inline const DoubleLinkedList<Course>& CourseRepository::getList() const {
