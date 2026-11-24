@@ -1,39 +1,72 @@
 #ifndef clss_h
 #define clss_h
+
 #include <string>
+#include "course.h"
+#include "schedule.h"
+#include "../DSA/DoublyLinkedList.h"
+
 using namespace std;
 
+class Registration;
+
+// ============================================================
+//  ClassSection - Lop hoc phan
+//  Quan he:
+//    - ClassSection HAS-A Schedule (Composition: Hop thanh)
+//      Moi lop hoc phan so huu mot lich hoc Schedule (thu, tiet, phong).
+//    - ClassSection ASSOCIATES WITH Course (Association: Lien ket truc tiep - Huong 1)
+//      Chua con tro Course* monHoc tro truc tiep toi mon hoc.
+//    - ClassSection HAS-MANY Registration (Association Class - Huong 1.2)
+//      Chua danh sach con tro toi cac phieu dang ky Registration cua lop.
+// ============================================================
 class ClassSection {
 private:
-    string maLopHP;
-    string maMon;
-    string giangVien;
-    string thu;
-    int tietBatDau;
-    int tietKetThuc;
-    string phong;
-    int siSoToiDa;
-    int soLuongDaDangKy;
-    int hocKy;
-    string nhomLopHP;
+    string    maLopHP;
+    string    maMon;            // Ma mon hoc (dung de luu tru / fallback)
+    Course*   monHoc;           // Huong 1: Con tro truc tiep toi doi tuong Course
+    string    giangVien;
+    Schedule  lichHoc;          // Quan he Composition: Lop hoc phan so huu mot Schedule
+    int       siSoToiDa;
+    int       soLuongDaDangKy;
+    int       hocKy;
+    string    nhomLopHP;
+
+    // Huong 1.2: Danh sach con tro Registration (Quan he 2 chieu)
+    DoubleLinkedList<Registration*> dsDangKy;
 
 public:
     ClassSection();
     ClassSection(string maLop, string maMonHoc, string gv, string ngayHoc,
                  int tietDau, int tietCuoi, string phongHoc, int toiDa,
                  int hk = 1, string nhom = "");
+    ClassSection(string maLop, Course* course, string gv, const Schedule& schedule,
+                 int toiDa, int hk = 1, string nhom = "");
+    ClassSection(const ClassSection& other);
+    ClassSection& operator=(const ClassSection& other);
+    ~ClassSection();
 
     string getMaLopHP() const;
     string getMaMon() const;
+    Course* getMonHoc() const;
+    void setMonHoc(Course* c);
+
     string getGiangVien() const;
-    string getThu() const;
-    int getTietBatDau() const;
-    int getTietKetThuc() const;
-    string getPhong() const;
     int getSiSoToiDa() const;
     int getSoLuongDaDangKy() const;
     int getHocKy() const;
     string getNhomLopHP() const;
+
+    // Getter & Setter cho Schedule (Lich hoc - Composition)
+    const Schedule& getSchedule() const;
+    Schedule& getSchedule();
+    void setSchedule(const Schedule& s);
+
+    // Wrapper cac getter/setter cua Schedule de dam bao tuong thich 100%
+    string getThu() const;
+    int getTietBatDau() const;
+    int getTietKetThuc() const;
+    string getPhong() const;
 
     void setMaLopHP(string ma);
     void setMaMon(string ma);
@@ -46,109 +79,22 @@ public:
     void setSoLuongDaDangKy(int soLuong);
     bool setHocKy(int hk);
     void setNhomLopHP(string nhom);
+
     bool conCho() const;
     bool tangSoLuong();
     void giamSoLuong();
+
+    // Kiem tra trung lich: uy quyen cho Schedule xu ly
     bool trungLichVoi(const ClassSection& other) const;
+
+    // Quan ly danh sach Registration (Huong 1.2)
+    void themDangKy(Registration* reg);
+    bool xoaDangKy(Registration* reg);
+    const DoubleLinkedList<Registration*>& getDanhSachDangKy() const;
+    int getSoLuongDangKyThucTe() const;
+    void clearDangKy();
 
     bool operator==(const ClassSection& other) const;
 };
-
-inline ClassSection::ClassSection() {
-    maLopHP = "";
-    maMon = "";
-    giangVien = "";
-    thu = "";
-    tietBatDau = 0;
-    tietKetThuc = 0;
-    phong = "";
-    siSoToiDa = 50;
-    soLuongDaDangKy = 0;
-    hocKy = 1;
-    nhomLopHP = "";
-}
-
-inline ClassSection::ClassSection(string maLop, string maMonHoc, string gv, string ngayHoc,
-                                  int tietDau, int tietCuoi, string phongHoc, int toiDa,
-                                  int hk, string nhom) {
-    maLopHP = maLop;
-    maMon = maMonHoc;
-    giangVien = gv;
-    thu = ngayHoc;
-    tietBatDau = tietDau;
-    tietKetThuc = tietCuoi;
-    phong = phongHoc;
-    siSoToiDa = toiDa;
-    soLuongDaDangKy = 0;
-    hocKy = hk;
-    nhomLopHP = nhom;
-}
-
-inline string ClassSection::getMaLopHP() const { return maLopHP; }
-inline string ClassSection::getMaMon() const { return maMon; }
-inline string ClassSection::getGiangVien() const { return giangVien; }
-inline string ClassSection::getThu() const { return thu; }
-inline int ClassSection::getTietBatDau() const { return tietBatDau; }
-inline int ClassSection::getTietKetThuc() const { return tietKetThuc; }
-inline string ClassSection::getPhong() const { return phong; }
-inline int ClassSection::getSiSoToiDa() const { return siSoToiDa; }
-inline int ClassSection::getSoLuongDaDangKy() const { return soLuongDaDangKy; }
-inline int ClassSection::getHocKy() const { return hocKy; }
-inline string ClassSection::getNhomLopHP() const { return nhomLopHP; }
-
-inline void ClassSection::setMaLopHP(string ma) { maLopHP = ma; }
-inline void ClassSection::setMaMon(string ma) { maMon = ma; }
-inline void ClassSection::setGiangVien(string gv) { giangVien = gv; }
-inline void ClassSection::setThu(string t) { thu = t; }
-inline void ClassSection::setTietBatDau(int tiet) { tietBatDau = tiet; }
-inline void ClassSection::setTietKetThuc(int tiet) { tietKetThuc = tiet; }
-inline void ClassSection::setPhong(string ph) { phong = ph; }
-inline void ClassSection::setSiSoToiDa(int siso) { if (siso > 0) siSoToiDa = siso; }
-
-inline void ClassSection::setSoLuongDaDangKy(int soLuong) {
-    if (soLuong >= 0) {
-        soLuongDaDangKy = soLuong;
-    }
-}
-
-inline bool ClassSection::setHocKy(int hk) {
-    if (hk >= 1 && hk <= 10) {
-        hocKy = hk;
-        return true;
-    }
-    return false;
-}
-
-inline void ClassSection::setNhomLopHP(string nhom) { nhomLopHP = nhom; }
-
-inline bool ClassSection::conCho() const {
-    return soLuongDaDangKy < siSoToiDa;
-}
-
-inline bool ClassSection::tangSoLuong() {
-    if (!conCho()) {
-        return false;
-    }
-    soLuongDaDangKy++;
-    return true;
-}
-
-inline void ClassSection::giamSoLuong() {
-    if (soLuongDaDangKy > 0) {
-        soLuongDaDangKy--;
-    }
-}
-
-inline bool ClassSection::trungLichVoi(const ClassSection& other) const {
-    if (thu != other.thu) {
-        return false;
-    }
-    return tietBatDau < other.tietKetThuc &&
-           other.tietBatDau < tietKetThuc;
-}
-
-inline bool ClassSection::operator==(const ClassSection& other) const {
-    return maLopHP == other.maLopHP;
-}
 
 #endif

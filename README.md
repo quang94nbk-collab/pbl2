@@ -3,7 +3,7 @@
 From the project root, compile with a C++14-compatible compiler:
 
 ```powershell
-g++ -std=c++14 -Wall -Wextra -pedantic main\main.cpp -o pbl2.exe
+g++ -std=c++14 -Wall -Wextra -pedantic main\*.cpp model\*.cpp dal\repositories\*.cpp dal\file\*.cpp manager\*.cpp -o pbl2.exe
 .\pbl2.exe
 ```
 ----.\run_gui.bat chạy gui
