@@ -22,7 +22,7 @@ bool ClassSectionRepository::add(const ClassSection& section) {
         sectionTable.search(section.getMaLopHP()) ||
         section.getSiSoToiDa()   <= 0          ||
         section.getTietBatDau()  <= 0          ||
-        section.getTietKetThuc() <= section.getTietBatDau())
+        section.getTietKetThuc() <  section.getTietBatDau())
         return false;
     sectionList.pushBack(section);
     sectionTable.insert(section.getMaLopHP(), getLastNode());

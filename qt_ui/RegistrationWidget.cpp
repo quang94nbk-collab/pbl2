@@ -292,7 +292,7 @@ void RegistrationWidget::populateEligibleGroups()
                 .arg(sv->getKhoaHoc().empty() ? "Chưa cập nhật" : QString::fromStdString(sv->getKhoaHoc()))
                 .arg(sv->getNganhHoc().empty() ? "Chưa cập nhật" : QString::fromStdString(sv->getNganhHoc()))
                 .arg(QString::fromStdString(sv->getLop()))
-                .arg(sv ? sv->getHocKyHienTai() : m_sys.getCurrentSemester())
+                .arg(sv ? sv->getHocKyHienTai(m_sys.getCurrentSemester()) : m_sys.getCurrentSemester())
         );
     }
 

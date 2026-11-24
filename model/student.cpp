@@ -49,6 +49,18 @@ bool isValidMaSV(const string& maSV) {
 // ============================================================
 //  Student Implementation
 // ============================================================
+int Student::currentBaseYear = 25;
+
+int Student::getCurrentBaseYear() {
+    return currentBaseYear;
+}
+
+void Student::setCurrentBaseYear(int baseYear) {
+    if (baseYear > 0 && baseYear < 100) {
+        currentBaseYear = baseYear;
+    }
+}
+
 Student::Student() : Person() {
     lop = "";
     nganhHoc = "";
@@ -127,19 +139,21 @@ string Student::getKhoaHoc() const { return khoaHoc; }
 int Student::getSoKiDaHoc() const { return soKiDaHoc; }
 
 int Student::getHocKyTienTrinh(int systemSemester) const {
+    if (soKiDaHoc > 0) return soKiDaHoc + 1;
+
     string kh = khoaHoc;
     if (kh.empty()) kh = getKhoaHocFromMaSV(maNguoi);
     if (kh.length() >= 3 && (kh[0] == 'K' || kh[0] == 'k')) {
         try {
             int khoaNum = stoi(kh.substr(1));
-            const int currentBaseYear = 24;
-            int namThu = (currentBaseYear - khoaNum) + 1;
+            int effectiveBaseYear = (khoaNum > currentBaseYear) ? khoaNum : currentBaseYear;
+            int namThu = (effectiveBaseYear - khoaNum) + 1;
             if (namThu < 1) namThu = 1;
-            int sem = (namThu - 1) * 2 + (systemSemester == 2 ? 2 : 1);
+            int semInYear = (systemSemester > 0 && systemSemester % 2 == 0) ? 2 : 1;
+            int sem = (namThu - 1) * 2 + semInYear;
             if (sem > 0) return sem;
         } catch (...) {}
     }
-    if (soKiDaHoc > 0) return soKiDaHoc + 1;
     return (systemSemester > 0 ? systemSemester : 1);
 }
 

@@ -23,6 +23,8 @@ private:
 
 public:
     Queue();
+    Queue(const Queue& other);
+    Queue& operator=(const Queue& other);
     ~Queue();
 
     bool empty() const;
@@ -47,6 +49,28 @@ public:
 
 template <typename T>
 Queue<T>::Queue() : frontNode(nullptr), rearNode(nullptr) {}
+
+template <typename T>
+Queue<T>::Queue(const Queue& other) : frontNode(nullptr), rearNode(nullptr) {
+    QueueNode<T> *p = other.frontNode;
+    while (p != nullptr) {
+        push(p->value);
+        p = p->next;
+    }
+}
+
+template <typename T>
+Queue<T>& Queue<T>::operator=(const Queue& other) {
+    if (this != &other) {
+        clear();
+        QueueNode<T> *p = other.frontNode;
+        while (p != nullptr) {
+            push(p->value);
+            p = p->next;
+        }
+    }
+    return *this;
+}
 
 template <typename T>
 Queue<T>::~Queue() {

@@ -11,12 +11,14 @@ using namespace std;
 // ============================================================
 class Schedule {
 private:
-    string thu;         // Thu hoc: "Thu 2", "Thu 3", ...
+    string thu;         // Thu hoc chuan hoa: "2".."7", "CN"
     int    tietBatDau;  // Tiet bat dau (>= 1)
-    int    tietKetThuc; // Tiet ket thuc (> tietBatDau)
+    int    tietKetThuc; // Tiet ket thuc (>= tietBatDau, doan dong)
     string phong;       // Phong hoc
 
 public:
+    static string normalizeThu(const string& t);
+
     Schedule();
     Schedule(string t, int start, int end, string p);
 

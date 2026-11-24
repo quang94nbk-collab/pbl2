@@ -279,7 +279,7 @@ int SystemManager::removeStudentFromCourseWaitlists(const string& maSV, const st
 }
 
 bool SystemManager::removeStudentFromWaitlist(const string& maSV, const string& maLopHP) {
-    return registrationService.removeStudentFromWaitlist(maLopHP, maSV);
+    return registrationService.removeStudentFromWaitlist(maSV, maLopHP);
 }
 
 int SystemManager::calculateTotalCredits(const string& maSV,

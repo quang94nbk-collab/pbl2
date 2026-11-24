@@ -90,7 +90,8 @@ bool RegistrationService::registerClass(const string& maSV, const string& maLopH
     if (!section)
         throw NotFoundException("Khong tim thay lop hoc phan voi ma: " + maLopHP);
 
-    if (checkSemester && section->getHocKy() != currentSemester)
+    if (checkSemester && section->getHocKy() != 0 &&
+        (section->getHocKy() != currentSemester && (section->getHocKy() % 2) != (currentSemester % 2)))
         throw WrongSemesterException(
             "Lop hoc phan '" + maLopHP + "' mo cho Hoc ky " +
             to_string(section->getHocKy()) +
@@ -98,10 +99,9 @@ bool RegistrationService::registerClass(const string& maSV, const string& maLopH
 
     Course* course = courseRepo.findById(section->getMaMon());
     if (course) {
-        if (checkSemester && course->getHocKy() != 0) {
+        if (checkSemester && course->getHocKy() != 0 && section->getHocKy() != 0) {
             bool matchesSem = (course->getHocKy() == section->getHocKy()) ||
-                              (section->getHocKy() == 1 && course->getHocKy() % 2 == 1) ||
-                              (section->getHocKy() == 2 && course->getHocKy() % 2 == 0);
+                              ((course->getHocKy() % 2) == (section->getHocKy() % 2));
             if (!matchesSem)
                 throw WrongSemesterException(
                     "Mon hoc '" + course->getTenMon() + "' thuoc chuong trinh Hoc ky " +
@@ -214,30 +214,37 @@ bool RegistrationService::cancelRegistration(const string& maSV, const string& m
 
     registrationRepo.remove(regID);
 
-    // Tu dong dang ky tu hang doi
+    // Tu dong dang ky tu hang doi (giu nguyen thu tu FIFO cho SV tam thoi trung lich)
     if (section) {
         Queue<string>* q = sectionRepo.getWaitlist(maLopHP);
-        if (q) {
-            string nextSV;
-            while (q->pop(nextSV)) {
+        if (q && !q->empty()) {
+            DoubleLinkedList<string> candidates;
+            q->copyTo(candidates);
+            for (auto* node = candidates.getHead(); node != nullptr; node = node->next) {
+                const string& nextSV = node->data;
                 Student* s  = studentRepo.findById(nextSV);
                 Course*  c  = section->getMonHoc() ? section->getMonHoc() : courseRepo.findById(section->getMaMon());
-                bool match  = true;
+                bool match  = (s != nullptr);
                 if (s && c) {
                     if (!c->getKhoa().empty()    && c->getKhoa()    != "Chung" && s->getKhoa()    != c->getKhoa())    match = false;
                     if (!c->getKhoaHoc().empty() && c->getKhoaHoc() != "Chung" && s->getKhoaHoc() != c->getKhoaHoc()) match = false;
                     if (!c->getNganhHoc().empty()&& c->getNganhHoc()!= "Chung" && s->getNganhHoc()!= c->getNganhHoc())match = false;
                 }
-                if (!match) continue;
+                if (!match) {
+                    q->remove(nextSV);
+                    continue;
+                }
 
                 // Kiem tra xem sinh vien nay da dang ky mot lop khac cua mon nay chua!
                 string alreadySec = getRegisteredSectionForCourse(nextSV, section->getMaMon());
                 if (!alreadySec.empty()) {
+                    q->remove(nextSV);
                     removeStudentFromCourseWaitlists(nextSV, section->getMaMon());
                     continue;
                 }
 
                 if (!isTimeConflict(nextSV, maLopHP)) {
+                    q->remove(nextSV);
                     section->tangSoLuong();
                     const string newRegID = registrationRepo.getRegID(nextSV, maLopHP);
                     Registration autoReg(s, section, today(), newRegID);
@@ -262,7 +269,7 @@ bool RegistrationService::cancelRegistration(const string& maSV, const string& m
                 } else {
                     if (outWaitlistNotices != nullptr) {
                         outWaitlistNotices->pushBack("Sinh vien " + nextSV +
-                                                     " bi trung lich, chuyen sang ban tiep theo.");
+                                                     " bi trung lich (giu nguyen trong hang doi), chuyen sang ban tiep theo.");
                     }
                 }
             }

@@ -44,6 +44,8 @@ private:
 
 public:
     HashTable();
+    HashTable(const HashTable& other);
+    HashTable& operator=(const HashTable& other);
     ~HashTable();
 
     bool search(const Key& k) const;
@@ -67,6 +69,49 @@ HashTable<Key, Data>::HashTable() {
     for (int i = 0; i < HASH_SIZE; ++i) {
         table[i] = nullptr;
     }
+}
+
+template <typename Key, typename Data>
+HashTable<Key, Data>::HashTable(const HashTable& other) {
+    for (int i = 0; i < HASH_SIZE; ++i) {
+        table[i] = nullptr;
+        HashNode<Key, Data> *tail = nullptr;
+        HashNode<Key, Data> *p = other.table[i];
+        while (p != nullptr) {
+            HashNode<Key, Data> *node = new HashNode<Key, Data>(p->key, p->data);
+            node->prev = tail;
+            if (tail == nullptr) {
+                table[i] = node;
+            } else {
+                tail->next = node;
+            }
+            tail = node;
+            p = p->next;
+        }
+    }
+}
+
+template <typename Key, typename Data>
+HashTable<Key, Data>& HashTable<Key, Data>::operator=(const HashTable& other) {
+    if (this != &other) {
+        clear();
+        for (int i = 0; i < HASH_SIZE; ++i) {
+            HashNode<Key, Data> *tail = nullptr;
+            HashNode<Key, Data> *p = other.table[i];
+            while (p != nullptr) {
+                HashNode<Key, Data> *node = new HashNode<Key, Data>(p->key, p->data);
+                node->prev = tail;
+                if (tail == nullptr) {
+                    table[i] = node;
+                } else {
+                    tail->next = node;
+                }
+                tail = node;
+                p = p->next;
+            }
+        }
+    }
+    return *this;
 }
 
 template <typename Key, typename Data>

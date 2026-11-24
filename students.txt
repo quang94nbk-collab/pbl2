@@ -1,64 +1,64 @@
-"102230001" "Nguyễn Văn An" "0901000001" "102230001@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
-"102230002" "Trần Thị Bình" "0901000002" "102230002@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
-"102220001" "Lê Hoàng Cường" "0901000003" "102220001@sv.dut.udn.vn" "22T_CNTT1" "CNTT" "CNTT" "K22"
-"105230001" "Phạm Minh Dung" "0901000004" "105230001@sv.dut.udn.vn" "23DT1" "DTVT" "DTVT" "K23"
-"105230002" "Hoàng Thị Em" "0901000005" "105230002@sv.dut.udn.vn" "23DT1" "DTVT" "DTVT" "K23"
-"102230003" "Đỗ Thị Hương" "0901000009" "102230003@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
-"102250169" "Hải" "0792312421" "ABC@GMAIL.COM" "23T_CNTT" "CNTT" "CNTT" "K25"
-"102230004" "Bùi Hữu Hải" "0901000011" "102230004@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
-"102230005" "Ngô Tuấn Kiệt" "0901000012" "102230005@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
-"102230006" "Lê Thị Mai" "0901000013" "102230006@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
-"102230007" "Vũ Hoàng Nam" "0901000014" "102230007@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23"
-"102230008" "Trần Quốc Toản" "0901000015" "102230008@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23"
-"101250001" "Nguyễn Thái Sơn" "0905250001" "101250001@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250002" "Trần Đình Bắc" "0905250002" "101250002@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250003" "Lê Quốc Nhật Nam" "0905250003" "101250003@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250004" "Phạm Đình Duy" "0905250004" "101250004@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250005" "Vũ Tiến Long" "0905250005" "101250005@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250006" "Đỗ Minh Quang" "0905250006" "101250006@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25"
-"101250007" "Bùi Vĩ Hào" "0905250007" "101250007@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101250008" "Nguyễn Thanh Nhàn" "0905250008" "101250008@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101250009" "Khuất Văn Khang" "0905250009" "101250009@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101250010" "Nguyễn Văn Tùng" "0905250010" "101250010@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101250011" "Phan Tuấn Tài" "0905250011" "101250011@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101250012" "Lương Duy Cương" "0905250012" "101250012@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25"
-"101240001" "Nguyễn Quang Hải" "0905240001" "101240001@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240002" "Trần Văn Kiên" "0905240002" "101240002@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240003" "Lê Văn Đô" "0905240003" "101240003@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240004" "Phạm Tuấn Hải" "0905240004" "101240004@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240005" "Vũ Văn Thanh" "0905240005" "101240005@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240006" "Đỗ Hùng Dũng" "0905240006" "101240006@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24"
-"101240007" "Bùi Hoàng Việt Anh" "0905240007" "101240007@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101240008" "Ngô Hồng Phước" "0905240008" "101240008@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101240009" "Huỳnh Tấn Sinh" "0905240009" "101240009@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101240010" "Hồ Tấn Tài" "0905240010" "101240010@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101240011" "Nguyễn Hoàng Đức" "0905240011" "101240011@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101240012" "Nguyễn Tiến Linh" "0905240012" "101240012@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24"
-"101230001" "Võ Quốc Phong" "0901000006" "101230001@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230002" "Đặng Ngọc Giang" "0901000007" "101230002@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230003" "Nguyễn Đức Huy" "0905230003" "101230003@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230004" "Trần Đình Trọng" "0905230004" "101230004@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230005" "Lê Công Vinh" "0905230005" "101230005@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230006" "Phạm Văn Quyến" "0905230006" "101230006@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23"
-"101230007" "Vũ Minh Tuấn" "0905230007" "101230007@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101230008" "Đỗ Duy Mạnh" "0905230008" "101230008@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101230009" "Bùi Tiến Dũng" "0905230009" "101230009@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101230010" "Ngô Xuân Trường" "0905230010" "101230010@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101230011" "Hoàng Đức Chinh" "0905230011" "101230011@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101230012" "Đoàn Văn Hậu" "0905230012" "101230012@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23"
-"101220001" "Phan Hữu Thắng" "0905220001" "101220001@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220002" "Nguyễn Trọng Nghĩa" "0905220002" "101220002@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220003" "Trương Tuấn Kiệt" "0905220003" "101220003@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220004" "Lâm Tấn Phát" "0905220004" "101220004@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220005" "Đặng Thành Danh" "0905220005" "101220005@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220006" "Đinh Hoàng Việt" "0905220006" "101220006@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22"
-"101220007" "Võ Anh Khoa" "0905220007" "101220007@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101220008" "Mai Hữu Phước" "0905220008" "101220008@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101220009" "Hồ Văn Tài" "0905220009" "101220009@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101220010" "Cao Bá Quát" "0905220010" "101220010@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101220011" "Nguyễn Văn Toàn" "0905220011" "101220011@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101220012" "Hà Đức Chinh" "0905220012" "101220012@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22"
-"101210001" "Trần Minh Quân" "0905210001" "101210001@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21"
-"101210002" "Lê Bảo Long" "0905210002" "101210002@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21"
-"101210003" "Nguyễn Hoàng Anh" "0905210003" "101210003@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21"
-"101210004" "Phạm Quốc Bảo" "0905210004" "101210004@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21"
+"102230001" "Nguyễn Văn An" "0901000001" "102230001@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23" 0
+"102230002" "Trần Thị Bình" "0901000002" "102230002@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23" 0
+"102220001" "Lê Hoàng Cường" "0901000003" "102220001@sv.dut.udn.vn" "22T_CNTT1" "CNTT" "CNTT" "K22" 0
+"105230001" "Phạm Minh Dung" "0901000004" "105230001@sv.dut.udn.vn" "23DT1" "DTVT" "DTVT" "K23" 0
+"105230002" "Hoàng Thị Em" "0901000005" "105230002@sv.dut.udn.vn" "23DT1" "DTVT" "DTVT" "K23" 0
+"102230003" "Đỗ Thị Hương" "0901000009" "102230003@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23" 0
+"102250169" "Hải" "0792312421" "ABC@GMAIL.COM" "23T_CNTT" "CNTT" "CNTT" "K25" 0
+"102230004" "Bùi Hữu Hải" "0901000011" "102230004@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23" 0
+"102230005" "Ngô Tuấn Kiệt" "0901000012" "102230005@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23" 0
+"102230006" "Lê Thị Mai" "0901000013" "102230006@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23" 0
+"102230007" "Vũ Hoàng Nam" "0901000014" "102230007@sv.dut.udn.vn" "23T_CNTT1" "CNTT" "CNTT" "K23" 0
+"102230008" "Trần Quốc Toản" "0901000015" "102230008@sv.dut.udn.vn" "23T_CNTT2" "CNTT" "CNTT" "K23" 0
+"101250001" "Nguyễn Thái Sơn" "0905250001" "101250001@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250002" "Trần Đình Bắc" "0905250002" "101250002@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250003" "Lê Quốc Nhật Nam" "0905250003" "101250003@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250004" "Phạm Đình Duy" "0905250004" "101250004@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250005" "Vũ Tiến Long" "0905250005" "101250005@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250006" "Đỗ Minh Quang" "0905250006" "101250006@sv.dut.udn.vn" "25CDT1" "CDT" "CoKhi" "K25" 0
+"101250007" "Bùi Vĩ Hào" "0905250007" "101250007@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101250008" "Nguyễn Thanh Nhàn" "0905250008" "101250008@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101250009" "Khuất Văn Khang" "0905250009" "101250009@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101250010" "Nguyễn Văn Tùng" "0905250010" "101250010@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101250011" "Phan Tuấn Tài" "0905250011" "101250011@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101250012" "Lương Duy Cương" "0905250012" "101250012@sv.dut.udn.vn" "25CDT2" "CDT" "CoKhi" "K25" 0
+"101240001" "Nguyễn Quang Hải" "0905240001" "101240001@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240002" "Trần Văn Kiên" "0905240002" "101240002@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240003" "Lê Văn Đô" "0905240003" "101240003@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240004" "Phạm Tuấn Hải" "0905240004" "101240004@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240005" "Vũ Văn Thanh" "0905240005" "101240005@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240006" "Đỗ Hùng Dũng" "0905240006" "101240006@sv.dut.udn.vn" "24CDT1" "CDT" "CoKhi" "K24" 0
+"101240007" "Bùi Hoàng Việt Anh" "0905240007" "101240007@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101240008" "Ngô Hồng Phước" "0905240008" "101240008@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101240009" "Huỳnh Tấn Sinh" "0905240009" "101240009@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101240010" "Hồ Tấn Tài" "0905240010" "101240010@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101240011" "Nguyễn Hoàng Đức" "0905240011" "101240011@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101240012" "Nguyễn Tiến Linh" "0905240012" "101240012@sv.dut.udn.vn" "24CDT2" "CDT" "CoKhi" "K24" 0
+"101230001" "Võ Quốc Phong" "0901000006" "101230001@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230002" "Đặng Ngọc Giang" "0901000007" "101230002@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230003" "Nguyễn Đức Huy" "0905230003" "101230003@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230004" "Trần Đình Trọng" "0905230004" "101230004@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230005" "Lê Công Vinh" "0905230005" "101230005@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230006" "Phạm Văn Quyến" "0905230006" "101230006@sv.dut.udn.vn" "23CDT1" "CDT" "CoKhi" "K23" 0
+"101230007" "Vũ Minh Tuấn" "0905230007" "101230007@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101230008" "Đỗ Duy Mạnh" "0905230008" "101230008@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101230009" "Bùi Tiến Dũng" "0905230009" "101230009@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101230010" "Ngô Xuân Trường" "0905230010" "101230010@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101230011" "Hoàng Đức Chinh" "0905230011" "101230011@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101230012" "Đoàn Văn Hậu" "0905230012" "101230012@sv.dut.udn.vn" "23CDT2" "CDT" "CoKhi" "K23" 0
+"101220001" "Phan Hữu Thắng" "0905220001" "101220001@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220002" "Nguyễn Trọng Nghĩa" "0905220002" "101220002@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220003" "Trương Tuấn Kiệt" "0905220003" "101220003@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220004" "Lâm Tấn Phát" "0905220004" "101220004@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220005" "Đặng Thành Danh" "0905220005" "101220005@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220006" "Đinh Hoàng Việt" "0905220006" "101220006@sv.dut.udn.vn" "22CDT1" "CDT" "CoKhi" "K22" 0
+"101220007" "Võ Anh Khoa" "0905220007" "101220007@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101220008" "Mai Hữu Phước" "0905220008" "101220008@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101220009" "Hồ Văn Tài" "0905220009" "101220009@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101220010" "Cao Bá Quát" "0905220010" "101220010@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101220011" "Nguyễn Văn Toàn" "0905220011" "101220011@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101220012" "Hà Đức Chinh" "0905220012" "101220012@sv.dut.udn.vn" "22CDT2" "CDT" "CoKhi" "K22" 0
+"101210001" "Trần Minh Quân" "0905210001" "101210001@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21" 0
+"101210002" "Lê Bảo Long" "0905210002" "101210002@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21" 0
+"101210003" "Nguyễn Hoàng Anh" "0905210003" "101210003@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21" 0
+"101210004" "Phạm Quốc Bảo" "0905210004" "101210004@sv.dut.udn.vn" "21CDT1" "CDT" "CoKhi" "K21" 0

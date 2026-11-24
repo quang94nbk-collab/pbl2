@@ -210,11 +210,11 @@ inline istream& operator>>(istream& is, ClassSection& sec) {
     }
     while (true) {
         cout << "Tiet ket thuc : ";
-        if (is >> tietCuoi && tietCuoi > tietDau) break;
+        if (is >> tietCuoi && tietCuoi >= tietDau) break;
         if (is.eof()) break;
         is.clear();
         is.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Tiet ket thuc phai lon hon tiet bat dau.\n";
+        cout << "Tiet ket thuc phai lon hon hoac bang tiet bat dau.\n";
     }
     is.ignore(numeric_limits<streamsize>::max(), '\n');
 
@@ -831,7 +831,7 @@ inline void editClassSectionInteractive(ClassSection& sec) {
     }
 
     if (readOptionalIntField("Tiet ket thuc moi", sec.getTietKetThuc(), "tiet ket thuc", t) &&
-        t > sec.getTietBatDau()) {
+        t >= sec.getTietBatDau()) {
         sec.setTietKetThuc(t);
     }
 

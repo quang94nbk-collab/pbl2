@@ -35,10 +35,15 @@ private:
     string khoaHoc;
     int soKiDaHoc;
 
+    static int currentBaseYear; // 2 chu so cuoi cua nam bat dau nam hoc hien tai (VD: 25 cho 2025-2026)
+
     // Huong 1: Danh sach con tro Registration ma sinh vien da dang ky
     DoubleLinkedList<Registration*> dsDangKy;
 
 public:
+    static int  getCurrentBaseYear();
+    static void setCurrentBaseYear(int baseYear);
+
     Student();
     Student(string maSV, string ten, string sdt, string mail,
             string lopSV, string nganh, string k = "", string kh = "", int soKi = 0);
