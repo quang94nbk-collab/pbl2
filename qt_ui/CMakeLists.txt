@@ -22,6 +22,23 @@ set(SOURCES
     SectionManagementWidget.cpp
     RegistrationWidget.cpp
     TimetableWidget.cpp
+    ../model/person.cpp
+    ../model/student.cpp
+    ../model/schedule.cpp
+    ../model/course.cpp
+    ../model/classsection.cpp
+    ../model/registration.cpp
+    ../dal/repositories/StudentRepository.cpp
+    ../dal/repositories/CourseRepository.cpp
+    ../dal/repositories/ClassSectionRepository.cpp
+    ../dal/repositories/RegistrationRepository.cpp
+    ../dal/file/FileManager.cpp
+    ../manager/system.cpp
+    ../manager/authmanager.cpp
+    ../manager/StudentService.cpp
+    ../manager/CourseService.cpp
+    ../manager/ClassSectionService.cpp
+    ../manager/RegistrationService.cpp
 )
 
 set(HEADERS

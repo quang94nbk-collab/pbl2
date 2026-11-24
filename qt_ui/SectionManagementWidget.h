@@ -23,6 +23,8 @@ private slots:
     void onAddSection();
     void onDeleteSection();
     void onViewStudents();
+    void onViewWaitlist();
+    void updateWaitlistButtonState();
 
 private:
     SystemManager& m_sys;
@@ -34,7 +36,9 @@ private:
     QPushButton*  m_addBtn;
     QPushButton*  m_deleteBtn;
     QPushButton*  m_viewStudentsBtn;
+    QPushButton*  m_waitlistBtn;
 
     void setupUi();
     void populateTable(DoubleLinkedList<ClassSection>& list);
+    void showWaitlistDialog(const QString& maLop, QWidget* parent = nullptr);
 };

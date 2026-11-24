@@ -70,8 +70,8 @@ void CourseManagementWidget::setupUi()
 {
     // --- search bar ---
     m_searchEdit = new QLineEdit(this);
-    m_searchEdit->setPlaceholderText("Nhập mã môn hoặc tên môn để tìm kiếm...");
-    m_searchBtn  = new QPushButton("Tìm kiếm", this);
+    m_searchEdit->setPlaceholderText("Nhập mã môn hoặc tên môn để tìm kiếm nhanh...");
+    m_searchBtn  = new QPushButton("Tìm nhanh", this);
     m_refreshBtn = new QPushButton("Làm mới",  this);
 
     auto* searchLayout = new QHBoxLayout;
@@ -109,12 +109,12 @@ void CourseManagementWidget::setupUi()
     mainLayout->addLayout(btnLayout);
 
     // --- connections ---
-    connect(m_searchBtn,  &QPushButton::clicked, this, &CourseManagementWidget::onSearch);
-    connect(m_refreshBtn, &QPushButton::clicked, this, &CourseManagementWidget::onRefresh);
-    connect(m_addBtn,     &QPushButton::clicked, this, &CourseManagementWidget::onAddCourse);
-    connect(m_editBtn,    &QPushButton::clicked, this, &CourseManagementWidget::onEditCourse);
-    connect(m_deleteBtn,  &QPushButton::clicked, this, &CourseManagementWidget::onDeleteCourse);
-    connect(m_searchEdit, &QLineEdit::returnPressed, this, &CourseManagementWidget::onSearch);
+    connect(m_searchBtn,            &QPushButton::clicked, this, &CourseManagementWidget::onSearch);
+    connect(m_refreshBtn,           &QPushButton::clicked, this, &CourseManagementWidget::onRefresh);
+    connect(m_addBtn,               &QPushButton::clicked, this, &CourseManagementWidget::onAddCourse);
+    connect(m_editBtn,              &QPushButton::clicked, this, &CourseManagementWidget::onEditCourse);
+    connect(m_deleteBtn,            &QPushButton::clicked, this, &CourseManagementWidget::onDeleteCourse);
+    connect(m_searchEdit,           &QLineEdit::returnPressed, this, &CourseManagementWidget::onSearch);
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -222,6 +222,8 @@ void CourseManagementWidget::onDeleteCourse()
             if (!msg.empty()) {
                 QMessageBox::information(this, "Thông báo", QString::fromStdString(msg));
             }
+            std::string err;
+            m_sys.saveData(err);
             refreshTable();
         } else {
             QString errMsg = msg.empty()
@@ -255,7 +257,7 @@ void CourseManagementWidget::showCourseDialog(Course* existing)
 
     tcSpin->setRange(1, 10);
     tcSpin->setValue(3);
-    hkSpin->setRange(1, 2);
+    hkSpin->setRange(1, 8);
     hkSpin->setValue(1);
 
     if (isEdit) {
@@ -297,28 +299,28 @@ void CourseManagementWidget::showCourseDialog(Course* existing)
 
     try {
         if (isEdit) {
-            // For edit: re-create or update fields via setters if available.
-            // Since Course may not expose individual setters, we delete and re-add.
-            // But to be safe and not break references, we update the object in-place
-            // by recreating with the same maMon (edit dialog disables maEdit).
-            std::string existingMa = existing->getMaMon();
-            std::string outMsg;
-            m_sys.deleteCourse(existingMa, &outMsg);
-            Course updated(existingMa, ten, tinChi, khoa, khoaHoc, nganh, hocKy);
-            bool ok = m_sys.addCourse(updated);
-            if (!ok) {
-                QMessageBox::warning(this, "Lỗi", "Không thể cập nhật môn học.");
-                return;
-            }
+            existing->setTenMon(ten);
+            existing->setSoTinChi(tinChi);
+            existing->setKhoa(khoa);
+            existing->setKhoaHoc(khoaHoc);
+            existing->setNganhHoc(nganh);
+            existing->setHocKy(hocKy);
+
+            std::string err;
+            m_sys.saveData(err);
             refreshTable();
+            QMessageBox::information(this, "Thành công", "Cập nhật môn học thành công!");
         } else {
             Course c(ma, ten, tinChi, khoa, khoaHoc, nganh, hocKy);
             bool ok = m_sys.addCourse(c);
             if (!ok) {
-                QMessageBox::warning(this, "Lỗi", "Mã môn học đã tồn tại.");
+                QMessageBox::warning(this, "Lỗi", "Mã môn học đã tồn tại hoặc dữ liệu không hợp lệ.");
                 return;
             }
+            std::string err;
+            m_sys.saveData(err);
             refreshTable();
+            QMessageBox::information(this, "Thành công", "Thêm môn học mới thành công!");
         }
     } catch (const AppException& e) {
         QMessageBox::warning(this, "Lỗi", QString::fromStdString(e.what()));

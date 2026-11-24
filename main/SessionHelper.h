@@ -1,68 +1,29 @@
 #ifndef SESSION_HELPER_H
 #define SESSION_HELPER_H
 
-#include <iostream>
 #include <string>
 
-#include "../DSA/DoublyLinkedList.h"
-#include "../manager/exception.h"
-#include "../manager/system.h"
-#include "../model/dtos.h"
-#include "../ui/ConsoleView.h"
+class SystemManager;
 
 namespace SessionHelper {
 
-inline void showSectionsByGroupView(const SystemManager& system) {
-    std::cout << "  DANH SACH NHOM LOP HOC PHAN - HOC KY " << system.getCurrentSemester() << "\n";
-    const int MAX_GROUPS = 100;
-    std::string groupNames[MAX_GROUPS];
-    int groupCount = system.getGroupsForCurrentSemester(groupNames, MAX_GROUPS);
+void showSectionsByGroupView(const SystemManager& system);
 
-    if (groupCount == 0) {
-        std::cout << "(Khong co nhom lop hoc phan nao trong hoc ky " << system.getCurrentSemester() << ")\n";
-    } else {
-        for (int g = 0; g < groupCount; g++) {
-            std::cout << "\n>>> NHOM: " << groupNames[g] << "\n";
-            DoubleLinkedList<SectionDetailInfo> list;
-            system.getSectionsByGroupInCurrentSemester(groupNames[g], list);
-            ConsoleView::displayGroupSectionList(list, true);
-        }
-    }
+/**
+ * @brief Thuc hien dang ky lop hoc phan cho sinh vien tren Console kem theo phan hoi chi tiet va tu dong luu du lieu.
+ * @param system Doi tuong quan ly he thong SystemManager.
+ * @param studentID Ma sinh vien dang ky.
+ * @param sectionID Ma lop hoc phan can dang ky.
+ */
+void tryRegisterWithFeedback(SystemManager& system, const std::string& studentID, const std::string& sectionID);
 
-    DoubleLinkedList<SectionDetailInfo> ungrouped;
-    system.getUngroupedSectionsInCurrentSemester(ungrouped);
-    if (!ungrouped.empty()) {
-        std::cout << "\n>>> CHUA GAN NHOM:\n";
-        ConsoleView::displayGroupSectionList(ungrouped, false);
-    }
-}
+void showSemesterStatusView(const SystemManager& system, const std::string& studentID);
 
-inline void tryRegisterWithFeedback(SystemManager& system, const std::string& studentID, const std::string& sectionID) {
-    try {
-        system.registerClass(studentID, sectionID);
-        std::cout << ">> Dang ky lop hoc phan thanh cong!\n";
-    } catch (const ClassFullException& e) {
-        std::cout << ">> [Lop day] " << e.what() << "\n";
-    } catch (const TimeConflictException& e) {
-        std::cout << ">> [Trung lich] " << e.what() << "\n";
-    } catch (const DuplicateException& e) {
-        std::cout << ">> [Trung lap] " << e.what() << "\n";
-    } catch (const WrongSemesterException& e) {
-        std::cout << ">> [Sai hoc ky] " << e.what() << "\n";
-    } catch (const NotEligibleException& e) {
-        std::cout << ">> [Khong du dieu kien] " << e.what() << "\n";
-    } catch (const AppException& e) {
-        std::cout << ">> Dang ky that bai: " << e.what() << "\n";
-    }
-}
-
-inline void showSemesterStatusView(const SystemManager& system, const std::string& studentID) {
-    SemesterProgressSummary summary;
-    DoubleLinkedList<CourseProgressItem> items;
-    if (system.getSemesterRegistrationStatus(studentID, summary, items)) {
-        ConsoleView::displaySemesterRegistrationStatus(summary, items);
-    }
-}
+/**
+ * @brief Chuc nang tra cuu chuyen biet Khung chuong trinh dao tao theo Khoa, Khoa hoc, Nganh va Hoc ky tren Console.
+ * @param system Doi tuong quan ly he thong SystemManager.
+ */
+void searchCoursesSpecialized(SystemManager& system);
 
 } // namespace SessionHelper
 

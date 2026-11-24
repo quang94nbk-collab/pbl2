@@ -1,59 +1,10 @@
-#ifndef FILEMANAGER_H
-#define FILEMANAGER_H
-
+#include "FileManager.h"
 #include <cerrno>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
-#include <string>
 
-#include "StudentRepository.h"
-#include "CourseRepository.h"
-#include "ClassSectionRepository.h"
-#include "RegistrationRepository.h"
-
-using namespace std;
-
-// ============================================================
-//  FileManager - Thuoc tang Data Access Layer (DAL)
-//  Chiu trach nhiem doc/ghi du lieu tu cac tep van ban vao cac Repository
-//  Khong phu thuoc vao tang BLL (SystemManager) hay Presentation
-// ============================================================
-class FileManager {
-private:
-    const string studentFile = "students.txt";
-    const string courseFile = "courses.txt";
-    const string sectionFile = "sections.txt";
-    const string registrationFile = "registrations.txt";
-    const string semesterFile = "semester.txt";
-
-    bool loadSemester(int& currentSemester, string& error) const;
-    bool saveSemester(int currentSemester, string& error) const;
-    bool loadStudents(StudentRepository& studentRepo, string& error) const;
-    bool loadCourses(CourseRepository& courseRepo, string& error) const;
-    bool loadSections(ClassSectionRepository& sectionRepo, const CourseRepository& courseRepo, string& error) const;
-    bool loadRegistrations(RegistrationRepository& registrationRepo,
-                           const StudentRepository& studentRepo,
-                           ClassSectionRepository& sectionRepo,
-                           string& error) const;
-
-public:
-    bool loadAllData(StudentRepository& studentRepo,
-                     CourseRepository& courseRepo,
-                     ClassSectionRepository& sectionRepo,
-                     RegistrationRepository& registrationRepo,
-                     int& currentSemester,
-                     string& error) const;
-
-    bool saveAllData(const StudentRepository& studentRepo,
-                     const CourseRepository& courseRepo,
-                     const ClassSectionRepository& sectionRepo,
-                     const RegistrationRepository& registrationRepo,
-                     int currentSemester,
-                     string& error) const;
-};
-
-inline bool FileManager::loadSemester(int& currentSemester, string& error) const {
+bool FileManager::loadSemester(int& currentSemester, string& error) const {
     errno = 0;
     ifstream file(semesterFile.c_str());
     if (!file.is_open()) {
@@ -65,7 +16,7 @@ inline bool FileManager::loadSemester(int& currentSemester, string& error) const
     }
     int sem = 1;
     if (file >> sem) {
-        if (sem == 1 || sem == 2) {
+        if (sem >= 1 && sem <= 10) {
             currentSemester = sem;
         }
     }
@@ -76,7 +27,7 @@ inline bool FileManager::loadSemester(int& currentSemester, string& error) const
     return true;
 }
 
-inline bool FileManager::saveSemester(int currentSemester, string& error) const {
+bool FileManager::saveSemester(int currentSemester, string& error) const {
     ofstream file(semesterFile.c_str());
     if (!file) {
         error = "Khong mo duoc tep " + semesterFile + " de ghi.";
@@ -86,7 +37,7 @@ inline bool FileManager::saveSemester(int currentSemester, string& error) const 
     return true;
 }
 
-inline bool FileManager::loadStudents(StudentRepository& studentRepo, string& error) const {
+bool FileManager::loadStudents(StudentRepository& studentRepo, string& error) const {
     errno = 0;
     ifstream file(studentFile.c_str());
     if (!file.is_open()) {
@@ -126,7 +77,7 @@ inline bool FileManager::loadStudents(StudentRepository& studentRepo, string& er
     return true;
 }
 
-inline bool FileManager::loadCourses(CourseRepository& courseRepo, string& error) const {
+bool FileManager::loadCourses(CourseRepository& courseRepo, string& error) const {
     errno = 0;
     ifstream file(courseFile.c_str());
     if (!file.is_open()) {
@@ -172,9 +123,9 @@ inline bool FileManager::loadCourses(CourseRepository& courseRepo, string& error
     return true;
 }
 
-inline bool FileManager::loadSections(ClassSectionRepository& sectionRepo,
-                                      const CourseRepository& courseRepo,
-                                      string& error) const {
+bool FileManager::loadSections(ClassSectionRepository& sectionRepo,
+                              const CourseRepository& courseRepo,
+                              string& error) const {
     errno = 0;
     ifstream file(sectionFile.c_str());
     if (!file.is_open()) {
@@ -217,10 +168,10 @@ inline bool FileManager::loadSections(ClassSectionRepository& sectionRepo,
     return true;
 }
 
-inline bool FileManager::loadRegistrations(RegistrationRepository& registrationRepo,
-                                           const StudentRepository& studentRepo,
-                                           ClassSectionRepository& sectionRepo,
-                                           string& error) const {
+bool FileManager::loadRegistrations(RegistrationRepository& registrationRepo,
+                                   const StudentRepository& studentRepo,
+                                   ClassSectionRepository& sectionRepo,
+                                   string& error) const {
     errno = 0;
     ifstream file(registrationFile.c_str());
     if (!file.is_open()) {
@@ -263,25 +214,78 @@ inline bool FileManager::loadRegistrations(RegistrationRepository& registrationR
     return true;
 }
 
-inline bool FileManager::loadAllData(StudentRepository& studentRepo,
-                                     CourseRepository& courseRepo,
-                                     ClassSectionRepository& sectionRepo,
-                                     RegistrationRepository& registrationRepo,
-                                     int& currentSemester,
-                                     string& error) const {
+bool FileManager::loadWaitlists(ClassSectionRepository& sectionRepo, string& error) const {
+    errno = 0;
+    ifstream file(waitlistFile.c_str());
+    if (!file.is_open()) {
+        if (errno == ENOENT) {
+            return true;
+        }
+        error = "Khong mo duoc tep " + waitlistFile;
+        return false;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        if (line.empty() || line.find_first_not_of(" \t\r\n") == string::npos) continue;
+        istringstream row(line);
+        string maLop, maSV;
+        if (!(row >> quoted(maLop) >> quoted(maSV))) continue;
+        if (sectionRepo.exists(maLop)) {
+            sectionRepo.pushToWaitlist(maLop, maSV);
+        }
+    }
+    if (file.bad()) {
+        error = "Loi khi doc tep " + waitlistFile;
+        return false;
+    }
+    return true;
+}
+
+bool FileManager::saveWaitlists(const ClassSectionRepository& sectionRepo, string& error) const {
+    ofstream file(waitlistFile.c_str());
+    if (!file.is_open()) {
+        error = "Khong mo duoc tep " + waitlistFile + " de ghi.";
+        return false;
+    }
+    auto cur = sectionRepo.getList().getHead();
+    while (cur != nullptr) {
+        const string& maLop = cur->data.getMaLopHP();
+        const Queue<string>* q = sectionRepo.getWaitlist(maLop);
+        if (q != nullptr && !q->empty()) {
+            DoubleLinkedList<string> svIDs;
+            q->copyTo(svIDs);
+            auto sCur = svIDs.getHead();
+            while (sCur != nullptr) {
+                file << quoted(maLop) << ' ' << quoted(sCur->data) << '\n';
+                sCur = sCur->next;
+            }
+        }
+        cur = cur->next;
+    }
+    return true;
+}
+
+bool FileManager::loadAllData(StudentRepository& studentRepo,
+                             CourseRepository& courseRepo,
+                             ClassSectionRepository& sectionRepo,
+                             RegistrationRepository& registrationRepo,
+                             int& currentSemester,
+                             string& error) const {
     return loadSemester(currentSemester, error) &&
            loadStudents(studentRepo, error) &&
            loadCourses(courseRepo, error) &&
            loadSections(sectionRepo, courseRepo, error) &&
-           loadRegistrations(registrationRepo, studentRepo, sectionRepo, error);
+           loadRegistrations(registrationRepo, studentRepo, sectionRepo, error) &&
+           loadWaitlists(sectionRepo, error);
 }
 
-inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
-                                     const CourseRepository& courseRepo,
-                                     const ClassSectionRepository& sectionRepo,
-                                     const RegistrationRepository& registrationRepo,
-                                     int currentSemester,
-                                     string& error) const {
+bool FileManager::saveAllData(const StudentRepository& studentRepo,
+                             const CourseRepository& courseRepo,
+                             const ClassSectionRepository& sectionRepo,
+                             const RegistrationRepository& registrationRepo,
+                             int currentSemester,
+                             string& error) const {
     if (!saveSemester(currentSemester, error)) {
         return false;
     }
@@ -350,7 +354,5 @@ inline bool FileManager::saveAllData(const StudentRepository& studentRepo,
         error = "Loi khi ghi tep du lieu.";
         return false;
     }
-    return true;
+    return saveWaitlists(sectionRepo, error);
 }
-
-#endif

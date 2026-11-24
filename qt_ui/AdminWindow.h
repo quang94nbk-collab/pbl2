@@ -7,9 +7,11 @@ class QTabWidget;
 class QTableWidget;
 class QSpinBox;
 class QLabel;
+class QComboBox;
+class QLineEdit;
+class QPushButton;
 
 // Forward declarations for management sub-widgets
-// (implemented by other workers in separate files)
 class StudentManagementWidget;
 class CourseManagementWidget;
 class SectionManagementWidget;
@@ -30,8 +32,13 @@ private slots:
     void onApplySemester();
     void refreshRegistrationsTab();
 
+    // Curriculum tab slots
+    void onCurriculumFilter();
+    void onCurriculumReset();
+
 private:
     void setupUi();
+    void setupCurriculumTab();
     void setupRegistrationsTab();
     void setupSettingsTab();
 
@@ -41,8 +48,24 @@ private:
     StudentManagementWidget*  m_studentWidget;
     CourseManagementWidget*   m_courseWidget;
     SectionManagementWidget*  m_sectionWidget;
+
+    // Tab Khung chuong trinh dao tao
+    QWidget*                  m_curriculumTab;
+    QComboBox*                m_currKhoaCombo;
+    QLineEdit*                m_currKhoaHocEdit;
+    QLineEdit*                m_currNganhEdit;
+    QComboBox*                m_currHocKyCombo;
+    QPushButton*              m_currFilterBtn;
+    QPushButton*              m_currResetBtn;
+    QTableWidget*             m_curriculumTable;
+
+    // Tab Dang ky
+    QWidget*                  m_registrationsTab;
     QTableWidget*             m_registrationsTable;
     QLabel*                   m_regTitle;
+
+    // Tab Cai dat
+    QWidget*                  m_settingsTab;
     QSpinBox*                 m_semesterSpinBox;
     QLabel*                   m_semesterBadge;
 };

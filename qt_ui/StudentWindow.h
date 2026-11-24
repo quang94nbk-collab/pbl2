@@ -12,6 +12,12 @@ class SystemManager;
 class QTabWidget;
 class TimetableWidget;
 class RegistrationWidget;
+class QTableWidget;
+class QLineEdit;
+class QPushButton;
+class QComboBox;
+class Course;
+template <typename T> class DoubleLinkedList;
 
 class StudentWindow : public QWidget {
     Q_OBJECT
@@ -27,15 +33,21 @@ signals:
 private slots:
     void onLogout();
     void onTabChanged(int index);
+    void onCurriculumFilter();
+    void onStudentCourseMyProgram();
+    void onStudentCourseReset();
 
 private:
     void setupUi();
     void setupRegisteredTab();
     void setupProgressTab();
     void setupCreditTab();
+    void setupCurriculumTab();
     void refreshRegisteredTab();
     void refreshProgressTab();
     void refreshCreditTab();
+    void refreshCurriculumTab();
+    void populateStudentCourseTable(DoubleLinkedList<Course>& list);
     void handleCancelSection(const QString& maLopHP);
 
     SystemManager&      m_sys;
@@ -51,4 +63,8 @@ private:
     QWidget*            m_progressTab;
     // Tab "Tong ket tin chi"
     QWidget*            m_creditTab;
+    // Tab "Khung chuong trinh dao tao"
+    QWidget*            m_curriculumTab;
+    QComboBox*          m_stuFilterHocKyCombo;
+    QTableWidget*       m_stuCourseTable;
 };

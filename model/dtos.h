@@ -100,5 +100,20 @@ struct SemesterProgressSummary {
           totalCredits(0), registeredCredits(0) {}
 };
 
+struct GroupInfo {
+    string groupName;
+    string khoa;
+    string khoaHoc;
+    string nganhHoc;
+    int    hocKy;
+    int    totalSections;
+    int    totalCredits;
+    string sectionIDs[50];
+
+    GroupInfo()
+        : groupName(""), khoa(""), khoaHoc(""), nganhHoc(""),
+          hocKy(1), totalSections(0), totalCredits(0) {}
+};
+
 #endif // DTOS_H
 

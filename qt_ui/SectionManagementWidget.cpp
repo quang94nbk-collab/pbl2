@@ -95,11 +95,11 @@ void SectionManagementWidget::setupUi()
 
     // -- Table --
     m_table = new QTableWidget;
-    m_table->setColumnCount(11);
+    m_table->setColumnCount(12);
     m_table->setHorizontalHeaderLabels({
         "Mã lớp HP", "Mã môn", "Giảng viên", "Thứ",
         "Tiết BĐ", "Tiết KT", "Phòng",
-        "Sĩ số TĐ", "Đã ĐK", "Học kỳ", "Nhóm"
+        "Sĩ số TĐ", "Đã ĐK", "Chờ (Waitlist)", "Học kỳ", "Nhóm"
     });
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -114,11 +114,16 @@ void SectionManagementWidget::setupUi()
     m_addBtn          = new QPushButton("Thêm lớp HP");
     m_deleteBtn       = new QPushButton("Xóa lớp HP");
     m_viewStudentsBtn = new QPushButton("Xem DS sinh viên");
+    m_waitlistBtn     = new QPushButton("Xem danh sách chờ");
     m_deleteBtn->setStyleSheet("QPushButton{background:#EF4444;} QPushButton:hover{background:#DC2626;}");
     m_viewStudentsBtn->setStyleSheet("QPushButton{background:#16A34A;} QPushButton:hover{background:#15803D;}");
+    m_waitlistBtn->setStyleSheet("QPushButton{background:#D97706; font-weight:bold;} QPushButton:hover{background:#B45309;}");
+    m_waitlistBtn->setVisible(false); // Chi hien khi lop du so luong va co sv cho
+
     btnLayout->addWidget(m_addBtn);
     btnLayout->addWidget(m_deleteBtn);
     btnLayout->addWidget(m_viewStudentsBtn);
+    btnLayout->addWidget(m_waitlistBtn);
     btnLayout->addStretch();
     mainLayout->addLayout(btnLayout);
 
@@ -128,7 +133,11 @@ void SectionManagementWidget::setupUi()
     connect(m_addBtn,          &QPushButton::clicked, this, &SectionManagementWidget::onAddSection);
     connect(m_deleteBtn,       &QPushButton::clicked, this, &SectionManagementWidget::onDeleteSection);
     connect(m_viewStudentsBtn, &QPushButton::clicked, this, &SectionManagementWidget::onViewStudents);
-    connect(m_searchEdit, &QLineEdit::returnPressed, this, &SectionManagementWidget::onSearch);
+    connect(m_waitlistBtn,     &QPushButton::clicked, this, &SectionManagementWidget::onViewWaitlist);
+    connect(m_table,           &QTableWidget::itemSelectionChanged, this, &SectionManagementWidget::updateWaitlistButtonState);
+    connect(m_table,           &QTableWidget::currentCellChanged,   this, &SectionManagementWidget::updateWaitlistButtonState);
+    connect(m_table,           &QTableWidget::cellClicked,          this, &SectionManagementWidget::updateWaitlistButtonState);
+    connect(m_searchEdit,      &QLineEdit::returnPressed,          this, &SectionManagementWidget::onSearch);
 }
 
 void SectionManagementWidget::populateTable(DoubleLinkedList<ClassSection>& list)
@@ -160,11 +169,27 @@ void SectionManagementWidget::populateTable(DoubleLinkedList<ClassSection>& list
         setItem(6,  QString::fromStdString(sec.getPhong()));
         setItem(7,  QString::number(sec.getSiSoToiDa()));
         setItem(8,  QString::number(sec.getSoLuongDaDangKy()));
-        setItem(9,  QString("Kỳ %1").arg(sec.getHocKy()));
-        setItem(10, QString::fromStdString(sec.getNhomLopHP()));
+
+        int wlCount = m_sys.getWaitlistCount(sec.getMaLopHP());
+        if (wlCount > 0) {
+            setItem(9, QString("%1 sinh viên").arg(wlCount));
+            if (m_table->item(row, 9)) {
+                m_table->item(row, 9)->setForeground(QColor("#B45309"));
+                m_table->item(row, 9)->setBackground(QColor("#FEF3C7"));
+                QFont f = m_table->item(row, 9)->font();
+                f.setBold(true);
+                m_table->item(row, 9)->setFont(f);
+            }
+        } else {
+            setItem(9, "0");
+        }
+
+        setItem(10, QString("Kỳ %1").arg(sec.getHocKy()));
+        setItem(11, QString::fromStdString(sec.getNhomLopHP()));
 
         if (!sec.conCho()) {
             for (int c = 0; c < m_table->columnCount(); ++c) {
+                if (c == 9 && wlCount > 0) continue; // keep waitlist highlight
                 if (m_table->item(row, c))
                     m_table->item(row, c)->setBackground(QColor("#FEE2E2"));
             }
@@ -173,6 +198,22 @@ void SectionManagementWidget::populateTable(DoubleLinkedList<ClassSection>& list
         node = node->next;
     }
     m_table->resizeColumnsToContents();
+
+    int targetRow = -1;
+    for (int r = 0; r < m_table->rowCount(); ++r) {
+        if (m_table->item(r, 0) &&
+            m_sys.canShowWaitlist(m_table->item(r, 0)->text().trimmed().toStdString())) {
+            targetRow = r;
+            break;
+        }
+    }
+    if (targetRow >= 0) {
+        m_table->selectRow(targetRow);
+    } else if (m_table->rowCount() > 0) {
+        m_table->selectRow(0);
+    }
+
+    updateWaitlistButtonState();
 }
 
 void SectionManagementWidget::refreshTable()
@@ -224,7 +265,7 @@ void SectionManagementWidget::onAddSection()
     auto* tietDauSpin  = new QSpinBox; tietDauSpin->setRange(1, 15); tietDauSpin->setValue(1);
     auto* tietCuoiSpin = new QSpinBox; tietCuoiSpin->setRange(1, 15); tietCuoiSpin->setValue(3);
     auto* siSoSpin     = new QSpinBox; siSoSpin->setRange(1, 200);   siSoSpin->setValue(50);
-    auto* hkSpin       = new QSpinBox; hkSpin->setRange(1, 2);       hkSpin->setValue(m_sys.getCurrentSemester());
+    auto* hkSpin       = new QSpinBox; hkSpin->setRange(1, 8);       hkSpin->setValue(m_sys.getCurrentSemester());
 
     form->addRow("Mã lớp HP (*):", maLopEdit);
     form->addRow("Mã môn (*):",    maMonEdit);
@@ -346,8 +387,115 @@ void SectionManagementWidget::onViewStudents()
     table->resizeColumnsToContents();
     layout->addWidget(table);
 
-    auto* closeBtn = new QPushButton("Đóng");
+    auto* btnBox = new QHBoxLayout;
+    if (m_sys.canShowWaitlist(maLop.toStdString())) {
+        int wlCount = m_sys.getWaitlistCount(maLop.toStdString());
+        auto* wlBtn = new QPushButton(QString("Xem danh sách chờ (%1)").arg(wlCount), &dlg);
+        wlBtn->setStyleSheet("QPushButton{background:#D97706; color:#FFFFFF; font-weight:bold; border-radius:6px; padding:6px 14px;} QPushButton:hover{background:#B45309;}");
+        connect(wlBtn, &QPushButton::clicked, this, [this, maLop, &dlg]() {
+            showWaitlistDialog(maLop, &dlg);
+        });
+        btnBox->addWidget(wlBtn);
+    }
+    btnBox->addStretch();
+    auto* closeBtn = new QPushButton("Đóng", &dlg);
     connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
-    layout->addWidget(closeBtn, 0, Qt::AlignRight);
+    btnBox->addWidget(closeBtn);
+    layout->addLayout(btnBox);
+    dlg.exec();
+}
+
+/**
+ * @brief Cap nhat trang thai an/hien va so luong sinh vien tren nut 'Xem danh sach cho'
+ * Chi hien thi khi dong dang chon la lop hoc phan DU SO LUONG va CO SINH VIEN trong danh sach cho.
+ */
+void SectionManagementWidget::updateWaitlistButtonState()
+{
+    int row = m_table->currentRow();
+    if (row < 0) {
+        m_waitlistBtn->setVisible(false);
+        return;
+    }
+    QTableWidgetItem* item = m_table->item(row, 0);
+    if (!item) {
+        m_waitlistBtn->setVisible(false);
+        return;
+    }
+    QString maLop = item->text().trimmed();
+    bool canShow = m_sys.canShowWaitlist(maLop.toStdString());
+    m_waitlistBtn->setVisible(canShow);
+    if (canShow) {
+        int cnt = m_sys.getWaitlistCount(maLop.toStdString());
+        m_waitlistBtn->setText(QString("Xem danh sách chờ (%1)").arg(cnt));
+    }
+}
+
+/**
+ * @brief Xu ly su kien khi Admin click vao nut 'Xem danh sach cho' ben canh nut 'Xem DS sinh vien'.
+ */
+void SectionManagementWidget::onViewWaitlist()
+{
+    int row = m_table->currentRow();
+    if (row < 0) return;
+    QTableWidgetItem* item = m_table->item(row, 0);
+    if (!item) return;
+    QString maLop = item->text().trimmed();
+    if (!m_sys.canShowWaitlist(maLop.toStdString())) {
+        QMessageBox::information(this, "Thông báo", "Lớp học phần chưa đủ số lượng hoặc không có sinh viên trong danh sách chờ.");
+        return;
+    }
+    showWaitlistDialog(maLop);
+}
+
+/**
+ * @brief Mo hop thoai popup hien thi chi tiet danh sach sinh vien dang trong hang doi cho theo thu tu FIFO.
+ * @param maLop Ma lop hoc phan can xem waitlist.
+ * @param parent Widget cha cua dialog popup.
+ */
+void SectionManagementWidget::showWaitlistDialog(const QString& maLop, QWidget* parent)
+{
+    DoubleLinkedList<Student> waitlistStudents;
+    m_sys.getWaitlistStudents(maLop.toStdString(), waitlistStudents);
+
+    QDialog dlg(parent ? parent : this);
+    dlg.setWindowTitle(QString("Danh sách sinh viên chờ (Waitlist) - %1 (%2 sinh viên)")
+                       .arg(maLop)
+                       .arg(m_sys.getWaitlistCount(maLop.toStdString())));
+    dlg.resize(680, 420);
+
+    auto* layout = new QVBoxLayout(&dlg);
+    auto* table  = new QTableWidget(&dlg);
+    table->setColumnCount(6);
+    table->setHorizontalHeaderLabels({"STT", "Mã SV", "Họ tên", "Lớp", "Khoa", "Khóa học"});
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setAlternatingRowColors(true);
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->verticalHeader()->setVisible(false);
+
+    int stt = 1;
+    auto* cur = waitlistStudents.getHead();
+    while (cur) {
+        int r = table->rowCount();
+        table->insertRow(r);
+        const Student& s = cur->data;
+        table->setItem(r, 0, new QTableWidgetItem(QString::number(stt++)));
+        table->setItem(r, 1, new QTableWidgetItem(QString::fromStdString(s.getMaSV())));
+        table->setItem(r, 2, new QTableWidgetItem(QString::fromStdString(s.getHoTen())));
+        table->setItem(r, 3, new QTableWidgetItem(QString::fromStdString(s.getLop())));
+        table->setItem(r, 4, new QTableWidgetItem(QString::fromStdString(s.getKhoa())));
+        table->setItem(r, 5, new QTableWidgetItem(QString::fromStdString(s.getKhoaHoc())));
+        cur = cur->next;
+    }
+    table->resizeColumnsToContents();
+    layout->addWidget(table);
+
+    auto* btnBox = new QHBoxLayout;
+    btnBox->addStretch();
+    auto* closeBtn = new QPushButton("Đóng", &dlg);
+    connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
+    btnBox->addWidget(closeBtn);
+    layout->addLayout(btnBox);
+
     dlg.exec();
 }
